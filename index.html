@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>流浪动物 TNR 管理系统 - 总览</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); min-height: 100vh; color: white; }
+        .header { text-align: center; padding: 60px 20px 40px; }
+        .logo { width: 120px; height: 120px; background: linear-gradient(135deg, #f6ad55, #ed8936); border-radius: 30px; margin: 0 auto 30px; display: flex; align-items: center; justify-content: center; font-size: 60px; box-shadow: 0 15px 50px rgba(246,173,85,0.4); animation: pulse 3s ease-in-out infinite; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        .header h1 { font-size: 42px; font-weight: 700; margin-bottom: 16px; background: linear-gradient(135deg, #f6ad55, #fc8181, #68d391); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .header p { font-size: 18px; color: rgba(255,255,255,0.7); max-width: 700px; margin: 0 auto; line-height: 1.8; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px 40px; }
+        .section-title { font-size: 24px; font-weight: 600; margin-bottom: 32px; padding-left: 20px; border-left: 5px solid #f6ad55; color: rgba(255,255,255,0.95); }
+        .portal-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 32px; margin-bottom: 60px; }
+        .portal-card { background: rgba(255,255,255,0.05); border-radius: 24px; padding: 40px 32px; transition: all 0.4s ease; cursor: pointer; border: 3px solid transparent; position: relative; overflow: hidden; }
+        .portal-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, transparent, var(--accent-color), transparent); opacity: 0; transition: opacity 0.3s; }
+        .portal-card:hover::before { opacity: 1; }
+        .portal-card:hover { transform: translateY(-12px) scale(1.02); box-shadow: 0 30px 60px rgba(0,0,0,0.4); }
+        .portal-card.shelter { --accent-color: #f6ad55; border-color: rgba(246,173,85,0.3); }
+        .portal-card.shelter:hover { border-color: #f6ad55; background: rgba(246,173,85,0.1); }
+        .portal-card.hospital { --accent-color: #68d391; border-color: rgba(104,211,145,0.3); }
+        .portal-card.hospital:hover { border-color: #68d391; background: rgba(104,211,145,0.1); }
+        .portal-card.adopter { --accent-color: #22d3ee; border-color: rgba(34,211,238,0.3); }
+        .portal-card.adopter:hover { border-color: #22d3ee; background: rgba(34,211,238,0.1); }
+        .portal-card.government { --accent-color: #a78bfa; border-color: rgba(167,139,250,0.3); }
+        .portal-card.government:hover { border-color: #a78bfa; background: rgba(167,139,250,0.1); }
+        .portal-icon { width: 90px; height: 90px; border-radius: 24px; display: flex; align-items: center; justify-content: center; font-size: 44px; margin-bottom: 28px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        .portal-card.shelter .portal-icon { background: linear-gradient(135deg, #f6ad55, #ed8936); }
+        .portal-card.hospital .portal-icon { background: linear-gradient(135deg, #68d391, #48bb78); }
+        .portal-card.adopter .portal-icon { background: linear-gradient(135deg, #22d3ee, #06b6d4); }
+        .portal-card.government .portal-icon { background: linear-gradient(135deg, #a78bfa, #8b5cf6); }
+        .portal-name { font-size: 28px; font-weight: 700; margin-bottom: 12px; color: white; }
+        .portal-desc { font-size: 15px; color: rgba(255,255,255,0.65); line-height: 1.7; margin-bottom: 24px; }
+        .portal-features { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+        .portal-feature { padding: 6px 14px; background: rgba(255,255,255,0.1); border-radius: 20px; font-size: 13px; color: rgba(255,255,255,0.8); }
+        .portal-btn { display: inline-flex; align-items: center; gap: 10px; padding: 14px 28px; background: var(--accent-color); color: white; border-radius: 12px; font-size: 16px; font-weight: 600; text-decoration: none; transition: all 0.3s; box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+        .portal-btn:hover { transform: translateX(6px); box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
+        .portal-card.shelter .portal-btn { background: linear-gradient(135deg, #f6ad55, #ed8936); }
+        .portal-card.hospital .portal-btn { background: linear-gradient(135deg, #68d391, #48bb78); }
+        .portal-card.adopter .portal-btn { background: linear-gradient(135deg, #22d3ee, #06b6d4); }
+        .portal-card.government .portal-btn { background: linear-gradient(135deg, #a78bfa, #8b5cf6); }
+        .info-section { background: rgba(255,255,255,0.03); border-radius: 24px; padding: 48px; margin-bottom: 48px; border: 1px solid rgba(255,255,255,0.1); }
+        .info-section h3 { font-size: 22px; margin-bottom: 24px; color: rgba(255,255,255,0.95); }
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
+        .info-item { display: flex; align-items: flex-start; gap: 16px; padding: 20px; background: rgba(255,255,255,0.03); border-radius: 16px; }
+        .info-icon { width: 50px; height: 50px; background: linear-gradient(135deg, #f6ad55, #ed8936); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
+        .info-text h4 { font-size: 16px; font-weight: 600; margin-bottom: 6px; color: white; }
+        .info-text p { font-size: 14px; color: rgba(255,255,255,0.6); line-height: 1.6; }
+        .footer { text-align: center; padding: 50px 20px; color: rgba(255,255,255,0.4); font-size: 14px; }
+        .footer .version { display: inline-block; padding: 8px 20px; background: rgba(255,255,255,0.05); border-radius: 20px; margin-bottom: 16px; }
+        .footer a { color: rgba(255,255,255,0.6); text-decoration: none; }
+        .footer a:hover { color: #f6ad55; }
+        @media (max-width: 768px) { .header h1 { font-size: 30px; } .container { padding: 20px; } .portal-grid { grid-template-columns: 1fr; } .portal-card { padding: 28px 24px; } }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">🐾</div>
+        <h1>流浪动物 TNR 管理系统</h1>
+        <p>规范城市流浪动物管理，标准化落地 TNR（捕捉 - 绝育 - 放养）治理模式<br>统一管控流浪动物收容、转运、诊疗、绝育、疫苗、芯片植入、物资管控、领养、回访、黑名单监管全流程</p>
+    </div>
+    
+    <div class="container">
+        <h2 class="section-title">🎯 四大角色端口</h2>
+        <div class="portal-grid">
+            <div class="portal-card shelter">
+                <div class="portal-icon">🏠</div>
+                <div class="portal-name">收容所端</div>
+                <div class="portal-desc">物业无独立账号，收容所工作人员现场录入物业信息、交接、签字流程，物料统一管控、统一下发</div>
+                <div class="portal-features">
+                    <span class="portal-feature">收容登记</span>
+                    <span class="portal-feature">转运交接</span>
+                    <span class="portal-feature">物料管理</span>
+                    <span class="portal-feature">放养管理</span>
+                    <span class="portal-feature">领养审核</span>
+                    <span class="portal-feature">数据报表</span>
+                </div>
+                <a href="tnr-system-mockups/shelter/homepage.html" class="portal-btn">进入收容所端 →</a>
+            </div>
+            
+            <div class="portal-card hospital">
+                <div class="portal-icon">🏥</div>
+                <div class="portal-name">宠物医院端</div>
+                <div class="portal-desc">医院接收转运动物、执行诊疗（绝育、疫苗、驱虫、芯片植入）、物料消耗扣减、待领养动物维护</div>
+                <div class="portal-features">
+                    <span class="portal-feature">动物接收</span>
+                    <span class="portal-feature">诊疗业务</span>
+                    <span class="portal-feature">物料库存</span>
+                    <span class="portal-feature">领养维护</span>
+                    <span class="portal-feature">安乐死处置</span>
+                    <span class="portal-feature">单据台账</span>
+                </div>
+                <a href="tnr-system-mockups/hospital/homepage.html" class="portal-btn">进入医院端 →</a>
+            </div>
+            
+            <div class="portal-card adopter">
+                <div class="portal-icon">👤</div>
+                <div class="portal-name">领养人端</div>
+                <div class="portal-desc">领养人小程序端，查看全市待领养动物、线下联系、申请领养、月度打卡回访、查看宠物全生命周期档案</div>
+                <div class="portal-features">
+                    <span class="portal-feature">领养大厅</span>
+                    <span class="portal-feature">我的领养</span>
+                    <span class="portal-feature">回访打卡</span>
+                    <span class="portal-feature">消息中心</span>
+                    <span class="portal-feature">个人中心</span>
+                </div>
+                <a href="tnr-system-mockups/adopter/adoption-hall.html" class="portal-btn">进入领养人端 →</a>
+            </div>
+            
+            <div class="portal-card government">
+                <div class="portal-icon">📊</div>
+                <div class="portal-name">政府监管端</div>
+                <div class="portal-desc">政府监管PC端，数据总览大屏、机构管理、账号权限、全业务监管、物料全局监管、全局台账中心</div>
+                <div class="portal-features">
+                    <span class="portal-feature">数据大屏</span>
+                    <span class="portal-feature">机构管理</span>
+                    <span class="portal-feature">账号权限</span>
+                    <span class="portal-feature">全业务监管</span>
+                    <span class="portal-feature">物料监管</span>
+                    <span class="portal-feature">台账中心</span>
+                </div>
+                <a href="tnr-system-mockups/government/dashboard.html" class="portal-btn">进入政府端 →</a>
+            </div>
+        </div>
+        
+        <div class="info-section">
+            <h3>📋 系统核心设计原则</h3>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-icon">🔒</div>
+                    <div class="info-text">
+                        <h4>无物业独立端口</h4>
+                        <p>所有物业信息、交接、签字流程内嵌至收容所端，统一管理</p>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-icon">📦</div>
+                    <div class="info-text">
+                        <h4>物料统一管控</h4>
+                        <p>收容所统一采购、统一下发，医院领用消耗，双端台账独立留存</p>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-icon">🔍</div>
+                    <div class="info-text">
+                        <h4>全流程电子化留痕</h4>
+                        <p>拍照、定位、签字、单据、库存、操作日志全程可追溯</p>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-icon">🔄</div>
+                    <div class="info-text">
+                        <h4>多分支业务闭环</h4>
+                        <p>主人领回、TNR放养、领养、安乐死四大闭环分支</p>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-icon">📝</div>
+                    <div class="info-text">
+                        <h4>领养流程轻量化</h4>
+                        <p>取消线上预约、线上协议，采用线下审核 + 线下协议存档</p>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-icon">🐾</div>
+                    <div class="info-text">
+                        <h4>TNR治理模式</h4>
+                        <p>捕捉(Trap) - 绝育(Neuter) - 放养(Return)，实现流浪动物可溯源、可监管、可闭环治理</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <div class="version">TNR 流浪动物管理系统 v1.0.0</div>
+        <p>实现全市流浪动物可溯源、可监管、可闭环治理</p>
+        <p style="margin-top:12px;">© 2025 TNR Management System</p>
+    </div>
+</body>
+</html>
