@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据报表 - 流浪动物 TNR 管理系统</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%); min-height: 100vh; display: flex; }
+        .sidebar { width: 260px; background: linear-gradient(180deg, #2d3748 0%, #1a202c 100%); color: white; padding: 24px; display: flex; flex-direction: column; min-height: 100vh; position: fixed; left: 0; top: 0; }
+        .sidebar-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-logo-icon { width: 44px; height: 44px; background: linear-gradient(135deg, #f6ad55, #ed8936); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+        .sidebar-logo h1 { font-size: 18px; font-weight: 600; color: white; }
+        .nav-menu { flex: 1; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 10px; margin-bottom: 8px; cursor: pointer; transition: all 0.3s ease; color: rgba(255,255,255,0.8); text-decoration: none; }
+        .nav-item:hover { background: rgba(255,255,255,0.1); color: white; }
+        .nav-item.active { background: linear-gradient(135deg, #f6ad55, #ed8936); color: white; }
+        .nav-icon { font-size: 20px; }
+        .nav-label { font-size: 15px; font-weight: 500; }
+        .nav-divider { height: 1px; background: rgba(255,255,255,0.1); margin: 20px 0; }
+        .user-section { padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); }
+        .user-info { display: flex; align-items: center; gap: 10px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 10px; }
+        .user-avatar { width: 36px; height: 36px; background: linear-gradient(135deg, #68d391, #48bb78); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        .user-details { flex: 1; }
+        .user-name { font-size: 14px; font-weight: 600; }
+        .user-role { font-size: 12px; color: rgba(255,255,255,0.6); }
+        .main-content { flex: 1; margin-left: 260px; padding: 24px; max-width: calc(100% - 260px); }
+        .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .page-title { font-size: 24px; font-weight: 600; color: #2d3748; }
+        .current-time { font-size: 14px; color: #718096; padding: 10px 20px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .section { background: white; border-radius: 16px; padding: 24px; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .section-title { font-size: 18px; font-weight: 600; color: #2d3748; display: flex; align-items: center; gap: 8px; }
+        .section-title::before { content: ''; width: 4px; height: 20px; background: linear-gradient(180deg, #22d3ee, #06b6d4); border-radius: 2px; }
+        .btn { padding: 10px 20px; border: none; border-radius: 10px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.3s ease; font-family: inherit; }
+        .btn-primary { background: linear-gradient(135deg, #22d3ee, #06b6d4); color: white; box-shadow: 0 4px 15px rgba(6,182,212,0.3); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(6,182,212,0.4); }
+        .btn-green { background: linear-gradient(135deg, #68d391, #48bb78); color: white; }
+        .btn-secondary { background: #f7fafc; color: #718096; border: 2px solid #e2e8f0; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .stat-card { display: flex; flex-direction: column; align-items: center; padding: 20px 16px; border-radius: 14px; transition: all 0.3s ease; border: 2px solid transparent; }
+        .stat-card:hover { transform: translateY(-3px); }
+        .stat-card.yellow { background: linear-gradient(135deg, #fffaf0, #feebc8); }
+        .stat-card.yellow:hover { box-shadow: 0 8px 20px rgba(246,173,85,0.3); border-color: #f6ad55; }
+        .stat-card.green { background: linear-gradient(135deg, #f0fff4, #c6f6d5); }
+        .stat-card.green:hover { box-shadow: 0 8px 20px rgba(104,211,145,0.3); border-color: #68d391; }
+        .stat-card.cyan { background: linear-gradient(135deg, #e6fffa, #b2f5ea); }
+        .stat-card.cyan:hover { box-shadow: 0 8px 20px rgba(34,211,238,0.3); border-color: #22d3ee; }
+        .stat-card.blue { background: linear-gradient(135deg, #ebf8ff, #90cdf4); }
+        .stat-card.blue:hover { box-shadow: 0 8px 20px rgba(66,153,225,0.3); border-color: #4299e1; }
+        .stat-icon { font-size: 28px; margin-bottom: 8px; }
+        .stat-value { font-size: 28px; font-weight: 700; color: #2d3748; margin-bottom: 4px; }
+        .stat-label { font-size: 13px; color: #718096; font-weight: 500; }
+        .filter-bar { display: flex; gap: 12px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
+        .form-select, .form-input { padding: 10px 16px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 14px; font-family: inherit; background: white; transition: all 0.3s; }
+        .form-select:focus, .form-input:focus { outline: none; border-color: #22d3ee; box-shadow: 0 0 0 3px rgba(6,182,212,0.1); }
+        .chart-container { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+        .chart-box { background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
+        .chart-title { font-size: 16px; font-weight: 600; color: #2d3748; margin-bottom: 16px; }
+        .bar-chart { display: flex; align-items: flex-end; gap: 12px; height: 200px; padding-top: 20px; }
+        .bar-group { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .bar { width: 100%; border-radius: 8px 8px 0 0; transition: all 0.3s ease; min-height: 10px; }
+        .bar:hover { opacity: 0.8; }
+        .bar-label { font-size: 12px; color: #718096; text-align: center; }
+        .bar-value { font-size: 12px; font-weight: 600; color: #2d3748; }
+        .pie-chart { display: flex; align-items: center; justify-content: center; gap: 24px; }
+        .pie-visual { width: 180px; height: 180px; border-radius: 50%; position: relative; }
+        .pie-legend { display: flex; flex-direction: column; gap: 12px; }
+        .legend-item { display: flex; align-items: center; gap: 8px; }
+        .legend-color { width: 16px; height: 16px; border-radius: 4px; }
+        .legend-text { font-size: 14px; color: #4a5568; }
+        .legend-value { font-weight: 600; color: #2d3748; }
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th { background: #f7fafc; padding: 12px 16px; text-align: left; font-size: 14px; font-weight: 600; color: #4a5568; border-bottom: 2px solid #edf2f7; }
+        .data-table td { padding: 12px 16px; border-bottom: 1px solid #edf2f7; font-size: 14px; color: #4a5568; }
+                .data-table tr:hover { background: #f7fafc; }
+        .trend-up { color: #48bb78; font-weight: 600; }
+        .trend-down { color: #f56565; font-weight: 600; }
+        .tab-bar { display: flex; gap: 8px; margin-bottom: 20px; background: white; padding: 8px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); }
+        .tab-item { padding: 10px 20px; border-radius: 8px; cursor: pointer; transition: all 0.3s; font-size: 14px; font-weight: 500; color: #718096; background: transparent; }
+        .tab-item:hover { background: #f7fafc; color: #2d3748; }
+        .tab-item.active { background: linear-gradient(135deg, #22d3ee, #06b6d4); color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .btn-cyan { background: linear-gradient(135deg, #22d3ee, #06b6d4); color: white; }
+        .btn-cyan:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(6,182,212,0.4); }
+        @media (max-width: 768px) { body { flex-direction: column; } .sidebar { width: 100%; position: relative; min-height: auto; } .nav-menu { display: none; } .main-content { margin-left: 0; max-width: 100%; padding: 16px; } .stats-grid { grid-template-columns: repeat(2, 1fr); } .chart-container { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-logo"><div class="sidebar-logo-icon">🐾</div><h1>TNR管理系统</h1></div>
+        <nav class="nav-menu">
+            <a href="homepage.html" class="nav-item"><span class="nav-icon">🏠</span><span class="nav-label">首页看板</span></a>
+            <a href="add-shelter.html" class="nav-item"><span class="nav-icon">➕</span><span class="nav-label">新增收容</span></a>
+            <a href="owner-return.html" class="nav-item"><span class="nav-icon">🏠</span><span class="nav-label">主人领回</span></a>
+            <div class="nav-divider"></div>
+            <a href="material.html" class="nav-item"><span class="nav-icon">📦</span><span class="nav-label">物料管理</span></a>
+            <a href="transfer.html" class="nav-item"><span class="nav-icon">🚚</span><span class="nav-label">转运管理</span></a>
+            <a href="release.html" class="nav-item"><span class="nav-icon">🌿</span><span class="nav-label">放养管理</span></a>
+            <a href="adoption.html" class="nav-item"><span class="nav-icon">👤</span><span class="nav-label">领养管理</span></a>
+            <div class="nav-divider"></div>
+            <a href="report.html" class="nav-item active"><span class="nav-icon">📊</span><span class="nav-label">数据报表</span></a>
+            <a href="settings.html" class="nav-item"><span class="nav-icon">⚙️</span><span class="nav-label">系统设置</span></a>
+        </nav>
+        <div class="user-section"><div class="user-info"><div class="user-avatar">管</div><div class="user-details"><div class="user-name">管理员</div><div class="user-role">系统管理员</div></div></div></div>
+    </aside>
+    <main class="main-content">
+        <div class="header-bar"><h2 class="page-title">数据报表</h2><div class="current-time" id="currentTime"></div></div>
+        <div class="stats-grid">
+            <div class="stat-card yellow"><span class="stat-icon">📋</span><span class="stat-value">128</span><span class="stat-label">本月收容</span></div>
+            <div class="stat-card green"><span class="stat-icon">✅</span><span class="stat-value">86</span><span class="stat-label">已绝育</span></div>
+            <div class="stat-card cyan"><span class="stat-icon">🌿</span><span class="stat-value">52</span><span class="stat-label">已放养</span></div>
+            <div class="stat-card blue"><span class="stat-icon">🏠</span><span class="stat-value">22</span><span class="stat-label">已领养</span></div>
+        </div>
+        <div class="filter-bar">
+            <select class="form-select"><option>本月</option><option>本季度</option><option>本年度</option><option>自定义</option></select>
+            <select class="form-select"><option>全部小区</option><option>阳光花园小区</option><option>幸福家园</option><option>绿色新城</option></select>
+        </div>
+        <div class="tab-bar">
+            <div class="tab-item active" onclick="switchReportTab('overview')">数据总览</div>
+            <div class="tab-item" onclick="switchReportTab('shelter')">收容统计</div>
+            <div class="tab-item" onclick="switchReportTab('medical')">诊疗统计</div>
+            <div class="tab-item" onclick="switchReportTab('material')">物料统计</div>
+            <div class="tab-item" onclick="switchReportTab('adoption')">领养统计</div>
+        </div>
+        <div id="overviewTab" class="tab-content active">
+        <div class="chart-container">
+            <div class="chart-box">
+                <div class="chart-title">月度收容趋势</div>
+                <div class="bar-chart">
+                    <div class="bar-group"><div class="bar-value">45</div><div class="bar" style="height:90px;background:linear-gradient(180deg,#f6ad55,#ed8936);"></div><div class="bar-label">7月</div></div>
+                    <div class="bar-group"><div class="bar-value">62</div><div class="bar" style="height:124px;background:linear-gradient(180deg,#f6ad55,#ed8936);"></div><div class="bar-label">8月</div></div>
+                    <div class="bar-group"><div class="bar-value">78</div><div class="bar" style="height:156px;background:linear-gradient(180deg,#f6ad55,#ed8936);"></div><div class="bar-label">9月</div></div>
+                    <div class="bar-group"><div class="bar-value">55</div><div class="bar" style="height:110px;background:linear-gradient(180deg,#f6ad55,#ed8936);"></div><div class="bar-label">10月</div></div>
+                    <div class="bar-group"><div class="bar-value">92</div><div class="bar" style="height:184px;background:linear-gradient(180deg,#f6ad55,#ed8936);"></div><div class="bar-label">11月</div></div>
+                    <div class="bar-group"><div class="bar-value">128</div><div class="bar" style="height:200px;background:linear-gradient(180deg,#68d391,#48bb78);"></div><div class="bar-label">12月</div></div>
+                </div>
+            </div>
+            <div class="chart-box">
+                <div class="chart-title">动物去向分布</div>
+                <div class="pie-chart">
+                    <div class="pie-visual" style="background: conic-gradient(#48bb78 0deg 151deg, #ed8936 151deg 252deg, #4299e1 252deg 324deg, #fc8181 324deg 360deg);"></div>
+                    <div class="pie-legend">
+                        <div class="legend-item"><div class="legend-color" style="background:#48bb78;"></div><div class="legend-text">放养 <span class="legend-value">42%</span></div></div>
+                        <div class="legend-item"><div class="legend-color" style="background:#ed8936;"></div><div class="legend-text">领养 <span class="legend-value">28%</span></div></div>
+                        <div class="legend-item"><div class="legend-color" style="background:#4299e1;"></div><div class="legend-text">主人领回 <span class="legend-value">20%</span></div></div>
+                        <div class="legend-item"><div class="legend-color" style="background:#fc8181;"></div><div class="legend-text">在收容 <span class="legend-value">10%</span></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="section">
+            <div class="section-header"><h3 class="section-title">各小区收容统计</h3></div>
+            <table class="data-table">
+                <thead><tr><th>小区名称</th><th>收容数量</th><th>绝育数量</th><th>放养数量</th><th>领养数量</th><th>环比变化</th></tr></thead>
+                <tbody>
+                    <tr><td>阳光花园小区</td><td>35</td><td>28</td><td>18</td><td>8</td><td><span class="trend-up">↑ 12%</span></td></tr>
+                    <tr><td>幸福家园</td><td>28</td><td>22</td><td>14</td><td>6</td><td><span class="trend-up">↑ 8%</span></td></tr>
+                    <tr><td>绿色新城</td><td>22</td><td>18</td><td>10</td><td>5</td><td><span class="trend-down">↓ 3%</span></td></tr>
+                    <tr><td>翠湖花园</td><td>25</td><td>12</td><td>6</td><td>2</td><td><span class="trend-up">↑ 5%</span></td></tr>
+                    <tr><td>金色阳光城</td><td>18</td><td>6</td><td>4</td><td>1</td><td><span class="trend-down">↓ 2%</span></td></tr>
+                </tbody>
+            </table>
+        </div>
+        </div>
+        <div id="shelterTab" class="tab-content">
+            <div class="section">
+                <div class="section-header">
+                    <h3 class="section-title">收容统计明细</h3>
+                    <div style="display:flex;gap:8px;">
+                        <button class="btn btn-cyan" onclick="exportReport('shelter')">📥 导出Excel</button>
+                        <button class="btn btn-secondary" onclick="printReport('shelter')">🖨️ 打印报表</button>
+                    </div>
+                </div>
+                <table class="data-table">
+                    <thead><tr><th>月份</th><th>小区名称</th><th>收容数量</th><th>在途数量</th><th>已转运数量</th><th>待回收数量</th><th>环比变化</th></tr></thead>
+                    <tbody>
+                        <tr><td>2025-01</td><td>阳光花园小区</td><td>35</td><td>3</td><td>28</td><td>4</td><td><span class="trend-up">↑ 12%</span></td></tr>
+                        <tr><td>2025-01</td><td>幸福家园</td><td>28</td><td>2</td><td>22</td><td>4</td><td><span class="trend-up">↑ 8%</span></td></tr>
+                        <tr><td>2025-01</td><td>绿色新城</td><td>22</td><td>1</td><td>18</td><td>3</td><td><span class="trend-down">↓ 3%</span></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div id="medicalTab" class="tab-content">
+            <div class="section">
+                <div class="section-header">
+                    <h3 class="section-title">诊疗统计明细</h3>
+                    <div style="display:flex;gap:8px;">
+                        <button class="btn btn-cyan" onclick="exportReport('medical')">📥 导出Excel</button>
+                        <button class="btn btn-secondary" onclick="printReport('medical')">🖨️ 打印报表</button>
+                    </div>
+                </div>
+                <table class="data-table">
+                    <thead><tr><th>医院名称</th><th>绝育手术</th><th>疫苗接种</th><th>驱虫护理</th><th>芯片植入</th><th>安乐死</th></tr></thead>
+                    <tbody>
+                        <tr><td>爱心宠物医院</td><td>45</td><td>52</td><td>38</td><td>32</td><td>3</td></tr>
+                        <tr><td>瑞鹏宠物医院</td><td>38</td><td>45</td><td>30</td><td>28</td><td>2</td></tr>
+                        <tr><td>宠物中心医院</td><td>32</td><td>40</td><td>25</td><td>22</td><td>1</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div id="materialTab" class="tab-content">
+            <div class="section">
+                <div class="section-header">
+                    <h3 class="section-title">物料消耗统计</h3>
+                    <div style="display:flex;gap:8px;">
+                        <button class="btn btn-cyan" onclick="exportReport('material')">📥 导出Excel</button>
+                        <button class="btn btn-secondary" onclick="printReport('material')">🖨️ 打印报表</button>
+                    </div>
+                </div>
+                <table class="data-table">
+                    <thead><tr><th>物料类型</th><th>采购数量</th><th>下发数量</th><th>消耗数量</th><th>库存数量</th><th>消耗率</th></tr></thead>
+                    <tbody>
+                        <tr><td>狂犬疫苗</td><td>500支</td><td>300支</td><td>245支</td><td>255支</td><td>49%</td></tr>
+                        <tr><td>芯片</td><td>200个</td><td>150个</td><td>82个</td><td>118个</td><td>41%</td></tr>
+                        <tr><td>驱虫药</td><td>300支</td><td>200支</td><td>93支</td><td>207支</td><td>31%</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div id="adoptionTab" class="tab-content">
+            <div class="section">
+                <div class="section-header">
+                    <h3 class="section-title">领养统计明细</h3>
+                    <div style="display:flex;gap:8px;">
+                        <button class="btn btn-cyan" onclick="exportReport('adoption')">📥 导出Excel</button>
+                        <button class="btn btn-secondary" onclick="printReport('adoption')">🖨️ 打印报表</button>
+                    </div>
+                </div>
+                <table class="data-table">
+                    <thead><tr><th>月份</th><th>申请数量</th><th>通过数量</th><th>拒绝数量</th><th>已完成领养</th><th>打卡合格率</th></tr></thead>
+                    <tbody>
+                        <tr><td>2025-01</td><td>18</td><td>12</td><td>4</td><td>8</td><td>92%</td></tr>
+                        <tr><td>2024-12</td><td>22</td><td>15</td><td>5</td><td>14</td><td>88%</td></tr>
+                        <tr><td>2024-11</td><td>15</td><td>10</td><td>3</td><td>9</td><td>95%</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+    <script>
+        function updateTime(){const now=new Date();document.getElementById('currentTime').textContent=now.toLocaleString('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});}
+        setInterval(updateTime,1000);updateTime();
+        function switchReportTab(tabName){
+            document.querySelectorAll('.tab-item').forEach(t=>t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(tabName+'Tab').classList.add('active');
+        }
+        function exportReport(type){
+            const typeNames={'shelter':'收容统计','medical':'诊疗统计','material':'物料统计','adoption':'领养统计'};
+            alert(`正在导出 ${typeNames[type]||'报表'}...\n\n报表包含以下内容：\n1. 数据明细表格\n2. 统计图表\n3. 汇总分析\n\n请选择导出格式：\n• Excel (.xlsx)\n• CSV (.csv)\n• PDF (.pdf)`);
+        }
+        function printReport(type){
+            const typeNames={'shelter':'收容统计','medical':'诊疗统计','material':'物料统计','adoption':'领养统计'};
+            alert(`正在准备打印 ${typeNames[type]||'报表'}...\n\n打印设置：\n• 纸张：A4\n• 方向：纵向\n• 边距：标准\n• 页眉：系统名称 + 日期\n• 页脚：页码\n\n点击确定打开打印预览。`);
+        }
+    </script>
+</body>
+</html>

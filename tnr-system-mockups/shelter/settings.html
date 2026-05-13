@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系统设置 - 流浪动物 TNR 管理系统</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%); min-height: 100vh; display: flex; }
+        .sidebar { width: 260px; background: linear-gradient(180deg, #2d3748 0%, #1a202c 100%); color: white; padding: 24px; display: flex; flex-direction: column; min-height: 100vh; position: fixed; left: 0; top: 0; }
+        .sidebar-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-logo-icon { width: 44px; height: 44px; background: linear-gradient(135deg, #f6ad55, #ed8936); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+        .sidebar-logo h1 { font-size: 18px; font-weight: 600; color: white; }
+        .nav-menu { flex: 1; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 10px; margin-bottom: 8px; cursor: pointer; transition: all 0.3s ease; color: rgba(255,255,255,0.8); text-decoration: none; }
+        .nav-item:hover { background: rgba(255,255,255,0.1); color: white; }
+        .nav-item.active { background: linear-gradient(135deg, #f6ad55, #ed8936); color: white; }
+        .nav-icon { font-size: 20px; }
+        .nav-label { font-size: 15px; font-weight: 500; }
+        .nav-divider { height: 1px; background: rgba(255,255,255,0.1); margin: 20px 0; }
+        .user-section { padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); }
+        .user-info { display: flex; align-items: center; gap: 10px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 10px; }
+        .user-avatar { width: 36px; height: 36px; background: linear-gradient(135deg, #68d391, #48bb78); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        .user-details { flex: 1; }
+        .user-name { font-size: 14px; font-weight: 600; }
+        .user-role { font-size: 12px; color: rgba(255,255,255,0.6); }
+        .main-content { flex: 1; margin-left: 260px; padding: 24px; max-width: calc(100% - 260px); }
+        .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .page-title { font-size: 24px; font-weight: 600; color: #2d3748; }
+        .current-time { font-size: 14px; color: #718096; padding: 10px 20px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .section { background: white; border-radius: 16px; padding: 24px; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .section-title { font-size: 18px; font-weight: 600; color: #2d3748; display: flex; align-items: center; gap: 8px; }
+        .section-title::before { content: ''; width: 4px; height: 20px; background: linear-gradient(180deg, #718096, #4a5568); border-radius: 2px; }
+        .btn { padding: 10px 20px; border: none; border-radius: 10px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.3s ease; font-family: inherit; }
+        .btn-primary { background: linear-gradient(135deg, #718096, #4a5568); color: white; box-shadow: 0 4px 15px rgba(74,85,104,0.3); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(74,85,104,0.4); }
+        .btn-green { background: linear-gradient(135deg, #68d391, #48bb78); color: white; }
+        .btn-green:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(72,187,120,0.4); }
+        .btn-secondary { background: #f7fafc; color: #718096; border: 2px solid #e2e8f0; }
+        .btn-secondary:hover { background: #edf2f7; }
+        .btn-danger { background: linear-gradient(135deg, #fc8181, #f56565); color: white; }
+        .btn-danger:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(245,101,101,0.4); }
+        .form-group { margin-bottom: 20px; }
+        .form-label { display: block; font-size: 14px; font-weight: 600; color: #4a5568; margin-bottom: 8px; }
+        .form-input, .form-select, .form-textarea { width: 100%; max-width: 500px; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 14px; font-family: inherit; background: white; transition: all 0.3s; }
+        .form-textarea { min-height: 100px; resize: vertical; }
+        .form-input:focus, .form-select:focus, .form-textarea:focus { outline: none; border-color: #718096; box-shadow: 0 0 0 3px rgba(113,128,150,0.1); }
+        .form-hint { font-size: 12px; color: #a0aec0; margin-top: 4px; }
+        .setting-row { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid #edf2f7; }
+        .setting-row:last-child { border-bottom: none; }
+        .setting-info { flex: 1; }
+        .setting-name { font-size: 15px; font-weight: 600; color: #2d3748; margin-bottom: 4px; }
+        .setting-desc { font-size: 13px; color: #718096; }
+        .toggle { width: 48px; height: 26px; background: #cbd5e0; border-radius: 13px; position: relative; cursor: pointer; transition: all 0.3s; }
+        .toggle.active { background: linear-gradient(135deg, #68d391, #48bb78); }
+        .toggle::after { content: ''; width: 22px; height: 22px; background: white; border-radius: 50%; position: absolute; top: 2px; left: 2px; transition: all 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .toggle.active::after { left: 24px; }
+        .info-box { background: linear-gradient(135deg, #ebf8ff, #bee3f8); border-left: 4px solid #4299e1; padding: 16px; border-radius: 0 10px 10px 0; margin-bottom: 16px; }
+        .info-box .info-title { font-size: 14px; font-weight: 600; color: #2c5282; margin-bottom: 4px; }
+        .info-box .info-desc { font-size: 13px; color: #4a5568; }
+        .tab-bar { display: flex; gap: 8px; margin-bottom: 20px; background: white; padding: 8px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); }
+        .tab-item { padding: 10px 20px; border-radius: 8px; cursor: pointer; transition: all 0.3s; font-size: 14px; font-weight: 500; color: #718096; background: transparent; }
+        .tab-item:hover { background: #f7fafc; color: #2d3748; }
+        .tab-item.active { background: linear-gradient(135deg, #718096, #4a5568); color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .data-table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+        .data-table th { background: #f7fafc; padding: 12px 16px; text-align: left; font-size: 14px; font-weight: 600; color: #4a5568; border-bottom: 2px solid #edf2f7; }
+        .data-table td { padding: 12px 16px; border-bottom: 1px solid #edf2f7; font-size: 14px; color: #4a5568; }
+        .data-table tr:hover { background: #f7fafc; }
+        @media (max-width: 768px) { body { flex-direction: column; } .sidebar { width: 100%; position: relative; min-height: auto; } .nav-menu { display: none; } .main-content { margin-left: 0; max-width: 100%; padding: 16px; } }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-logo"><div class="sidebar-logo-icon">🐾</div><h1>TNR管理系统</h1></div>
+        <nav class="nav-menu">
+            <a href="homepage.html" class="nav-item"><span class="nav-icon">🏠</span><span class="nav-label">首页看板</span></a>
+            <a href="add-shelter.html" class="nav-item"><span class="nav-icon">➕</span><span class="nav-label">新增收容</span></a>
+            <a href="owner-return.html" class="nav-item"><span class="nav-icon">🏠</span><span class="nav-label">主人领回</span></a>
+            <div class="nav-divider"></div>
+            <a href="material.html" class="nav-item"><span class="nav-icon">📦</span><span class="nav-label">物料管理</span></a>
+            <a href="transfer.html" class="nav-item"><span class="nav-icon">🚚</span><span class="nav-label">转运管理</span></a>
+            <a href="release.html" class="nav-item"><span class="nav-icon">🌿</span><span class="nav-label">放养管理</span></a>
+            <a href="adoption.html" class="nav-item"><span class="nav-icon">👤</span><span class="nav-label">领养管理</span></a>
+            <div class="nav-divider"></div>
+            <a href="report.html" class="nav-item"><span class="nav-icon">📊</span><span class="nav-label">数据报表</span></a>
+            <a href="settings.html" class="nav-item active"><span class="nav-icon">⚙️</span><span class="nav-label">系统设置</span></a>
+        </nav>
+        <div class="user-section"><div class="user-info"><div class="user-avatar">管</div><div class="user-details"><div class="user-name">管理员</div><div class="user-role">系统管理员</div></div></div></div>
+    </aside>
+    <main class="main-content">
+        <div class="header-bar"><h2 class="page-title">系统设置</h2><div class="current-time" id="currentTime"></div></div>
+        <div class="tab-bar">
+            <div class="tab-item active" onclick="switchSettingsTab('basic')">基本信息</div>
+            <div class="tab-item" onclick="switchSettingsTab('account')">账号管理</div>
+            <div class="tab-item" onclick="switchSettingsTab('notice')">通知设置</div>
+            <div class="tab-item" onclick="switchSettingsTab('logs')">操作日志</div>
+        </div>
+        <div id="basicTab" class="tab-content active">
+        <div class="section">
+            <div class="section-header"><h3 class="section-title">基本信息</h3></div>
+            <div class="form-group"><label class="form-label">收容所名称</label><input type="text" class="form-input" id="shelterName" value="爱心流浪动物收容所"></div>
+            <div class="form-group"><label class="form-label">联系电话</label><input type="text" class="form-input" id="shelterPhone" value="0571-88888888"></div>
+            <div class="form-group"><label class="form-label">收容所地址</label><input type="text" class="form-input" id="shelterAddress" value="杭州市西湖区爱心路88号"></div>
+            <div class="form-group"><label class="form-label">备注说明</label><textarea class="form-textarea" id="shelterNote">本收容所专注于流浪猫TNR管理，服务周边15个社区。</textarea></div>
+            <button class="btn btn-primary" onclick="saveBasicInfo()">💾 保存修改</button>
+        </div>
+        <div class="section">
+            <div class="section-header"><h3 class="section-title">外部管理说明</h3></div>
+            <div class="info-box">
+                <div class="info-title">🏥 合作医院管理</div>
+                <div class="info-desc">合作医院信息需在官方管理平台进行设置和维护，本系统仅展示已配置的医院列表供选择使用。</div>
+            </div>
+            <div class="info-box">
+                <div class="info-title">🏘️ 小区管理</div>
+                <div class="info-desc">小区信息无需预先设置，在新增收容登记、搜索筛选等操作时直接输入小区名称即可使用。</div>
+            </div>
+        </div>
+        </div>
+        <div id="accountTab" class="tab-content">
+            <div class="section">
+                <div class="section-header"><h3 class="section-title">账号信息</h3></div>
+                <div class="form-group"><label class="form-label">当前账号</label><input type="text" class="form-input" value="admin" readonly></div>
+                <div class="form-group"><label class="form-label">账号角色</label><input type="text" class="form-input" value="系统管理员" readonly></div>
+                <div class="form-group"><label class="form-label">最后登录时间</label><input type="text" class="form-input" value="2025-01-15 09:30:00" readonly></div>
+            </div>
+            <div class="section">
+                <div class="section-header"><h3 class="section-title">修改密码</h3></div>
+                <div class="form-group"><label class="form-label">原密码</label><input type="password" class="form-input" id="oldPassword" placeholder="请输入原密码"></div>
+                <div class="form-group"><label class="form-label">新密码</label><input type="password" class="form-input" id="newPassword" placeholder="请输入新密码"></div>
+                <div class="form-group"><label class="form-label">确认新密码</label><input type="password" class="form-input" id="confirmPassword" placeholder="请再次输入新密码"></div>
+                <button class="btn btn-primary" onclick="changePassword()">🔐 修改密码</button>
+            </div>
+        </div>
+        <div id="noticeTab" class="tab-content">
+            <div class="section">
+                <div class="section-header"><h3 class="section-title">通知设置</h3></div>
+                <div class="setting-row"><div class="setting-info"><div class="setting-name">收容登记通知</div><div class="setting-desc">新动物收容登记时发送通知</div></div><div class="toggle active" onclick="toggleSetting(this)"></div></div>
+                <div class="setting-row"><div class="setting-info"><div class="setting-name">物料预警通知</div><div class="setting-desc">物料库存低于安全值时发送预警</div></div><div class="toggle active" onclick="toggleSetting(this)"></div></div>
+                <div class="setting-row"><div class="setting-info"><div class="setting-name">领养审核通知</div><div class="setting-desc">收到新的领养申请时发送通知</div></div><div class="toggle active" onclick="toggleSetting(this)"></div></div>
+                <div class="setting-row"><div class="setting-info"><div class="setting-name">转运到达通知</div><div class="setting-desc">动物到达医院时发送通知</div></div><div class="toggle" onclick="toggleSetting(this)"></div></div>
+                <div class="setting-row"><div class="setting-info"><div class="setting-name">放养确认通知</div><div class="setting-desc">物业确认放养时发送通知</div></div><div class="toggle" onclick="toggleSetting(this)"></div></div>
+            </div>
+        </div>
+        <div id="logsTab" class="tab-content">
+            <div class="section">
+                <div class="section-header"><h3 class="section-title">操作日志</h3><button class="btn btn-secondary" onclick="exportLogs()">📥 导出日志</button></div>
+                <table class="data-table">
+                    <thead><tr><th>操作时间</th><th>操作人</th><th>操作类型</th><th>操作内容</th><th>IP地址</th></tr></thead>
+                    <tbody>
+                        <tr><td>2025-01-15 14:30:22</td><td>管理员</td><td>收容登记</td><td>新增收容登记，阳光花园小区，3只动物</td><td>192.168.1.100</td></tr>
+                        <tr><td>2025-01-15 13:20:15</td><td>管理员</td><td>物料管理</td><td>物料下发出库，芯片50个→瑞鹏宠物医院</td><td>192.168.1.100</td></tr>
+                        <tr><td>2025-01-15 11:45:08</td><td>管理员</td><td>转运管理</td><td>转运下发完成，批次号TR20250115001</td><td>192.168.1.100</td></tr>
+                        <tr><td>2025-01-15 10:15:33</td><td>管理员</td><td>领养审核</td><td>审核通过领养申请 AD20250113001</td><td>192.168.1.100</td></tr>
+                        <tr><td>2025-01-15 09:30:00</td><td>管理员</td><td>系统登录</td><td>用户登录成功</td><td>192.168.1.100</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="section">
+            <div class="section-header"><h3 class="section-title">危险操作</h3></div>
+            <div class="setting-row"><div class="setting-info"><div class="setting-name">清除缓存数据</div><div class="setting-desc">清除系统缓存，不会影响业务数据</div></div><button class="btn btn-secondary" onclick="clearCache()">清除缓存</button></div>
+            <div class="setting-row"><div class="setting-info"><div class="setting-name">重置系统设置</div><div class="setting-desc">将所有设置恢复为默认值</div></div><button class="btn btn-danger" onclick="resetSettings()">重置设置</button></div>
+        </div>
+    </main>
+    <script>
+        function updateTime(){const now=new Date();document.getElementById('currentTime').textContent=now.toLocaleString('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});}
+        setInterval(updateTime,1000);updateTime();
+        function saveBasicInfo(){
+            const name=document.getElementById('shelterName').value;
+            const phone=document.getElementById('shelterPhone').value;
+            const address=document.getElementById('shelterAddress').value;
+            if(!name||!phone||!address){
+                alert('请填写完整信息');
+                return;
+            }
+            alert(`基本信息已保存！\n名称：${name}\n电话：${phone}\n地址：${address}`);
+        }
+        function toggleSetting(el){
+            el.classList.toggle('active');
+            const settingName=el.previousElementSibling.querySelector('.setting-name').textContent;
+            const status=el.classList.contains('active')?'开启':'关闭';
+            console.log(`${settingName} 已${status}`);
+        }
+        function clearCache(){
+            if(confirm('确定清除缓存数据吗？')){
+                alert('缓存已清除');
+            }
+        }
+        function resetSettings(){
+            if(confirm('确定重置所有系统设置吗？这将恢复为默认值。')){
+                document.querySelectorAll('.toggle').forEach(t=>t.classList.remove('active'));
+                alert('系统设置已重置为默认值');
+            }
+        }
+        function switchSettingsTab(tabName){
+            document.querySelectorAll('.tab-item').forEach(t=>t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(tabName+'Tab').classList.add('active');
+        }
+        function changePassword(){
+            const oldPwd=document.getElementById('oldPassword').value;
+            const newPwd=document.getElementById('newPassword').value;
+            const confirmPwd=document.getElementById('confirmPassword').value;
+            if(!oldPwd||!newPwd||!confirmPwd){
+                alert('请填写完整密码信息');
+                return;
+            }
+            if(newPwd!==confirmPwd){
+                alert('新密码与确认密码不一致');
+                return;
+            }
+            if(newPwd.length<6){
+                alert('新密码长度不能少于6位');
+                return;
+            }
+            alert('密码修改成功！');
+            document.getElementById('oldPassword').value='';
+            document.getElementById('newPassword').value='';
+            document.getElementById('confirmPassword').value='';
+        }
+        function exportLogs(){
+            alert('正在导出操作日志...\n\n日志包含所有系统操作记录，可导出为Excel或CSV格式。');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>物料供应链管理 - 流浪动物 TNR 管理系统</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%); min-height: 100vh; display: flex; }
+        .sidebar { width: 260px; background: linear-gradient(180deg, #2d3748 0%, #1a202c 100%); color: white; padding: 24px; display: flex; flex-direction: column; min-height: 100vh; position: fixed; left: 0; top: 0; }
+        .sidebar-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-logo-icon { width: 44px; height: 44px; background: linear-gradient(135deg, #f6ad55, #ed8936); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+        .sidebar-logo h1 { font-size: 18px; font-weight: 600; color: white; }
+        .nav-menu { flex: 1; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 10px; margin-bottom: 8px; cursor: pointer; transition: all 0.3s ease; color: rgba(255,255,255,0.8); text-decoration: none; }
+        .nav-item:hover { background: rgba(255,255,255,0.1); color: white; }
+        .nav-item.active { background: linear-gradient(135deg, #f6ad55, #ed8936); color: white; }
+        .nav-icon { font-size: 20px; }
+        .nav-label { font-size: 15px; font-weight: 500; }
+        .nav-divider { height: 1px; background: rgba(255,255,255,0.1); margin: 20px 0; }
+        .user-section { padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); }
+        .user-info { display: flex; align-items: center; gap: 10px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 10px; }
+        .user-avatar { width: 36px; height: 36px; background: linear-gradient(135deg, #68d391, #48bb78); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        .user-details { flex: 1; }
+        .user-name { font-size: 14px; font-weight: 600; }
+        .user-role { font-size: 12px; color: rgba(255,255,255,0.6); }
+        .main-content { flex: 1; margin-left: 260px; padding: 24px; max-width: calc(100% - 260px); }
+        .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .page-title { font-size: 24px; font-weight: 600; color: #2d3748; }
+        .current-time { font-size: 14px; color: #718096; padding: 10px 20px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .section { background: white; border-radius: 16px; padding: 24px; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .section-title { font-size: 18px; font-weight: 600; color: #2d3748; display: flex; align-items: center; gap: 8px; }
+        .section-title::before { content: ''; width: 4px; height: 20px; background: linear-gradient(180deg, #4299e1, #3182ce); border-radius: 2px; }
+        .btn { padding: 10px 20px; border: none; border-radius: 10px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.3s ease; font-family: inherit; }
+        .btn-primary { background: linear-gradient(135deg, #4299e1, #3182ce); color: white; box-shadow: 0 4px 15px rgba(66,153,225,0.3); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(66,153,225,0.4); }
+        .btn-warning { background: linear-gradient(135deg, #f6ad55, #ed8936); color: white; }
+        .btn-warning:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(237,137,54,0.4); }
+        .btn-green { background: linear-gradient(135deg, #68d391, #48bb78); color: white; }
+        .btn-green:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(72,187,120,0.4); }
+        .btn-secondary { background: #f7fafc; color: #718096; border: 2px solid #e2e8f0; }
+        .btn-secondary:hover { background: #edf2f7; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .stat-card { display: flex; flex-direction: column; align-items: center; padding: 20px 16px; border-radius: 14px; transition: all 0.3s ease; border: 2px solid transparent; }
+        .stat-card:hover { transform: translateY(-3px); }
+        .stat-card.yellow { background: linear-gradient(135deg, #fffaf0, #feebc8); }
+        .stat-card.yellow:hover { box-shadow: 0 8px 20px rgba(246,173,85,0.3); border-color: #f6ad55; }
+        .stat-card.green { background: linear-gradient(135deg, #f0fff4, #c6f6d5); }
+        .stat-card.green:hover { box-shadow: 0 8px 20px rgba(104,211,145,0.3); border-color: #68d391; }
+        .stat-card.red { background: linear-gradient(135deg, #fff5f5, #fed7d7); }
+        .stat-card.red:hover { box-shadow: 0 8px 20px rgba(245,101,101,0.3); border-color: #fc8181; }
+        .stat-card.blue { background: linear-gradient(135deg, #ebf8ff, #90cdf4); }
+        .stat-card.blue:hover { box-shadow: 0 8px 20px rgba(66,153,225,0.3); border-color: #4299e1; }
+        .stat-icon { font-size: 28px; margin-bottom: 8px; }
+        .stat-value { font-size: 28px; font-weight: 700; color: #2d3748; margin-bottom: 4px; }
+        .stat-label { font-size: 13px; color: #718096; font-weight: 500; }
+        .filter-bar { display: flex; gap: 12px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
+        .form-select, .form-input { padding: 10px 16px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 14px; font-family: inherit; background: white; transition: all 0.3s; }
+        .form-select:focus, .form-input:focus { outline: none; border-color: #4299e1; box-shadow: 0 0 0 3px rgba(66,153,225,0.1); }
+        table { width: 100%; border-collapse: collapse; }
+        thead th { background: #f7fafc; padding: 14px 16px; text-align: left; font-size: 14px; font-weight: 600; color: #4a5568; border-bottom: 2px solid #edf2f7; }
+        tbody td { padding: 14px 16px; border-bottom: 1px solid #edf2f7; font-size: 14px; color: #4a5568; }
+        tbody tr:hover { background: #f7fafc; }
+        .badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+        .badge-ok { background: #c6f6d5; color: #276749; }
+        .badge-low { background: #fefcbf; color: #975a16; }
+        .badge-out { background: #fed7d7; color: #9b2c2c; }
+        .actions-cell { display: flex; gap: 8px; }
+        .btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 6px; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+        .modal-overlay.show { display: flex; }
+        .modal { background: white; border-radius: 16px; padding: 24px; max-width: 550px; width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid #edf2f7; }
+        .modal-title { font-size: 18px; font-weight: 600; color: #2d3748; }
+        .modal-close { width: 32px; height: 32px; border: none; background: #f7fafc; border-radius: 8px; font-size: 20px; cursor: pointer; color: #718096; }
+        .modal-close:hover { background: #edf2f7; }
+        .form-group { margin-bottom: 16px; }
+        .form-label { display: block; font-size: 14px; font-weight: 500; color: #4a5568; margin-bottom: 8px; }
+        .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; padding-top: 16px; border-top: 2px solid #edf2f7; }
+        .tab-bar { display: flex; gap: 4px; margin-bottom: 20px; background: #f7fafc; padding: 4px; border-radius: 10px; }
+        .tab-item { flex: 1; padding: 10px 16px; text-align: center; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.3s; color: #718096; }
+        .tab-item:hover { color: #4299e1; }
+        .tab-item.active { background: white; color: #4299e1; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        @media (max-width: 768px) { body { flex-direction: column; } .sidebar { width: 100%; position: relative; min-height: auto; } .nav-menu { display: none; } .main-content { margin-left: 0; max-width: 100%; padding: 16px; } .stats-grid { grid-template-columns: repeat(2, 1fr); } table { font-size: 12px; } }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-logo"><div class="sidebar-logo-icon">🐾</div><h1>TNR管理系统</h1></div>
+        <nav class="nav-menu">
+            <a href="homepage.html" class="nav-item"><span class="nav-icon">🏠</span><span class="nav-label">首页看板</span></a>
+            <a href="add-shelter.html" class="nav-item"><span class="nav-icon">➕</span><span class="nav-label">新增收容</span></a>
+            <a href="owner-return.html" class="nav-item"><span class="nav-icon">🏠</span><span class="nav-label">主人领回</span></a>
+            <div class="nav-divider"></div>
+            <a href="material.html" class="nav-item active"><span class="nav-icon">📦</span><span class="nav-label">物料管理</span></a>
+            <a href="transfer.html" class="nav-item"><span class="nav-icon">🚚</span><span class="nav-label">转运管理</span></a>
+            <a href="release.html" class="nav-item"><span class="nav-icon">🌿</span><span class="nav-label">放养管理</span></a>
+            <a href="adoption.html" class="nav-item"><span class="nav-icon">👤</span><span class="nav-label">领养管理</span></a>
+            <div class="nav-divider"></div>
+            <a href="report.html" class="nav-item"><span class="nav-icon">📊</span><span class="nav-label">数据报表</span></a>
+            <a href="settings.html" class="nav-item"><span class="nav-icon">⚙️</span><span class="nav-label">系统设置</span></a>
+        </nav>
+        <div class="user-section"><div class="user-info"><div class="user-avatar">管</div><div class="user-details"><div class="user-name">管理员</div><div class="user-role">系统管理员</div></div></div></div>
+    </aside>
+    <main class="main-content">
+        <div class="header-bar"><h2 class="page-title">物料供应链管理</h2><div class="current-time" id="currentTime"></div></div>
+        <div class="stats-grid">
+            <div class="stat-card green"><span class="stat-icon">📦</span><span class="stat-value">156</span><span class="stat-label">物料种类</span></div>
+            <div class="stat-card yellow"><span class="stat-icon">📋</span><span class="stat-value">8</span><span class="stat-label">待采购单</span></div>
+            <div class="stat-card red"><span class="stat-icon">⚠️</span><span class="stat-value">3</span><span class="stat-label">库存预警</span></div>
+            <div class="stat-card blue"><span class="stat-icon">💰</span><span class="stat-value">¥2.4w</span><span class="stat-label">本月采购额</span></div>
+        </div>
+        <div class="tab-bar">
+            <div class="tab-item active" onclick="switchTab('stock')">库存台账</div>
+            <div class="tab-item" onclick="switchTab('purchase')">采购入库</div>
+            <div class="tab-item" onclick="switchTab('outbound')">下发出库</div>
+            <div class="tab-item" onclick="switchTab('trace')">流向查询</div>
+        </div>
+        <div id="stockTab" class="tab-content active">
+            <div class="section">
+                <div class="section-header">
+                    <h3 class="section-title">收容所库存台账</h3>
+                    <div style="display:flex;gap:12px;">
+                        <button class="btn btn-primary" onclick="openPurchaseModal()">📥 采购入库</button>
+                        <button class="btn btn-warning" onclick="openOutboundModal()">📤 下发出库</button>
+                    </div>
+                </div>
+                <div class="filter-bar">
+                    <select class="form-select" id="categoryFilter" onchange="filterMaterials()"><option value="">全部分类</option><option value="疫苗药品">疫苗药品</option><option value="芯片">芯片</option><option value="驱虫药">驱虫药</option><option value="笼具耗材">笼具耗材</option><option value="清洁消毒">清洁消毒</option></select>
+                    <select class="form-select" id="statusFilter" onchange="filterMaterials()"><option value="">全部状态</option><option value="充足">库存充足</option><option value="偏低">库存偏低</option><option value="耗尽">库存耗尽</option></select>
+                    <input type="text" class="form-input" id="searchInput" placeholder="搜索物料名称..." onkeyup="filterMaterials()" style="min-width:200px;">
+                </div>
+                <table id="materialTable">
+                    <thead><tr><th>物料编号</th><th>物料名称</th><th>分类</th><th>库存数量</th><th>安全库存</th><th>状态</th><th>最近采购</th><th>操作</th></tr></thead>
+                    <tbody>
+                        <tr><td>M001</td><td>狂犬疫苗</td><td>疫苗药品</td><td>45</td><td>50</td><td><span class="badge badge-low">偏低</span></td><td>2025-01-10</td><td><div class="actions-cell"><button class="btn btn-sm btn-warning" onclick="quickRestock('M001', '狂犬疫苗')">补货</button><button class="btn btn-sm btn-secondary" onclick="viewMaterialDetail('M001')">详情</button></div></td></tr>
+                        <tr><td>M002</td><td>猫粮（成猫）</td><td>饲料猫粮</td><td>200</td><td>100</td><td><span class="badge badge-ok">充足</span></td><td>2025-01-08</td><td><div class="actions-cell"><button class="btn btn-sm btn-secondary" onclick="viewMaterialDetail('M002')">详情</button></div></td></tr>
+                        <tr><td>M003</td><td>消毒液</td><td>清洁消毒</td><td>12</td><td>30</td><td><span class="badge badge-low">偏低</span></td><td>2025-01-05</td><td><div class="actions-cell"><button class="btn btn-sm btn-warning" onclick="quickRestock('M003', '消毒液')">补货</button><button class="btn btn-sm btn-secondary" onclick="viewMaterialDetail('M003')">详情</button></div></td></tr>
+                        <tr><td>M004</td><td>转运笼</td><td>笼具耗材</td><td>0</td><td>10</td><td><span class="badge badge-out">耗尽</span></td><td>2024-12-20</td><td><div class="actions-cell"><button class="btn btn-sm btn-warning" onclick="quickRestock('M004', '转运笼')">补货</button><button class="btn btn-sm btn-secondary" onclick="viewMaterialDetail('M004')">详情</button></div></td></tr>
+                        <tr><td>M005</td><td>芯片</td><td>芯片</td><td>500</td><td>200</td><td><span class="badge badge-ok">充足</span></td><td>2025-01-12</td><td><div class="actions-cell"><button class="btn btn-sm btn-secondary" onclick="viewMaterialDetail('M005')">详情</button></div></td></tr>
+                        <tr><td>M006</td><td>驱虫药</td><td>驱虫药</td><td>30</td><td>40</td><td><span class="badge badge-low">偏低</span></td><td>2025-01-06</td><td><div class="actions-cell"><button class="btn btn-sm btn-warning" onclick="quickRestock('M006', '驱虫药')">补货</button><button class="btn btn-sm btn-secondary" onclick="viewMaterialDetail('M006')">详情</button></div></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div id="purchaseTab" class="tab-content">
+            <div class="section">
+                <div class="section-header"><h3 class="section-title">物料采购入库</h3></div>
+                <div class="filter-bar">
+                    <select class="form-select"><option>全部状态</option><option>待入库</option><option>已入库</option></select>
+                    <input type="text" class="form-input" placeholder="搜索批号/供应商..." style="min-width:200px;">
+                </div>
+                <table>
+                    <thead><tr><th>采购单号</th><th>物料名称</th><th>数量</th><th>供应商</th><th>采购日期</th><th>批号</th><th>状态</th><th>操作</th></tr></thead>
+                    <tbody>
+                        <tr><td>PO20250115001</td><td>狂犬疫苗</td><td>100支</td><td>国药集团</td><td>2025-01-15</td><td>B20250115</td><td><span class="badge badge-ok">已入库</span></td><td><button class="btn btn-sm btn-secondary">查看</button></td></tr>
+                        <tr><td>PO20250114001</td><td>芯片</td><td>200个</td><td>信码科技</td><td>2025-01-14</td><td>C20250114</td><td><span class="badge badge-ok">已入库</span></td><td><button class="btn btn-sm btn-secondary">查看</button></td></tr>
+                        <tr><td>PO20250113001</td><td>驱虫药</td><td>50盒</td><td>派奥生物</td><td>2025-01-13</td><td>Q20250113</td><td><span class="badge badge-low">待入库</span></td><td><button class="btn btn-sm btn-primary">确认入库</button></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div id="outboundTab" class="tab-content">
+            <div class="section">
+                <div class="section-header"><h3 class="section-title">物料下发出库</h3></div>
+                <div class="filter-bar">
+                    <select class="form-select"><option>全部医院</option><option>爱心宠物医院</option><option>瑞鹏宠物医院</option><option>芭比堂动物医院</option></select>
+                    <select class="form-select"><option>全部状态</option><option>待确认</option><option>已接收</option></select>
+                    <input type="text" class="form-input" placeholder="搜索单号..." style="min-width:200px;">
+                </div>
+                <table>
+                    <thead><tr><th>下发单号</th><th>接收医院</th><th>物料名称</th><th>数量</th><th>下发日期</th><th>状态</th><th>操作</th></tr></thead>
+                    <tbody>
+                        <tr><td>OUT20250115001</td><td>爱心宠物医院</td><td>狂犬疫苗</td><td>20支</td><td>2025-01-15</td><td><span class="badge badge-ok">已接收</span></td><td><button class="btn btn-sm btn-secondary">查看</button></td></tr>
+                        <tr><td>OUT20250114001</td><td>瑞鹏宠物医院</td><td>芯片</td><td>50个</td><td>2025-01-14</td><td><span class="badge badge-ok">已接收</span></td><td><button class="btn btn-sm btn-secondary">查看</button></td></tr>
+                        <tr><td>OUT20250113001</td><td>芭比堂动物医院</td><td>驱虫药</td><td>30盒</td><td>2025-01-13</td><td><span class="badge badge-low">待确认</span></td><td><button class="btn btn-sm btn-secondary">查看</button></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div id="traceTab" class="tab-content">
+            <div class="section">
+                <div class="section-header"><h3 class="section-title">物料全流向追溯</h3></div>
+                <div class="filter-bar">
+                    <select class="form-select"><option>全部分类</option><option>疫苗药品</option><option>芯片</option><option>驱虫药</option></select>
+                    <input type="text" class="form-input" placeholder="搜索单号/医院..." style="min-width:200px;">
+                    <button class="btn btn-secondary">🔍 查询</button>
+                </div>
+                <table>
+                    <thead><tr><th>时间</th><th>单号</th><th>物料名称</th><th>类型</th><th>数量</th><th>来源/去向</th><th>操作人</th></tr></thead>
+                    <tbody>
+                        <tr><td>2025-01-15 10:30</td><td>PO20250115001</td><td>狂犬疫苗</td><td>采购入库</td><td>+100支</td><td>国药集团</td><td>管理员</td></tr>
+                        <tr><td>2025-01-15 14:20</td><td>OUT20250115001</td><td>狂犬疫苗</td><td>下发出库</td><td>-20支</td><td>→爱心宠物医院</td><td>管理员</td></tr>
+                        <tr><td>2025-01-14 09:15</td><td>PO20250114001</td><td>芯片</td><td>采购入库</td><td>+200个</td><td>信码科技</td><td>管理员</td></tr>
+                        <tr><td>2025-01-14 16:45</td><td>OUT20250114001</td><td>芯片</td><td>下发出库</td><td>-50个</td><td>→瑞鹏宠物医院</td><td>管理员</td></tr>
+                        <tr><td>2025-01-13 11:00</td><td>OUT20250113001</td><td>驱虫药</td><td>下发出库</td><td>-30盒</td><td>→芭比堂动物医院</td><td>管理员</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+    <div class="modal-overlay" id="purchaseModal">
+        <div class="modal">
+            <div class="modal-header"><h3 class="modal-title">📥 采购入库</h3><button class="modal-close" onclick="closeModal('purchaseModal')">×</button></div>
+            <div class="form-group"><label class="form-label">物料类型</label><select class="form-select" id="purchaseMaterialType"><option>疫苗药品</option><option>芯片</option><option>驱虫药</option><option>笼具耗材</option><option>清洁消毒</option></select></div>
+            <div class="form-group"><label class="form-label">物料名称</label><input type="text" class="form-input" id="purchaseMaterialName" placeholder="请输入物料名称"></div>
+            <div class="form-group"><label class="form-label">采购数量</label><input type="number" class="form-input" id="purchaseQuantity" placeholder="请输入采购数量" min="1"></div>
+            <div class="form-group"><label class="form-label">供应商</label><input type="text" class="form-input" id="purchaseSupplier" placeholder="请输入供应商名称"></div>
+            <div class="form-group"><label class="form-label">采购日期</label><input type="date" class="form-input" id="purchaseDate"></div>
+            <div class="form-group"><label class="form-label">批号</label><input type="text" class="form-input" id="purchaseBatch" placeholder="请输入批号"></div>
+            <div class="form-group" id="chipRangeGroup" style="display:none;"><label class="form-label">芯片号段</label><div style="display:flex;gap:12px;"><input type="text" class="form-input" placeholder="起始号" style="flex:1;"><span style="line-height:40px;">-</span><input type="text" class="form-input" placeholder="结束号" style="flex:1;"></div></div>
+            <div class="form-group"><label class="form-label">备注说明</label><textarea class="form-input" style="min-height:80px;" id="purchaseNote" placeholder="请输入备注说明"></textarea></div>
+            <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('purchaseModal')">取消</button><button class="btn btn-primary" onclick="submitPurchase()">提交入库</button></div>
+        </div>
+    </div>
+    <div class="modal-overlay" id="outboundModal">
+        <div class="modal">
+            <div class="modal-header"><h3 class="modal-title">📤 下发出库</h3><button class="modal-close" onclick="closeModal('outboundModal')">×</button></div>
+            <div class="form-group"><label class="form-label">接收医院</label><select class="form-select" id="outboundHospital"><option>爱心宠物医院</option><option>瑞鹏宠物医院</option><option>芭比堂动物医院</option></select></div>
+            <div class="form-group"><label class="form-label">物料类型</label><select class="form-select" id="outboundMaterialType" onchange="updateOutboundMaterials()"><option>疫苗药品</option><option>芯片</option><option>驱虫药</option><option>笼具耗材</option><option>清洁消毒</option></select></div>
+            <div class="form-group"><label class="form-label">物料名称</label><select class="form-select" id="outboundMaterial"><option>狂犬疫苗（库存：45支）</option><option>猫三联疫苗（库存：60支）</option><option>驱虫药（库存：30盒）</option></select></div>
+            <div class="form-group"><label class="form-label">下发数量</label><input type="number" class="form-input" id="outboundQuantity" placeholder="请输入下发数量" min="1"></div>
+            <div class="form-group" id="outboundChipGroup" style="display:none;"><label class="form-label">选择芯片号段</label><select class="form-select"><option>Chip001-Chip050</option><option>Chip051-Chip100</option><option>单个选择</option></select></div>
+            <div class="form-group"><label class="form-label">备注说明</label><textarea class="form-input" style="min-height:80px;" id="outboundNote" placeholder="请输入备注说明"></textarea></div>
+            <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('outboundModal')">取消</button><button class="btn btn-primary" onclick="submitOutbound()">提交下发</button></div>
+        </div>
+    </div>
+    <div class="modal-overlay" id="restockModal">
+        <div class="modal">
+            <div class="modal-header"><h3 class="modal-title">⚠️ 快速补货</h3><button class="modal-close" onclick="closeModal('restockModal')">×</button></div>
+            <div class="form-group"><label class="form-label">物料名称</label><input type="text" class="form-input" id="restockMaterialName" readonly></div>
+            <div class="form-group"><label class="form-label">当前库存</label><input type="text" class="form-input" id="restockCurrentStock" readonly></div>
+            <div class="form-group"><label class="form-label">补货数量</label><input type="number" class="form-input" id="restockQuantity" placeholder="请输入补货数量" min="1"></div>
+            <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('restockModal')">取消</button><button class="btn btn-primary" onclick="submitRestock()">提交补货</button></div>
+        </div>
+    </div>
+    <script>
+        function updateTime(){const now=new Date();document.getElementById('currentTime').textContent=now.toLocaleString('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});}
+        setInterval(updateTime,1000);updateTime();
+        function switchTab(tabId){document.querySelectorAll('.tab-item').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));event.target.classList.add('active');document.getElementById(tabId+'Tab').classList.add('active');}
+        function openPurchaseModal(){document.getElementById('purchaseMaterialType').onchange=function(){document.getElementById('chipRangeGroup').style.display=this.value==='芯片'?'block':'none';};document.getElementById('purchaseModal').classList.add('show');}
+        function openOutboundModal(){document.getElementById('outboundMaterialType').onchange=function(){document.getElementById('outboundChipGroup').style.display=this.value==='芯片'?'block':'none';};document.getElementById('outboundModal').classList.add('show');}
+        function updateOutboundMaterials(){document.getElementById('outboundChipGroup').style.display=document.getElementById('outboundMaterialType').value==='芯片'?'block':'none';}
+        function closeModal(modalId){document.getElementById(modalId).classList.remove('show');}
+        function submitPurchase(){const type=document.getElementById('purchaseMaterialType').value;const name=document.getElementById('purchaseMaterialName').value;const qty=document.getElementById('purchaseQuantity').value;const supplier=document.getElementById('purchaseSupplier').value;const date=document.getElementById('purchaseDate').value;const batch=document.getElementById('purchaseBatch').value;if(!name||!qty||!supplier||!date){alert('请填写完整信息');return;}alert(`采购入库成功！\n物料：${name}\n类型：${type}\n数量：${qty}\n供应商：${supplier}\n日期：${date}\n批号：${batch}`);closeModal('purchaseModal');}
+        function submitOutbound(){const hospital=document.getElementById('outboundHospital').value;const material=document.getElementById('outboundMaterial').value;const qty=document.getElementById('outboundQuantity').value;if(!qty){alert('请输入下发数量');return;}alert(`下发出库成功！\n接收医院：${hospital}\n物料：${material}\n数量：${qty}\n等待医院确认接收...`);closeModal('outboundModal');}
+        function quickRestock(id,name){const stock=prompt(`${name} 当前库存不足，请输入补货数量：`);if(stock&&parseInt(stock)>0){alert(`补货申请已提交：${name} × ${stock}件`);}}
+        function submitRestock(){const qty=document.getElementById('restockQuantity').value;if(!qty||parseInt(qty)<=0){alert('请输入有效补货数量');return;}alert(`补货成功！`);closeModal('restockModal');}
+        function viewMaterialDetail(id){const details={'M001':'物料编号：M001\n名称：狂犬疫苗\n分类：疫苗药品\n库存：45\n安全库存：50\n单位：支\n规格：1ml/支\n供应商：国药集团\n备注：需冷藏保存','M002':'物料编号：M002\n名称：猫粮（成猫）\n分类：饲料猫粮\n库存：200\n安全库存：100\n单位：袋\n规格：5kg/袋\n供应商：皇家宠物食品','M003':'物料编号：M003\n名称：消毒液\n分类：清洁消毒\n库存：12\n安全库存：30\n单位：瓶\n规格：500ml/瓶','M004':'物料编号：M004\n名称：转运笼\n分类：笼具耗材\n库存：0\n安全库存：10\n单位：个\n规格：60×40×50cm','M005':'物料编号：M005\n名称：芯片\n分类：芯片\n库存：500\n安全库存：200\n单位：个\n供应商：信码科技','M006':'物料编号：M006\n名称：驱虫药\n分类：驱虫药\n库存：30\n安全库存：40\n单位：盒\n规格：6片/盒'};alert(details[id]||'暂无详细信息');}
+        function filterMaterials(){const category=document.getElementById('categoryFilter').value;const status=document.getElementById('statusFilter').value;const search=document.getElementById('searchInput').value.toLowerCase();const rows=document.querySelectorAll('#materialTable tbody tr');rows.forEach(row=>{const cat=row.cells[2].textContent;const name=row.cells[1].textContent.toLowerCase();const stat=row.querySelector('.badge')?.textContent||'';let show=true;if(category&&cat!==category)show=false;if(status&&stat!==status)show=false;if(search&&!name.includes(search))show=false;row.style.display=show?'table-row':'none';});}
+    </script>
+</body>
+</html>

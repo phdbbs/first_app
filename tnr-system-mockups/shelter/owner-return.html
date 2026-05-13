@@ -5,526 +5,471 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>主人领回登记 - 流浪动物 TNR 管理系统</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
             min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            overflow: hidden;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 24px 32px;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
         }
 
-        .header h1 {
-            font-size: 24px;
-            font-weight: 600;
+        .sidebar {
+            width: 260px;
+            background: linear-gradient(180deg, #2d3748 0%, #1a202c 100%);
+            color: white; padding: 24px;
+            display: flex; flex-direction: column;
+            min-height: 100vh; position: fixed; left: 0; top: 0;
         }
 
-        .header-info {
-            font-size: 14px;
-            opacity: 0.9;
+        .sidebar-logo {
+            display: flex; align-items: center; gap: 12px;
+            margin-bottom: 32px; padding-bottom: 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
         }
 
-        .form-container {
-            padding: 32px;
+        .sidebar-logo-icon {
+            width: 44px; height: 44px;
+            background: linear-gradient(135deg, #f6ad55, #ed8936);
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px;
+        }
+
+        .sidebar-logo h1 { font-size: 18px; font-weight: 600; color: white; }
+
+        .nav-menu { flex: 1; }
+
+        .nav-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 16px; border-radius: 10px; margin-bottom: 8px;
+            cursor: pointer; transition: all 0.3s ease;
+            color: rgba(255,255,255,0.8); text-decoration: none;
+        }
+
+        .nav-item:hover { background: rgba(255,255,255,0.1); color: white; }
+        .nav-item.active { background: linear-gradient(135deg, #f6ad55, #ed8936); color: white; }
+
+        .nav-icon { font-size: 20px; }
+        .nav-label { font-size: 15px; font-weight: 500; }
+        .nav-divider { height: 1px; background: rgba(255,255,255,0.1); margin: 20px 0; }
+
+        .user-section { padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); }
+
+        .user-info {
+            display: flex; align-items: center; gap: 10px;
+            padding: 12px; background: rgba(255,255,255,0.05); border-radius: 10px;
+        }
+
+        .user-avatar {
+            width: 36px; height: 36px;
+            background: linear-gradient(135deg, #68d391, #48bb78);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold;
+        }
+
+        .user-details { flex: 1; }
+        .user-name { font-size: 14px; font-weight: 600; }
+        .user-role { font-size: 12px; color: rgba(255,255,255,0.6); }
+
+        .main-content {
+            flex: 1; margin-left: 260px; padding: 24px;
+            max-width: calc(100% - 260px);
+        }
+
+        .header-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .page-title { font-size: 24px; font-weight: 600; color: #2d3748; }
+
+        .current-time {
+            font-size: 14px; color: #718096;
+            padding: 10px 20px; background: white;
+            border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
         }
 
         .alert-box {
-            background: #fff3cd;
-            border-left: 4px solid #ffc107;
-            padding: 16px 20px;
-            border-radius: 8px;
-            margin-bottom: 24px;
-            display: flex;
-            align-items: start;
-            gap: 12px;
+            background: linear-gradient(135deg, #fffaf0, #feebc8);
+            border-left: 4px solid #f6ad55;
+            padding: 16px 20px; border-radius: 8px;
+            margin-bottom: 24px; display: flex; align-items: start; gap: 12px;
         }
 
-        .alert-icon {
-            font-size: 24px;
-        }
-
-        .alert-content h3 {
-            color: #856404;
-            font-size: 16px;
-            margin-bottom: 4px;
-        }
-
-        .alert-content p {
-            color: #856404;
-            font-size: 14px;
-            line-height: 1.6;
-        }
+        .alert-icon { font-size: 24px; }
+        .alert-content h3 { color: #c05621; font-size: 16px; margin-bottom: 4px; }
+        .alert-content p { color: #c05621; font-size: 14px; line-height: 1.6; }
 
         .section {
-            margin-bottom: 24px;
-            border: 1px solid #e0e0e0;
-            border-radius: 12px;
+            background: white; border-radius: 16px;
+            margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.06);
             overflow: hidden;
         }
 
         .section-header {
-            background: #f5f7fa;
-            padding: 16px 24px;
-            border-bottom: 1px solid #e0e0e0;
-            display: flex;
-            align-items: center;
-            gap: 12px;
+            background: #f7fafc; padding: 16px 24px;
+            border-bottom: 1px solid #edf2f7;
+            display: flex; align-items: center; gap: 12px;
         }
 
         .section-icon {
-            width: 32px;
-            height: 32px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            width: 32px; height: 32px;
+            background: linear-gradient(135deg, #f6ad55, #ed8936);
             border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 18px;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 18px;
         }
 
-        .section-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: #333;
-        }
+        .section-title { font-size: 18px; font-weight: 600; color: #2d3748; }
+        .section-body { padding: 24px; }
 
-        .section-body {
-            padding: 24px;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            margin-bottom: 20px;
-        }
+        .form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
 
         .form-label {
-            font-size: 14px;
-            font-weight: 500;
-            color: #555;
-            display: flex;
-            align-items: center;
-            gap: 4px;
+            font-size: 14px; font-weight: 500; color: #555;
+            display: flex; align-items: center; gap: 4px;
         }
 
-        .required {
-            color: #e74c3c;
+        .required { color: #e53e3e; }
+
+        .form-input, .form-select {
+            padding: 12px 16px; border: 2px solid #e2e8f0;
+            border-radius: 10px; font-size: 14px;
+            transition: all 0.3s; font-family: inherit;
+            background: white;
         }
 
-        .form-input {
-            padding: 12px 16px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 14px;
-            transition: all 0.3s;
-        }
-
-        .form-input:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        .form-input:focus, .form-select:focus {
+            outline: none; border-color: #f6ad55;
+            box-shadow: 0 0 0 3px rgba(246,173,85,0.1);
         }
 
         .form-textarea {
-            padding: 12px 16px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 14px;
-            resize: vertical;
-            min-height: 80px;
-            font-family: inherit;
+            padding: 12px 16px; border: 2px solid #e2e8f0;
+            border-radius: 10px; font-size: 14px;
+            resize: vertical; min-height: 80px; font-family: inherit;
+        }
+
+        .form-textarea:focus {
+            outline: none; border-color: #f6ad55;
+            box-shadow: 0 0 0 3px rgba(246,173,85,0.1);
+        }
+
+        .filter-bar {
+            display: flex; gap: 16px; align-items: center;
+            margin-bottom: 20px; flex-wrap: wrap;
+        }
+
+        .filter-label {
+            font-size: 14px; font-weight: 500; color: #555;
         }
 
         .pet-selector {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 16px;
-            margin-top: 16px;
+            gap: 16px; margin-top: 16px;
         }
 
         .pet-card {
-            border: 2px solid #e0e0e0;
-            border-radius: 12px;
-            padding: 16px;
-            cursor: pointer;
-            transition: all 0.3s;
+            border: 2px solid #e2e8f0; border-radius: 12px;
+            padding: 16px; cursor: pointer; transition: all 0.3s;
             position: relative;
         }
 
         .pet-card:hover {
-            border-color: #667eea;
+            border-color: #f6ad55;
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+            box-shadow: 0 4px 12px rgba(246,173,85,0.2);
         }
 
         .pet-card.selected {
-            border-color: #667eea;
-            background: #f0f4ff;
+            border-color: #f6ad55;
+            background: linear-gradient(135deg, #fffaf0, #feebc8);
         }
 
         .pet-card.selected::after {
-            content: '✓';
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            width: 24px;
-            height: 24px;
-            background: #667eea;
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            content: '✓'; position: absolute; top: 10px; right: 10px;
+            width: 24px; height: 24px;
+            background: linear-gradient(135deg, #f6ad55, #ed8936);
+            color: white; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
             font-size: 14px;
         }
 
         .pet-photo {
-            width: 100%;
-            aspect-ratio: 1;
-            object-fit: cover;
-            border-radius: 8px;
-            margin-bottom: 12px;
-            background: #f0f0f0;
+            width: 100%; aspect-ratio: 1; object-fit: cover;
+            border-radius: 8px; margin-bottom: 12px; background: #f0f0f0;
         }
 
-        .pet-info {
-            font-size: 14px;
-        }
-
-        .pet-id {
-            font-weight: 600;
-            color: #667eea;
-            margin-bottom: 4px;
-        }
-
-        .pet-detail {
-            color: #666;
-            font-size: 13px;
-        }
+        .pet-info { font-size: 14px; }
+        .pet-id { font-weight: 600; color: #ed8936; margin-bottom: 4px; }
+        .pet-detail { color: #666; font-size: 13px; }
 
         .signature-pad {
-            border: 2px solid #ddd;
-            border-radius: 12px;
-            background: white;
-            cursor: crosshair;
-            touch-action: none;
-            width: 100%;
-            height: 250px;
+            border: 2px solid #e2e8f0; border-radius: 12px;
+            background: white; cursor: crosshair; touch-action: none;
+            width: 100%; height: 250px;
         }
 
-        .signature-actions {
-            display: flex;
-            gap: 12px;
-            margin-top: 16px;
+        .signature-actions { display: flex; gap: 12px; margin-top: 16px; }
+
+        .btn {
+            padding: 12px 24px; border: none; border-radius: 10px;
+            font-size: 14px; font-weight: 500; cursor: pointer;
+            transition: all 0.3s ease; font-family: inherit;
         }
 
-        .clear-btn {
-            background: #f5f5f5;
-            color: #666;
-            border: 1px solid #ddd;
-            padding: 10px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
+        .btn-secondary {
+            background: #f7fafc; color: #718096;
+            border: 2px solid #e2e8f0;
+        }
+
+        .btn-secondary:hover { background: #edf2f7; }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #f6ad55, #ed8936);
+            color: white;
+            box-shadow: 0 4px 15px rgba(246,173,85,0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(246,173,85,0.4);
+        }
+
+        .btn-green {
+            background: linear-gradient(135deg, #68d391, #48bb78);
+            color: white;
+            box-shadow: 0 4px 15px rgba(104,211,145,0.3);
+        }
+
+        .btn-green:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(104,211,145,0.4);
         }
 
         .submit-section {
-            display: flex;
-            gap: 16px;
-            justify-content: flex-end;
-            margin-top: 32px;
-        }
-
-        .cancel-btn {
-            background: white;
-            color: #666;
-            border: 1px solid #ddd;
-            padding: 14px 32px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 500;
-            transition: all 0.3s;
-        }
-
-        .cancel-btn:hover {
-            background: #f5f5f5;
-        }
-
-        .submit-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 14px 40px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 600;
-            transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        .submit-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+            display: flex; gap: 16px; justify-content: flex-end;
+            margin-top: 32px; padding-top: 24px;
+            border-top: 2px solid #edf2f7;
         }
 
         .status-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 500;
+            display: inline-block; padding: 4px 12px;
+            border-radius: 20px; font-size: 12px; font-weight: 500;
         }
 
-        .status-archived {
-            background: #d4edda;
-            color: #155724;
-        }
+        .status-archived { background: #c6f6d5; color: #276749; }
 
         .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
+            display: none; position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5); z-index: 1000;
+            align-items: center; justify-content: center;
         }
 
-        .modal.active {
-            display: flex;
-        }
+        .modal.active { display: flex; }
 
         .modal-content {
-            background: white;
-            border-radius: 16px;
-            padding: 32px;
-            max-width: 500px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
+            background: white; border-radius: 16px; padding: 32px;
+            max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto;
         }
 
-        .success-animation {
-            text-align: center;
-            padding: 40px 0;
-        }
+        .success-animation { text-align: center; padding: 40px 0; }
 
         .success-icon {
-            width: 80px;
-            height: 80px;
-            background: #27ae60;
+            width: 80px; height: 80px;
+            background: linear-gradient(135deg, #68d391, #48bb78);
             border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 20px;
-            font-size: 40px;
-            color: white;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 20px; font-size: 40px; color: white;
         }
 
         .document-preview {
-            background: #f9f9f9;
-            border: 1px solid #eee;
-            border-radius: 8px;
-            padding: 20px;
-            margin-top: 20px;
+            background: #f7fafc; border: 1px solid #edf2f7;
+            border-radius: 8px; padding: 20px; margin-top: 20px;
             font-family: 'Courier New', monospace;
-            font-size: 12px;
-            line-height: 1.8;
-            text-align: left;
+            font-size: 12px; line-height: 1.8; text-align: left;
         }
 
         .document-title {
-            text-align: center;
-            font-weight: bold;
-            font-size: 16px;
-            margin-bottom: 16px;
+            text-align: center; font-weight: bold;
+            font-size: 16px; margin-bottom: 16px;
         }
 
         @media (max-width: 768px) {
-            .header {
-                flex-direction: column;
-                gap: 12px;
-                text-align: center;
-            }
-            
-            .submit-section {
-                flex-direction: column;
-            }
-            
-            .cancel-btn, .submit-btn {
-                width: 100%;
-            }
-            
-            .pet-selector {
-                grid-template-columns: 1fr;
-            }
+            body { flex-direction: column; }
+            .sidebar { width: 100%; position: relative; min-height: auto; }
+            .nav-menu { display: none; }
+            .main-content { margin-left: 0; max-width: 100%; padding: 16px; }
+            .submit-section { flex-direction: column; }
+            .pet-selector { grid-template-columns: 1fr; }
+            .filter-bar { flex-direction: column; align-items: stretch; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- 头部 -->
-        <div class="header">
-            <h1>🏠 主人领回登记</h1>
-            <div class="header-info">
-                <span id="currentDate"></span> | 
-                <span id="operatorName">操作员：张管理员</span>
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <div class="sidebar-logo-icon">🐾</div>
+            <h1>TNR管理系统</h1>
+        </div>
+        <nav class="nav-menu">
+            <a href="homepage.html" class="nav-item">
+                <span class="nav-icon">🏠</span><span class="nav-label">首页看板</span>
+            </a>
+            <a href="add-shelter.html" class="nav-item">
+                <span class="nav-icon">➕</span><span class="nav-label">新增收容</span>
+            </a>
+            <a href="owner-return.html" class="nav-item active">
+                <span class="nav-icon">🏠</span><span class="nav-label">主人领回</span>
+            </a>
+            <div class="nav-divider"></div>
+            <a href="material.html" class="nav-item">
+                <span class="nav-icon">📦</span><span class="nav-label">物料管理</span>
+            </a>
+            <a href="transfer.html" class="nav-item">
+                <span class="nav-icon">🚚</span><span class="nav-label">转运管理</span>
+            </a>
+            <a href="release.html" class="nav-item">
+                <span class="nav-icon">🌿</span><span class="nav-label">放养管理</span>
+            </a>
+            <a href="adoption.html" class="nav-item">
+                <span class="nav-icon">👤</span><span class="nav-label">领养管理</span>
+            </a>
+            <div class="nav-divider"></div>
+            <a href="report.html" class="nav-item">
+                <span class="nav-icon">📊</span><span class="nav-label">数据报表</span>
+            </a>
+            <a href="settings.html" class="nav-item">
+                <span class="nav-icon">⚙️</span><span class="nav-label">系统设置</span>
+            </a>
+        </nav>
+        <div class="user-section">
+            <div class="user-info">
+                <div class="user-avatar">管</div>
+                <div class="user-details">
+                    <div class="user-name">管理员</div>
+                    <div class="user-role">系统管理员</div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="header-bar">
+            <h2 class="page-title">主人领回登记</h2>
+            <div class="current-time" id="currentDate"></div>
+        </div>
+
+        <div class="alert-box">
+            <div class="alert-icon">⚠️</div>
+            <div class="alert-content">
+                <h3>注意事项</h3>
+                <p>此操作用于现场找到原主人的情况。录入宠主信息并电子签字确认后，系统将直接出库归档，终止后续诊疗转运流程。请确保信息真实有效。</p>
             </div>
         </div>
 
-        <!-- 表单容器 -->
-        <div class="form-container">
-            <!-- 提示信息 -->
-            <div class="alert-box">
-                <div class="alert-icon">⚠️</div>
-                <div class="alert-content">
-                    <h3>注意事项</h3>
-                    <p>此操作用于现场找到原主人的情况。录入宠主信息并电子签字确认后，系统将直接出库归档，终止后续诊疗转运流程。请确保信息真实有效。</p>
+        <form id="ownerReturnForm">
+            <div class="section">
+                <div class="section-header">
+                    <div class="section-icon">🐕</div>
+                    <div class="section-title">选择在途宠物</div>
+                </div>
+                <div class="section-body">
+                    <div class="filter-bar">
+                        <span class="filter-label">按小区筛选：</span>
+                        <select class="form-select" id="communityFilter" onchange="filterPets()" style="min-width:200px;">
+                            <option value="">全部小区</option>
+                            <option value="阳光花园小区">阳光花园小区</option>
+                            <option value="幸福家园">幸福家园</option>
+                            <option value="绿色新城">绿色新城</option>
+                            <option value="翠湖花园">翠湖花园</option>
+                            <option value="金色阳光城">金色阳光城</option>
+                        </select>
+                        <span class="filter-label" id="petCount">共 6 只在途宠物</span>
+                    </div>
+                    <div class="pet-selector" id="petSelector"></div>
                 </div>
             </div>
 
-            <form id="ownerReturnForm">
-                <!-- 选择在途宠物 -->
-                <div class="section">
-                    <div class="section-header">
-                        <div class="section-icon">🐕</div>
-                        <div class="section-title">选择在途宠物</div>
+            <div class="section">
+                <div class="section-header">
+                    <div class="section-icon" style="background:linear-gradient(135deg,#68d391,#48bb78);">👤</div>
+                    <div class="section-title">宠主信息登记</div>
+                </div>
+                <div class="section-body">
+                    <div class="form-group">
+                        <label class="form-label"><span class="required">*</span> 宠主姓名</label>
+                        <input type="text" class="form-input" id="ownerName" placeholder="请输入宠主姓名" required>
                     </div>
-                    <div class="section-body">
-                        <label class="form-label">
-                            <span class="required">*</span> 请选择要被领回的宠物（状态：在途）
-                        </label>
-                        <div class="pet-selector" id="petSelector">
-                            <!-- 宠物卡片将由 JS 动态生成 -->
+                    <div class="form-group">
+                        <label class="form-label"><span class="required">*</span> 联系电话</label>
+                        <input type="tel" class="form-input" id="ownerPhone" placeholder="请输入手机号码" pattern="[0-9]{11}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label"><span class="required">*</span> 身份证信息</label>
+                        <input type="text" class="form-input" id="ownerIdCard" placeholder="请输入身份证号码" pattern="[0-9]{17}[0-9Xx]" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label"><span class="required">*</span> 领回原因备注</label>
+                        <textarea class="form-textarea" id="returnReason" placeholder="请详细说明领回原因，如：走失寻找、临时寄养等" required></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <div class="section-icon" style="background:linear-gradient(135deg,#68d391,#48bb78);">✍️</div>
+                    <div class="section-title">宠主电子签名确认</div>
+                </div>
+                <div class="section-body">
+                    <div class="form-group">
+                        <label class="form-label">请宠主在下方签名区域手写签名确认</label>
+                        <canvas class="signature-pad" id="signaturePad"></canvas>
+                        <div class="signature-actions">
+                            <button type="button" class="btn btn-secondary" onclick="clearSignature()">🗑️ 清除签名</button>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- 宠主信息区 -->
-                <div class="section">
-                    <div class="section-header">
-                        <div class="section-icon">👤</div>
-                        <div class="section-title">宠主信息登记</div>
-                    </div>
-                    <div class="section-body">
-                        <div class="form-group">
-                            <label class="form-label">
-                                <span class="required">*</span> 宠主姓名
-                            </label>
-                            <input type="text" class="form-input" id="ownerName" placeholder="请输入宠主姓名" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">
-                                <span class="required">*</span> 联系电话
-                            </label>
-                            <input type="tel" class="form-input" id="ownerPhone" placeholder="请输入手机号码" pattern="[0-9]{11}" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">
-                                <span class="required">*</span> 身份证信息
-                            </label>
-                            <input type="text" class="form-input" id="ownerIdCard" placeholder="请输入身份证号码" pattern="[0-9]{17}[0-9Xx]" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">
-                                <span class="required">*</span> 领回原因备注
-                            </label>
-                            <textarea class="form-textarea" id="returnReason" placeholder="请详细说明领回原因，如：走失寻找、临时寄养等" required></textarea>
-                        </div>
-                    </div>
-                </div>
+            <div class="submit-section">
+                <button type="button" class="btn btn-secondary" onclick="window.history.back()">❌ 取消</button>
+                <button type="submit" class="btn btn-green">✅ 确认出库归档</button>
+            </div>
+        </form>
+    </main>
 
-                <!-- 确认区 -->
-                <div class="section">
-                    <div class="section-header">
-                        <div class="section-icon">✍️</div>
-                        <div class="section-title">宠主电子签名确认</div>
-                    </div>
-                    <div class="section-body">
-                        <div class="form-group">
-                            <label class="form-label">请宠主在下方签名区域手写签名确认</label>
-                            <canvas class="signature-pad" id="signaturePad"></canvas>
-                            <div class="signature-actions">
-                                <button type="button" class="clear-btn" onclick="clearSignature()">🗑️ 清除签名</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 提交按钮 -->
-                <div class="submit-section">
-                    <button type="button" class="cancel-btn" onclick="window.history.back()">❌ 取消</button>
-                    <button type="submit" class="submit-btn">✅ 确认出库归档</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- 提交成功弹窗 -->
     <div class="modal" id="successModal">
         <div class="modal-content">
             <div class="success-animation">
                 <div class="success-icon">✓</div>
-                <h3 style="margin-bottom: 16px; color: #333;">主人领回登记成功！</h3>
-                <p style="color: #666; margin-bottom: 24px;">
+                <h3 style="margin-bottom: 16px; color: #2d3748;">主人领回登记成功！</h3>
+                <p style="color: #718096; margin-bottom: 24px;">
                     宠物已出库归档，状态：<span class="status-badge status-archived">已归档</span>
                 </p>
-                
                 <div class="document-preview">
                     <div class="document-title">流浪动物主人领回登记表</div>
                     <div id="documentContent"></div>
                 </div>
-                
                 <div style="margin-top: 24px; display: flex; gap: 12px;">
-                    <button class="cancel-btn" style="flex: 1;" onclick="printDocument()">🖨️ 打印单据</button>
-                    <button class="submit-btn" style="flex: 1;" onclick="closeModal()">✓ 确定</button>
+                    <button class="btn btn-secondary" style="flex: 1;" onclick="printDocument()">🖨️ 打印单据</button>
+                    <button class="btn btn-green" style="flex: 1;" onclick="closeModal()">✓ 确定</button>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // 显示当前日期
         function showCurrentDate() {
             const now = new Date();
             const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long', hour: '2-digit', minute: '2-digit' };
             document.getElementById('currentDate').textContent = now.toLocaleDateString('zh-CN', options);
         }
 
-        // 模拟在途宠物数据
         const inTransitPets = [
             { id: 'TNR241215001', community: '阳光花园小区', date: '2024-12-15', photo: null },
             { id: 'TNR241215002', community: '阳光花园小区', date: '2024-12-15', photo: null },
@@ -534,12 +479,10 @@
             { id: 'TNR241213001', community: '绿色新城', date: '2024-12-13', photo: null }
         ];
 
-        // 渲染宠物选择器
-        function renderPetSelector() {
+        function renderPetSelector(pets) {
             const container = document.getElementById('petSelector');
             let html = '';
-            
-            inTransitPets.forEach(pet => {
+            pets.forEach(pet => {
                 html += `
                     <div class="pet-card" onclick="selectPet(this, '${pet.id}')">
                         <img src="${pet.photo || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22200%22 viewBox=%220 0 200 200%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22200%22 height=%22200%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-size=%2240%22 fill=%22%23ccc%22%3E🐕%3C/text%3E%3C/svg%3E'}" alt="${pet.id}" class="pet-photo">
@@ -552,28 +495,28 @@
                     </div>
                 `;
             });
-            
             container.innerHTML = html;
+            document.getElementById('petCount').textContent = `共 ${pets.length} 只在途宠物`;
         }
 
-        // 选择宠物
+        function filterPets() {
+            const community = document.getElementById('communityFilter').value;
+            const filtered = community ? inTransitPets.filter(p => p.community === community) : inTransitPets;
+            selectedPetId = null;
+            renderPetSelector(filtered);
+        }
+
         let selectedPetId = null;
         function selectPet(card, petId) {
-            // 移除其他选中状态
             document.querySelectorAll('.pet-card').forEach(c => c.classList.remove('selected'));
-            // 添加当前选中状态
             card.classList.add('selected');
             selectedPetId = petId;
         }
 
-        // 签名板初始化
         const canvas = document.getElementById('signaturePad');
         const ctx = canvas.getContext('2d');
-        let isDrawing = false;
-        let lastX = 0;
-        let lastY = 0;
+        let isDrawing = false, lastX = 0, lastY = 0;
 
-        // 适配高分辨率屏幕和容器大小
         function resizeCanvas() {
             const container = canvas.parentElement;
             const ratio = Math.max(window.devicePixelRatio || 1, 1);
@@ -583,98 +526,54 @@
             canvas.style.width = '100%';
             canvas.style.height = '250px';
         }
-        
+
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
 
-        ctx.strokeStyle = '#000';
+        ctx.strokeStyle = '#2d3748';
         ctx.lineWidth = 2;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
 
-        function startDrawing(e) {
-            isDrawing = true;
-            [lastX, lastY] = getCoordinates(e);
-        }
-
+        function startDrawing(e) { isDrawing = true; [lastX, lastY] = getCoordinates(e); }
         function draw(e) {
-            if (!isDrawing) return;
-            e.preventDefault();
-            
+            if (!isDrawing) return; e.preventDefault();
             const [x, y] = getCoordinates(e);
-            
-            ctx.beginPath();
-            ctx.moveTo(lastX, lastY);
-            ctx.lineTo(x, y);
-            ctx.stroke();
-            
+            ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(x, y); ctx.stroke();
             [lastX, lastY] = [x, y];
         }
-
-        function stopDrawing() {
-            isDrawing = false;
-        }
-
+        function stopDrawing() { isDrawing = false; }
         function getCoordinates(e) {
             const rect = canvas.getBoundingClientRect();
             let clientX, clientY;
-            
-            if (e.touches && e.touches.length > 0) {
-                clientX = e.touches[0].clientX;
-                clientY = e.touches[0].clientY;
-            } else {
-                clientX = e.clientX;
-                clientY = e.clientY;
-            }
-            
-            return [
-                clientX - rect.left,
-                clientY - rect.top
-            ];
+            if (e.touches && e.touches.length > 0) { clientX = e.touches[0].clientX; clientY = e.touches[0].clientY; }
+            else { clientX = e.clientX; clientY = e.clientY; }
+            return [clientX - rect.left, clientY - rect.top];
         }
 
-        // 鼠标事件
         canvas.addEventListener('mousedown', startDrawing);
         canvas.addEventListener('mousemove', draw);
         canvas.addEventListener('mouseup', stopDrawing);
         canvas.addEventListener('mouseout', stopDrawing);
-
-        // 触摸事件
         canvas.addEventListener('touchstart', startDrawing);
         canvas.addEventListener('touchmove', draw);
         canvas.addEventListener('touchend', stopDrawing);
 
-        // 清除签名
-        function clearSignature() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-        }
+        function clearSignature() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
 
-        // 表单提交
         document.getElementById('ownerReturnForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            
-            // 验证选择宠物
-            if (!selectedPetId) {
-                alert('请选择一只在途宠物');
-                return;
-            }
-            
-            // 验证签名
+            if (!selectedPetId) { alert('请选择一只在途宠物'); return; }
             const isEmpty = ctx.getImageData(0, 0, canvas.width, canvas.height).data.every((val) => val === 0);
-            if (isEmpty) {
-                alert('请宠主先进行电子签名');
-                return;
-            }
-            
-            // 获取表单数据
+            if (isEmpty) { alert('请宠主先进行电子签名'); return; }
+
             const ownerName = document.getElementById('ownerName').value;
             const ownerPhone = document.getElementById('ownerPhone').value;
             const ownerIdCard = document.getElementById('ownerIdCard').value;
             const returnReason = document.getElementById('returnReason').value;
             const date = new Date().toLocaleString('zh-CN');
-            
-            // 生成单据内容
-            const documentContent = `
+
+            document.getElementById('documentContent').innerHTML = `
                 <div>单据编号：RETURN-${Date.now()}</div>
                 <div>登记时间：${date}</div>
                 <div>操作员：张管理员</div>
@@ -688,26 +587,14 @@
                 <div>状态：<span class="status-badge status-archived">已归档</span></div>
                 <div>备注：原主人认领，流程终止</div>
             `;
-            
-            document.getElementById('documentContent').innerHTML = documentContent;
             document.getElementById('successModal').classList.add('active');
         });
 
-        // 关闭弹窗
-        function closeModal() {
-            document.getElementById('successModal').classList.remove('active');
-            // 可以跳转到列表页或首页
-            // window.location.href = 'shelter-list.html';
-        }
+        function closeModal() { document.getElementById('successModal').classList.remove('active'); }
+        function printDocument() { window.print(); }
 
-        // 打印单据
-        function printDocument() {
-            window.print();
-        }
-
-        // 初始化
         showCurrentDate();
-        renderPetSelector();
+        renderPetSelector(inTransitPets);
     </script>
 </body>
 </html>

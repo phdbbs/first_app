@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>动物回收放养管理 - 流浪动物 TNR 管理系统</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%); min-height: 100vh; display: flex; }
+        .sidebar { width: 260px; background: linear-gradient(180deg, #2d3748 0%, #1a202c 100%); color: white; padding: 24px; display: flex; flex-direction: column; min-height: 100vh; position: fixed; left: 0; top: 0; }
+        .sidebar-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-logo-icon { width: 44px; height: 44px; background: linear-gradient(135deg, #f6ad55, #ed8936); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+        .sidebar-logo h1 { font-size: 18px; font-weight: 600; color: white; }
+        .nav-menu { flex: 1; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 10px; margin-bottom: 8px; cursor: pointer; transition: all 0.3s ease; color: rgba(255,255,255,0.8); text-decoration: none; }
+        .nav-item:hover { background: rgba(255,255,255,0.1); color: white; }
+        .nav-item.active { background: linear-gradient(135deg, #f6ad55, #ed8936); color: white; }
+        .nav-icon { font-size: 20px; }
+        .nav-label { font-size: 15px; font-weight: 500; }
+        .nav-divider { height: 1px; background: rgba(255,255,255,0.1); margin: 20px 0; }
+        .user-section { padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); }
+        .user-info { display: flex; align-items: center; gap: 10px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 10px; }
+        .user-avatar { width: 36px; height: 36px; background: linear-gradient(135deg, #68d391, #48bb78); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        .user-details { flex: 1; }
+        .user-name { font-size: 14px; font-weight: 600; }
+        .user-role { font-size: 12px; color: rgba(255,255,255,0.6); }
+        .main-content { flex: 1; margin-left: 260px; padding: 24px; max-width: calc(100% - 260px); }
+        .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .page-title { font-size: 24px; font-weight: 600; color: #2d3748; }
+        .current-time { font-size: 14px; color: #718096; padding: 10px 20px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .section { background: white; border-radius: 16px; padding: 24px; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .section-title { font-size: 18px; font-weight: 600; color: #2d3748; display: flex; align-items: center; gap: 8px; }
+        .section-title::before { content: ''; width: 4px; height: 20px; background: linear-gradient(180deg, #22d3ee, #06b6d4); border-radius: 2px; }
+        .btn { padding: 10px 20px; border: none; border-radius: 10px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.3s ease; font-family: inherit; }
+        .btn-primary { background: linear-gradient(135deg, #22d3ee, #06b6d4); color: white; box-shadow: 0 4px 15px rgba(6,182,212,0.3); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(6,182,212,0.4); }
+        .btn-warning { background: linear-gradient(135deg, #f6ad55, #ed8936); color: white; }
+        .btn-warning:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(237,137,54,0.4); }
+        .btn-green { background: linear-gradient(135deg, #68d391, #48bb78); color: white; }
+        .btn-green:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(72,187,120,0.4); }
+        .btn-secondary { background: #f7fafc; color: #718096; border: 2px solid #e2e8f0; }
+        .btn-secondary:hover { background: #edf2f7; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .stat-card { display: flex; flex-direction: column; align-items: center; padding: 20px 16px; border-radius: 14px; transition: all 0.3s ease; border: 2px solid transparent; }
+        .stat-card:hover { transform: translateY(-3px); }
+        .stat-card.cyan { background: linear-gradient(135deg, #e6fffa, #b2f5ea); }
+        .stat-card.cyan:hover { box-shadow: 0 8px 20px rgba(34,211,238,0.3); border-color: #22d3ee; }
+        .stat-card.yellow { background: linear-gradient(135deg, #fffaf0, #feebc8); }
+        .stat-card.yellow:hover { box-shadow: 0 8px 20px rgba(246,173,85,0.3); border-color: #f6ad55; }
+        .stat-card.green { background: linear-gradient(135deg, #f0fff4, #c6f6d5); }
+        .stat-card.green:hover { box-shadow: 0 8px 20px rgba(104,211,145,0.3); border-color: #68d391; }
+        .stat-card.blue { background: linear-gradient(135deg, #ebf8ff, #90cdf4); }
+        .stat-card.blue:hover { box-shadow: 0 8px 20px rgba(66,153,225,0.3); border-color: #4299e1; }
+        .stat-card.purple { background: linear-gradient(135deg, #faf5ff, #e9d8fd); }
+        .stat-card.purple:hover { box-shadow: 0 8px 20px rgba(168,85,247,0.3); border-color: #a855f7; }
+        .stat-icon { font-size: 28px; margin-bottom: 8px; }
+        .stat-value { font-size: 28px; font-weight: 700; color: #2d3748; margin-bottom: 4px; }
+        .stat-label { font-size: 13px; color: #718096; font-weight: 500; }
+        .filter-bar { display: flex; gap: 12px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
+        .form-select, .form-input { padding: 10px 16px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 14px; font-family: inherit; background: white; transition: all 0.3s; }
+        .form-select:focus, .form-input:focus { outline: none; border-color: #22d3ee; box-shadow: 0 0 0 3px rgba(6,182,212,0.1); }
+        table { width: 100%; border-collapse: collapse; }
+        thead th { background: #f7fafc; padding: 14px 16px; text-align: left; font-size: 14px; font-weight: 600; color: #4a5568; border-bottom: 2px solid #edf2f7; }
+        tbody td { padding: 14px 16px; border-bottom: 1px solid #edf2f7; font-size: 14px; color: #4a5568; }
+        tbody tr:hover { background: #f7fafc; }
+        .badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+        .badge-wait { background: #fefcbf; color: #975a16; }
+        .badge-recover { background: #e9d8fd; color: #6b21a8; }
+        .badge-done { background: #c6f6d5; color: #276749; }
+        .badge-confirm { background: #ebf8ff; color: #2b6cb0; }
+        .actions-cell { display: flex; gap: 8px; }
+        .btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 6px; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+        .modal-overlay.show { display: flex; }
+        .modal { background: white; border-radius: 16px; padding: 24px; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid #edf2f7; }
+        .modal-title { font-size: 18px; font-weight: 600; color: #2d3748; }
+        .modal-close { width: 32px; height: 32px; border: none; background: #f7fafc; border-radius: 8px; font-size: 20px; cursor: pointer; color: #718096; }
+        .modal-close:hover { background: #edf2f7; }
+        .form-group { margin-bottom: 16px; }
+        .form-label { display: block; font-size: 14px; font-weight: 500; color: #4a5568; margin-bottom: 8px; }
+        .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; padding-top: 16px; border-top: 2px solid #edf2f7; }
+        .animal-list { max-height: 150px; overflow-y: auto; border: 2px solid #e2e8f0; border-radius: 10px; padding: 8px; }
+        .animal-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-radius: 8px; cursor: pointer; }
+        .animal-item:hover { background: #f7fafc; }
+        .animal-item.selected { background: #e6fffa; }
+        .tab-bar { display: flex; gap: 4px; margin-bottom: 20px; background: #f7fafc; padding: 4px; border-radius: 10px; }
+        .tab-item { flex: 1; padding: 10px 16px; text-align: center; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.3s; color: #718096; }
+        .tab-item:hover { color: #22d3ee; }
+        .tab-item.active { background: white; color: #22d3ee; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        @media (max-width: 768px) { body { flex-direction: column; } .sidebar { width: 100%; position: relative; min-height: auto; } .nav-menu { display: none; } .main-content { margin-left: 0; max-width: 100%; padding: 16px; } .stats-grid { grid-template-columns: repeat(2, 1fr); } table { font-size: 12px; } }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-logo"><div class="sidebar-logo-icon">🐾</div><h1>TNR管理系统</h1></div>
+        <nav class="nav-menu">
+            <a href="homepage.html" class="nav-item"><span class="nav-icon">🏠</span><span class="nav-label">首页看板</span></a>
+            <a href="add-shelter.html" class="nav-item"><span class="nav-icon">➕</span><span class="nav-label">新增收容</span></a>
+            <a href="owner-return.html" class="nav-item"><span class="nav-icon">🏠</span><span class="nav-label">主人领回</span></a>
+            <div class="nav-divider"></div>
+            <a href="material.html" class="nav-item"><span class="nav-icon">📦</span><span class="nav-label">物料管理</span></a>
+            <a href="transfer.html" class="nav-item"><span class="nav-icon">🚚</span><span class="nav-label">转运管理</span></a>
+            <a href="release.html" class="nav-item active"><span class="nav-icon">🌿</span><span class="nav-label">放养管理</span></a>
+            <a href="adoption.html" class="nav-item"><span class="nav-icon">👤</span><span class="nav-label">领养管理</span></a>
+            <div class="nav-divider"></div>
+            <a href="report.html" class="nav-item"><span class="nav-icon">📊</span><span class="nav-label">数据报表</span></a>
+            <a href="settings.html" class="nav-item"><span class="nav-icon">⚙️</span><span class="nav-label">系统设置</span></a>
+        </nav>
+        <div class="user-section"><div class="user-info"><div class="user-avatar">管</div><div class="user-details"><div class="user-name">管理员</div><div class="user-role">系统管理员</div></div></div></div>
+    </aside>
+    <main class="main-content">
+        <div class="header-bar"><h2 class="page-title">动物回收放养管理</h2><div class="current-time" id="currentTime"></div></div>
+        <div class="stats-grid">
+            <div class="stat-card purple"><span class="stat-icon">🏥</span><span class="stat-value">12</span><span class="stat-label">待回收</span></div>
+            <div class="stat-card cyan"><span class="stat-icon">🌿</span><span class="stat-value">24</span><span class="stat-label">待放养</span></div>
+            <div class="stat-card yellow"><span class="stat-icon">📋</span><span class="stat-value">12</span><span class="stat-label">待物业确认</span></div>
+            <div class="stat-card green"><span class="stat-icon">✅</span><span class="stat-value">86</span><span class="stat-label">已放养</span></div>
+        </div>
+        <div class="tab-bar">
+            <div class="tab-item active" onclick="switchTab('recover')">治愈回收</div>
+            <div class="tab-item" onclick="switchTab('release')">放养登记</div>
+            <div class="tab-item" onclick="switchTab('confirm')">放养确认</div>
+            <div class="tab-item" onclick="switchTab('record')">放养台账</div>
+        </div>
+        <div id="recoverTab" class="tab-content active">
+            <div class="section">
+                <div class="section-header">
+                    <h3 class="section-title">治愈动物回收</h3>
+                    <button class="btn btn-primary" onclick="openRecoverModal()">🏥 回收动物</button>
+                </div>
+                <div class="filter-bar">
+                    <select class="form-select"><option>全部医院</option><option>爱心宠物医院</option><option>瑞鹏宠物医院</option><option>芭比堂动物医院</option></select>
+                    <select class="form-select" id="recoverStatusFilter"><option value="">全部状态</option><option value="待回收">待回收</option><option value="已回收">已回收</option></select>
+                    <input type="text" class="form-input" placeholder="搜索动物编号..." style="min-width:200px;">
+                </div>
+                <table>
+                    <thead><tr><th>动物编号</th><th>动物名称</th><th>来源医院</th><th>绝育状态</th><th>芯片号</th><th>回收状态</th><th>操作</th></tr></thead>
+                    <tbody>
+                        <tr><td>A001</td><td>橘猫-大橘</td><td>爱心宠物医院</td><td>已绝育</td><td>Chip001</td><td><span class="badge badge-recover">待回收</span></td><td><div class="actions-cell"><button class="btn btn-sm btn-green" onclick="confirmRecover('A001')">确认回收</button><button class="btn btn-sm btn-secondary" onclick="viewAnimalDetail('A001')">详情</button></div></td></tr>
+                        <tr><td>A002</td><td>狸花猫-花花</td><td>瑞鹏宠物医院</td><td>已绝育</td><td>Chip002</td><td><span class="badge badge-recover">待回收</span></td><td><div class="actions-cell"><button class="btn btn-sm btn-green" onclick="confirmRecover('A002')">确认回收</button><button class="btn btn-sm btn-secondary" onclick="viewAnimalDetail('A002')">详情</button></div></td></tr>
+                        <tr><td>A003</td><td>奶牛猫-小黑</td><td>芭比堂动物医院</td><td>已绝育</td><td>Chip003</td><td><span class="badge badge-done">已回收</span></td><td><div class="actions-cell"><button class="btn btn-sm btn-secondary" onclick="viewAnimalDetail('A003')">详情</button></div></td></tr>
+                        <tr><td>A004</td><td>三花猫-美美</td><td>爱心宠物医院</td><td>已绝育</td><td>Chip004</td><td><span class="badge badge-done">已回收</span></td><td><div class="actions-cell"><button class="btn btn-sm btn-secondary" onclick="viewAnimalDetail('A004')">详情</button></div></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div id="releaseTab" class="tab-content">
+            <div class="section">
+                <div class="section-header">
+                    <h3 class="section-title">小区放养登记</h3>
+                    <button class="btn btn-primary" onclick="openReleaseModal()">➕ 新建放养单</button>
+                </div>
+                <div class="filter-bar">
+                    <select class="form-select" id="communityFilter" onchange="filterReleases()"><option value="">全部小区</option><option value="阳光花园小区">阳光花园小区</option><option value="幸福家园">幸福家园</option><option value="绿色新城">绿色新城</option><option value="翠湖花园">翠湖花园</option></select>
+                    <select class="form-select" id="releaseStatusFilter" onchange="filterReleases()"><option value="">全部状态</option><option value="待放养">待放养</option><option value="待物业确认">待物业确认</option><option value="已放养">已放养</option></select>
+                    <input type="text" class="form-input" id="searchInput" placeholder="搜索编号..." onkeyup="filterReleases()" style="min-width:200px;">
+                </div>
+                <table id="releaseTable">
+                    <thead><tr><th>放养编号</th><th>动物数量</th><th>放养小区</th><th>绝育状态</th><th>放养状态</th><th>计划日期</th><th>操作</th></tr></thead>
+                    <tbody>
+                        <tr><td>RL20250115001</td><td>8只</td><td>花园社区</td><td>已绝育</td><td><span class="badge badge-wait">待放养</span></td><td>2025-01-16</td><td><div class="actions-cell"><button class="btn btn-sm btn-green" onclick="confirmRelease('RL20250115001')">放养</button><button class="btn btn-sm btn-secondary" onclick="viewReleaseDetail('RL20250115001')">详情</button></div></td></tr>
+                        <tr><td>RL20250114001</td><td>5只</td><td>阳光花园小区</td><td>已绝育</td><td><span class="badge badge-confirm">待物业确认</span></td><td>2025-01-15</td><td><div class="actions-cell"><button class="btn btn-sm btn-warning" onclick="remindProperty('RL20250114001')">催促</button><button class="btn btn-sm btn-secondary" onclick="viewReleaseDetail('RL20250114001')">详情</button></div></td></tr>
+                        <tr><td>RL20250113001</td><td>6只</td><td>幸福家园</td><td>已绝育</td><td><span class="badge badge-done">已放养</span></td><td>2025-01-13</td><td><div class="actions-cell"><button class="btn btn-sm btn-secondary" onclick="viewReleaseDetail('RL20250113001')">详情</button></div></td></tr>
+                        <tr><td>RL20250112001</td><td>4只</td><td>绿色新城</td><td>已绝育</td><td><span class="badge badge-done">已放养</span></td><td>2025-01-12</td><td><div class="actions-cell"><button class="btn btn-sm btn-secondary" onclick="viewReleaseDetail('RL20250112001')">详情</button></div></td></tr>
+                        <tr><td>RL20250111001</td><td>10只</td><td>翠湖花园</td><td>已绝育</td><td><span class="badge badge-wait">待放养</span></td><td>2025-01-17</td><td><div class="actions-cell"><button class="btn btn-sm btn-green" onclick="confirmRelease('RL20250111001')">放养</button><button class="btn btn-sm btn-secondary" onclick="viewReleaseDetail('RL20250111001')">详情</button></div></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div id="confirmTab" class="tab-content">
+            <div class="section">
+                <div class="section-header"><h3 class="section-title">放养物业确认</h3></div>
+                <table>
+                    <thead><tr><th>放养编号</th><th>放养小区</th><th>物业联系人</th><th>联系电话</th><th>放养数量</th><th>确认状态</th><th>操作</th></tr></thead>
+                    <tbody>
+                        <tr><td>RL20250114001</td><td>阳光花园小区</td><td>张经理</td><td>138****5678</td><td>5只</td><td><span class="badge badge-confirm">待确认</span></td><td><div class="actions-cell"><button class="btn btn-sm btn-green" onclick="propertyConfirm('RL20250114001')">物业确认</button><button class="btn btn-sm btn-secondary" onclick="viewPropertyConfirm('RL20250114001')">详情</button></div></td></tr>
+                        <tr><td>RL20250110001</td><td>金色阳光城</td><td>李经理</td><td>139****1234</td><td>7只</td><td><span class="badge badge-done">已确认</span></td><td><div class="actions-cell"><button class="btn btn-sm btn-secondary" onclick="viewPropertyConfirm('RL20250110001')">详情</button></div></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div id="recordTab" class="tab-content">
+            <div class="section">
+                <div class="section-header">
+                    <h3 class="section-title">放养台账</h3>
+                    <div style="display:flex;gap:12px;">
+                        <button class="btn btn-secondary" onclick="exportReleaseRecord()">📥 导出</button>
+                        <button class="btn btn-secondary" onclick="printReleaseRecord()">🖨️ 打印</button>
+                    </div>
+                </div>
+                <div class="filter-bar">
+                    <select class="form-select"><option>全部小区</option><option>阳光花园小区</option><option>幸福家园</option><option>绿色新城</option></select>
+                    <input type="month" class="form-input">
+                    <button class="btn btn-secondary">🔍 查询</button>
+                </div>
+                <table>
+                    <thead><tr><th>放养编号</th><th>放养小区</th><th>动物数量</th><th>放养日期</th><th>物业确认人</th><th>确认时间</th><th>操作</th></tr></thead>
+                    <tbody>
+                        <tr><td>RL20250113001</td><td>幸福家园</td><td>6只</td><td>2025-01-13</td><td>王经理</td><td>2025-01-13 18:00</td><td><button class="btn btn-sm btn-secondary" onclick="viewReleaseDetail('RL20250113001')">详情</button></td></tr>
+                        <tr><td>RL20250112001</td><td>绿色新城</td><td>4只</td><td>2025-01-12</td><td>赵经理</td><td>2025-01-12 17:00</td><td><button class="btn btn-sm btn-secondary" onclick="viewReleaseDetail('RL20250112001')">详情</button></td></tr>
+                        <tr><td>RL20250110001</td><td>金色阳光城</td><td>7只</td><td>2025-01-10</td><td>李经理</td><td>2025-01-10 16:30</td><td><button class="btn btn-sm btn-secondary" onclick="viewReleaseDetail('RL20250110001')">详情</button></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+    <div class="modal-overlay" id="recoverModal">
+        <div class="modal">
+            <div class="modal-header"><h3 class="modal-title">🏥 治愈动物回收</h3><button class="modal-close" onclick="closeModal('recoverModal')">×</button></div>
+            <div class="form-group"><label class="form-label">来源医院</label><select class="form-select" id="recoverHospital"><option>爱心宠物医院</option><option>瑞鹏宠物医院</option><option>芭比堂动物医院</option></select></div>
+            <div class="form-group"><label class="form-label">选择动物</label><div class="animal-list" id="recoverAnimalList"></div></div>
+            <div class="form-group"><label class="form-label">回收备注</label><textarea class="form-input" style="min-height:80px;" id="recoverNote" placeholder="请输入回收备注信息"></textarea></div>
+            <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('recoverModal')">取消</button><button class="btn btn-primary" onclick="submitRecover()">确认回收</button></div>
+        </div>
+    </div>
+    <div class="modal-overlay" id="releaseModal">
+        <div class="modal">
+            <div class="modal-header"><h3 class="modal-title">新建放养单</h3><button class="modal-close" onclick="closeModal('releaseModal')">×</button></div>
+            <div class="form-group"><label class="form-label">放养小区</label><input type="text" class="form-input" id="releaseCommunity" placeholder="请输入放养小区名称"></div>
+            <div class="form-group"><label class="form-label">选择动物</label><div class="animal-list" id="releaseAnimalList"></div></div>
+            <div class="form-group"><label class="form-label">计划放养日期</label><input type="date" class="form-input" id="releaseDate"></div>
+            <div class="form-group"><label class="form-label">放养地点</label><input type="text" class="form-input" id="releaseLocation" placeholder="请输入具体放养地点"></div>
+            <div class="form-group"><label class="form-label">备注说明</label><textarea class="form-input" style="min-height:80px;" id="releaseNote" placeholder="请输入备注说明"></textarea></div>
+            <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('releaseModal')">取消</button><button class="btn btn-primary" onclick="submitRelease()">创建放养单</button></div>
+        </div>
+    </div>
+    <div class="modal-overlay" id="propertyConfirmModal">
+        <div class="modal">
+            <div class="modal-header"><h3 class="modal-title">物业确认放养</h3><button class="modal-close" onclick="closeModal('propertyConfirmModal')">×</button></div>
+            <div class="form-group"><label class="form-label">放养编号</label><input type="text" class="form-input" id="confirmReleaseId" readonly></div>
+            <div class="form-group"><label class="form-label">物业确认人</label><input type="text" class="form-input" id="propertyName" placeholder="请输入物业确认人姓名"></div>
+            <div class="form-group"><label class="form-label">联系电话</label><input type="tel" class="form-input" id="propertyPhone" placeholder="请输入联系电话"></div>
+            <div class="form-group"><label class="form-label">确认时间</label><input type="datetime-local" class="form-input" id="confirmTime"></div>
+            <div class="form-group"><label class="form-label">备注</label><textarea class="form-input" style="min-height:60px;" id="confirmNote" placeholder="请输入备注"></textarea></div>
+            <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('propertyConfirmModal')">取消</button><button class="btn btn-green" onclick="submitPropertyConfirm()">确认放养</button></div>
+        </div>
+    </div>
+    <script>
+        function updateTime(){const now=new Date();document.getElementById('currentTime').textContent=now.toLocaleString('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});}
+        setInterval(updateTime,1000);updateTime();
+        function switchTab(tabId){document.querySelectorAll('.tab-item').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));event.target.classList.add('active');document.getElementById(tabId+'Tab').classList.add('active');}
+        const animals=[{'id':'A001','name':'橘猫-大橘','sex':'公','age':'2岁','neutered':'已绝育'},{'id':'A002','name':'狸花猫-花花','sex':'母','age':'1岁','neutered':'已绝育'},{'id':'A003','name':'奶牛猫-小黑','sex':'公','age':'3岁','neutered':'已绝育'},{'id':'A004','name':'三花猫-美美','sex':'母','age':'6个月','neutered':'已绝育'},{'id':'A005','name':'英短-团子','sex':'公','age':'1岁半','neutered':'已绝育'},{'id':'A006','name':'田园猫-小白','sex':'母','age':'4岁','neutered':'已绝育'}];
+        function openRecoverModal(){
+            const list=document.getElementById('recoverAnimalList');
+            list.innerHTML='';
+            animals.forEach(a=>{
+                const item=document.createElement('div');
+                item.className='animal-item';
+                item.innerHTML=`<span>${a.name} (${a.sex} · ${a.age} · ${a.neutered})</span><input type="checkbox" style="width:18px;height:18px;"></input>`;
+                item.onclick=()=>{item.classList.toggle('selected');};
+                list.appendChild(item);
+            });
+            document.getElementById('recoverModal').classList.add('show');
+        }
+        function openReleaseModal(){
+            const list=document.getElementById('releaseAnimalList');
+            list.innerHTML='';
+            animals.forEach(a=>{
+                const item=document.createElement('div');
+                item.className='animal-item';
+                item.innerHTML=`<span>${a.name} (${a.sex} · ${a.age} · ${a.neutered})</span><input type="checkbox" style="width:18px;height:18px;"></input>`;
+                item.onclick=()=>{item.classList.toggle('selected');};
+                list.appendChild(item);
+            });
+            document.getElementById('releaseModal').classList.add('show');
+        }
+        function closeModal(modalId){document.getElementById(modalId).classList.remove('show');}
+        function submitRecover(){
+            const hospital=document.getElementById('recoverHospital').value;
+            const selected=document.querySelectorAll('#recoverAnimalList .animal-item.selected');
+            if(selected.length===0){alert('请选择至少一只动物');return;}
+            alert(`动物回收成功！\n来源医院：${hospital}\n回收数量：${selected.length}只\n动物已纳入收容所库存。`);
+            closeModal('recoverModal');
+        }
+        function confirmRecover(id){if(confirm(`确认回收动物 ${id} 吗？`)){alert(`动物 ${id} 已回收成功！`);}}
+        function submitRelease(){
+            const community=document.getElementById('releaseCommunity').value;
+            const date=document.getElementById('releaseDate').value;
+            const location=document.getElementById('releaseLocation').value;
+            const selected=document.querySelectorAll('#releaseAnimalList .animal-item.selected');
+            if(!community){alert('请输入放养小区');return;}
+            if(!date){alert('请选择计划放养日期');return;}
+            if(selected.length===0){alert('请选择至少一只动物');return;}
+            alert(`放养单创建成功！\n放养小区：${community}\n放养地点：${location}\n动物数量：${selected.length}只\n计划日期：${date}`);
+            closeModal('releaseModal');
+        }
+        function confirmRelease(id){
+            if(confirm(`确认编号 ${id} 的动物已放养吗？`)){
+                alert(`编号 ${id} 已确认放养，状态更新为「待物业确认」`);
+            }
+        }
+        function remindProperty(id){alert(`已发送催促通知给物业\n编号：${id}`);}
+        function propertyConfirm(id){
+            document.getElementById('confirmReleaseId').value=id;
+            document.getElementById('propertyConfirmModal').classList.add('show');
+        }
+        function submitPropertyConfirm(){
+            const id=document.getElementById('confirmReleaseId').value;
+            const name=document.getElementById('propertyName').value;
+            const phone=document.getElementById('propertyPhone').value;
+            const time=document.getElementById('confirmTime').value;
+            if(!name||!phone||!time){alert('请填写完整信息');return;}
+            alert(`放养确认成功！\n放养编号：${id}\n物业确认人：${name}\n确认时间：${time}\n放养闭环已完成！`);
+            closeModal('propertyConfirmModal');
+        }
+        function viewReleaseDetail(id){
+            const details={'RL20250115001':'放养编号：RL20250115001\n状态：待放养\n放养小区：花园社区\n动物数量：8只\n计划日期：2025-01-16\n负责人：王阿姨\n备注：傍晚时分放养','RL20250114001':'放养编号：RL20250114001\n状态：待物业确认\n放养小区：阳光花园小区\n动物数量：5只\n计划日期：2025-01-15\n实际放养：2025-01-15 17:30\n负责人：李阿姨\n物业联系人：张经理','RL20250113001':'放养编号：RL20250113001\n状态：已放养\n放养小区：幸福家园\n动物数量：6只\n计划日期：2025-01-13\n实际放养：2025-01-13 18:00\n物业确认：2025-01-14 09:00','RL20250112001':'放养编号：RL20250112001\n状态：已放养\n放养小区：绿色新城\n动物数量：4只\n计划日期：2025-01-12\n实际放养：2025-01-12 16:30\n物业确认：2025-01-12 17:00','RL20250111001':'放养编号：RL20250111001\n状态：待放养\n放养小区：翠湖花园\n动物数量：10只\n计划日期：2025-01-17\n负责人：赵阿姨'};
+            alert(details[id]||'暂无详细信息');
+        }
+        function viewAnimalDetail(id){alert(`查看动物 ${id} 详细信息`);}
+        function viewPropertyConfirm(id){alert(`查看放养确认详情 ${id}`);}
+        function exportReleaseRecord(){alert('正在导出放养台账...');}
+        function printReleaseRecord(){alert('正在打印放养台账...');}
+        function filterReleases(){
+            const community=document.getElementById('communityFilter').value;
+            const status=document.getElementById('releaseStatusFilter').value;
+            const search=document.getElementById('searchInput').value.toLowerCase();
+            const rows=document.querySelectorAll('#releaseTable tbody tr');
+            rows.forEach(row=>{
+                const comm=row.cells[2].textContent;
+                const stat=row.querySelector('.badge')?.textContent||'';
+                const code=row.cells[0].textContent.toLowerCase();
+                let show=true;
+                if(community&&comm!==community)show=false;
+                if(status&&stat!==status)show=false;
+                if(search&&!code.includes(search))show=false;
+                row.style.display=show?'table-row':'none';
+            });
+        }
+    </script>
+</body>
+</html>

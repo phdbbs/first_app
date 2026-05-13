@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>转运交接管理 - 流浪动物 TNR 管理系统</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%); min-height: 100vh; display: flex; }
+        .sidebar { width: 260px; background: linear-gradient(180deg, #2d3748 0%, #1a202c 100%); color: white; padding: 24px; display: flex; flex-direction: column; min-height: 100vh; position: fixed; left: 0; top: 0; }
+        .sidebar-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-logo-icon { width: 44px; height: 44px; background: linear-gradient(135deg, #f6ad55, #ed8936); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+        .sidebar-logo h1 { font-size: 18px; font-weight: 600; color: white; }
+        .nav-menu { flex: 1; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 10px; margin-bottom: 8px; cursor: pointer; transition: all 0.3s ease; color: rgba(255,255,255,0.8); text-decoration: none; }
+        .nav-item:hover { background: rgba(255,255,255,0.1); color: white; }
+        .nav-item.active { background: linear-gradient(135deg, #f6ad55, #ed8936); color: white; }
+        .nav-icon { font-size: 20px; }
+        .nav-label { font-size: 15px; font-weight: 500; }
+        .nav-divider { height: 1px; background: rgba(255,255,255,0.1); margin: 20px 0; }
+        .user-section { padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); }
+        .user-info { display: flex; align-items: center; gap: 10px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 10px; }
+        .user-avatar { width: 36px; height: 36px; background: linear-gradient(135deg, #68d391, #48bb78); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        .user-details { flex: 1; }
+        .user-name { font-size: 14px; font-weight: 600; }
+        .user-role { font-size: 12px; color: rgba(255,255,255,0.6); }
+        .main-content { flex: 1; margin-left: 260px; padding: 24px; max-width: calc(100% - 260px); }
+        .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .page-title { font-size: 24px; font-weight: 600; color: #2d3748; }
+        .current-time { font-size: 14px; color: #718096; padding: 10px 20px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .section { background: white; border-radius: 16px; padding: 24px; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .section-title { font-size: 18px; font-weight: 600; color: #2d3748; display: flex; align-items: center; gap: 8px; }
+        .section-title::before { content: ''; width: 4px; height: 20px; background: linear-gradient(180deg, #fc8181, #f56565); border-radius: 2px; }
+        .btn { padding: 10px 20px; border: none; border-radius: 10px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.3s ease; font-family: inherit; }
+        .btn-primary { background: linear-gradient(135deg, #fc8181, #f56565); color: white; box-shadow: 0 4px 15px rgba(245,101,101,0.3); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(245,101,101,0.4); }
+        .btn-warning { background: linear-gradient(135deg, #f6ad55, #ed8936); color: white; }
+        .btn-warning:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(237,137,54,0.4); }
+        .btn-green { background: linear-gradient(135deg, #68d391, #48bb78); color: white; }
+        .btn-green:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(72,187,120,0.4); }
+        .btn-secondary { background: #f7fafc; color: #718096; border: 2px solid #e2e8f0; }
+        .btn-secondary:hover { background: #edf2f7; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .stat-card { display: flex; flex-direction: column; align-items: center; padding: 20px 16px; border-radius: 14px; transition: all 0.3s ease; border: 2px solid transparent; }
+        .stat-card:hover { transform: translateY(-3px); }
+        .stat-card.pink { background: linear-gradient(135deg, #fff5f5, #fed7d7); }
+        .stat-card.pink:hover { box-shadow: 0 8px 20px rgba(245,101,101,0.3); border-color: #fc8181; }
+        .stat-card.yellow { background: linear-gradient(135deg, #fffaf0, #feebc8); }
+        .stat-card.yellow:hover { box-shadow: 0 8px 20px rgba(246,173,85,0.3); border-color: #f6ad55; }
+        .stat-card.green { background: linear-gradient(135deg, #f0fff4, #c6f6d5); }
+        .stat-card.green:hover { box-shadow: 0 8px 20px rgba(104,211,145,0.3); border-color: #68d391; }
+        .stat-card.blue { background: linear-gradient(135deg, #ebf8ff, #90cdf4); }
+        .stat-card.blue:hover { box-shadow: 0 8px 20px rgba(66,153,225,0.3); border-color: #4299e1; }
+        .stat-card.red { background: linear-gradient(135deg, #fed7d7, #fc8181); }
+        .stat-card.red:hover { box-shadow: 0 8px 20px rgba(245,101,101,0.3); border-color: #fc8181; }
+        .stat-icon { font-size: 28px; margin-bottom: 8px; }
+        .stat-value { font-size: 28px; font-weight: 700; color: #2d3748; margin-bottom: 4px; }
+        .stat-label { font-size: 13px; color: #718096; font-weight: 500; }
+        .filter-bar { display: flex; gap: 12px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
+        .form-select, .form-input { padding: 10px 16px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 14px; font-family: inherit; background: white; transition: all 0.3s; }
+        .form-select:focus, .form-input:focus { outline: none; border-color: #fc8181; box-shadow: 0 0 0 3px rgba(245,101,101,0.1); }
+        table { width: 100%; border-collapse: collapse; }
+        thead th { background: #f7fafc; padding: 14px 16px; text-align: left; font-size: 14px; font-weight: 600; color: #4a5568; border-bottom: 2px solid #edf2f7; }
+        tbody td { padding: 14px 16px; border-bottom: 1px solid #edf2f7; font-size: 14px; color: #4a5568; }
+        tbody tr:hover { background: #f7fafc; }
+        .badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+        .badge-pending { background: #fefcbf; color: #975a16; }
+        .badge-transit { background: #ebf8ff; color: #2b6cb0; }
+        .badge-received { background: #c6f6d5; color: #276749; }
+        .badge-rejected { background: #fed7d7; color: #9b2c2c; }
+        .badge-reissue { background: #feebc8; color: #c05621; }
+        .actions-cell { display: flex; gap: 8px; }
+        .btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 6px; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+        .modal-overlay.show { display: flex; }
+        .modal { background: white; border-radius: 16px; padding: 24px; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid #edf2f7; }
+        .modal-title { font-size: 18px; font-weight: 600; color: #2d3748; }
+        .modal-close { width: 32px; height: 32px; border: none; background: #f7fafc; border-radius: 8px; font-size: 20px; cursor: pointer; color: #718096; }
+        .modal-close:hover { background: #edf2f7; }
+        .form-group { margin-bottom: 16px; }
+        .form-label { display: block; font-size: 14px; font-weight: 500; color: #4a5568; margin-bottom: 8px; }
+        .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; padding-top: 16px; border-top: 2px solid #edf2f7; }
+        .animal-list { max-height: 150px; overflow-y: auto; border: 2px solid #e2e8f0; border-radius: 10px; padding: 8px; }
+        .animal-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-radius: 8px; cursor: pointer; }
+        .animal-item:hover { background: #f7fafc; }
+        .animal-item.selected { background: #ebf8ff; }
+        .tab-bar { display: flex; gap: 4px; margin-bottom: 20px; background: #f7fafc; padding: 4px; border-radius: 10px; }
+        .tab-item { flex: 1; padding: 10px 16px; text-align: center; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.3s; color: #718096; }
+        .tab-item:hover { color: #fc8181; }
+        .tab-item.active { background: white; color: #fc8181; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .info-box { background: linear-gradient(135deg, #fff5f5, #fed7d7); border-left: 4px solid #fc8181; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; }
+        .info-box p { font-size: 13px; color: #9b2c2c; line-height: 1.6; }
+        @media (max-width: 768px) { body { flex-direction: column; } .sidebar { width: 100%; position: relative; min-height: auto; } .nav-menu { display: none; } .main-content { margin-left: 0; max-width: 100%; padding: 16px; } .stats-grid { grid-template-columns: repeat(2, 1fr); } table { font-size: 12px; } }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-logo"><div class="sidebar-logo-icon">🐾</div><h1>TNR管理系统</h1></div>
+        <nav class="nav-menu">
+            <a href="homepage.html" class="nav-item"><span class="nav-icon">🏠</span><span class="nav-label">首页看板</span></a>
+            <a href="add-shelter.html" class="nav-item"><span class="nav-icon">➕</span><span class="nav-label">新增收容</span></a>
+            <a href="owner-return.html" class="nav-item"><span class="nav-icon">🏠</span><span class="nav-label">主人领回</span></a>
+            <div class="nav-divider"></div>
+            <a href="material.html" class="nav-item"><span class="nav-icon">📦</span><span class="nav-label">物料管理</span></a>
+            <a href="transfer.html" class="nav-item active"><span class="nav-icon">🚚</span><span class="nav-label">转运管理</span></a>
+            <a href="release.html" class="nav-item"><span class="nav-icon">🌿</span><span class="nav-label">放养管理</span></a>
+            <a href="adoption.html" class="nav-item"><span class="nav-icon">👤</span><span class="nav-label">领养管理</span></a>
+            <div class="nav-divider"></div>
+            <a href="report.html" class="nav-item"><span class="nav-icon">📊</span><span class="nav-label">数据报表</span></a>
+            <a href="settings.html" class="nav-item"><span class="nav-icon">⚙️</span><span class="nav-label">系统设置</span></a>
+        </nav>
+        <div class="user-section"><div class="user-info"><div class="user-avatar">管</div><div class="user-details"><div class="user-name">管理员</div><div class="user-role">系统管理员</div></div></div></div>
+    </aside>
+    <main class="main-content">
+        <div class="header-bar"><h2 class="page-title">转运交接管理</h2><div class="current-time" id="currentTime"></div></div>
+        <div class="stats-grid">
+            <div class="stat-card pink"><span class="stat-icon">🚚</span><span class="stat-value">8</span><span class="stat-label">待转运</span></div>
+            <div class="stat-card yellow"><span class="stat-icon">⏳</span><span class="stat-value">5</span><span class="stat-label">转运中</span></div>
+            <div class="stat-card green"><span class="stat-icon">✅</span><span class="stat-value">42</span><span class="stat-label">已完成</span></div>
+            <div class="stat-card red"><span class="stat-icon">❌</span><span class="stat-value">2</span><span class="stat-label">已驳回</span></div>
+        </div>
+        <div class="tab-bar">
+            <div class="tab-item active" onclick="switchTab('transfer')">转运记录</div>
+            <div class="tab-item" onclick="switchTab('rejected')">驳回重办</div>
+            <div class="tab-item" onclick="switchTab('record')">交接单据</div>
+        </div>
+        <div id="transferTab" class="tab-content active">
+            <div class="section">
+                <div class="section-header">
+                    <h3 class="section-title">转运记录</h3>
+                    <button class="btn btn-primary" onclick="openTransferModal()">➕ 新建转运单</button>
+                </div>
+                <div class="filter-bar">
+                    <select class="form-select" id="statusFilter" onchange="filterTransfers()"><option value="">全部状态</option><option value="待转运">待转运</option><option value="转运中">转运中</option><option value="已完成">已完成</option><option value="已驳回">已驳回</option></select>
+                    <select class="form-select" id="hospitalFilter" onchange="filterTransfers()"><option value="">全部医院</option><option value="爱心宠物医院">爱心宠物医院</option><option value="瑞鹏宠物医院">瑞鹏宠物医院</option><option value="芭比堂动物医院">芭比堂动物医院</option></select>
+                    <input type="text" class="form-input" id="searchInput" placeholder="搜索批次号..." onkeyup="filterTransfers()" style="min-width:200px;">
+                </div>
+                <table id="transferTable">
+                    <thead><tr><th>批次号</th><th>动物数量</th><th>来源小区</th><th>目标医院</th><th>转运状态</th><th>创建时间</th><th>操作</th></tr></thead>
+                    <tbody>
+                        <tr><td>TR20250115001</td><td>5只</td><td>阳光花园小区</td><td>爱心宠物医院</td><td><span class="badge badge-pending">待转运</span></td><td>2025-01-15 09:30</td><td><div class="actions-cell"><button class="btn btn-sm btn-green" onclick="confirmDeparture('TR20250115001')">发车</button><button class="btn btn-sm btn-secondary" onclick="viewTransferDetail('TR20250115001')">详情</button></div></td></tr>
+                        <tr><td>TR20250114002</td><td>3只</td><td>幸福家园</td><td>瑞鹏宠物医院</td><td><span class="badge badge-transit">转运中</span></td><td>2025-01-14 14:00</td><td><div class="actions-cell"><button class="btn btn-sm btn-green" onclick="confirmArrival('TR20250114002')">到达</button><button class="btn btn-sm btn-secondary" onclick="viewTransferDetail('TR20250114002')">详情</button></div></td></tr>
+                        <tr><td>TR20250113001</td><td>8只</td><td>绿色新城</td><td>芭比堂动物医院</td><td><span class="badge badge-received">已完成</span></td><td>2025-01-13 10:00</td><td><div class="actions-cell"><button class="btn btn-sm btn-secondary" onclick="viewTransferDetail('TR20250113001')">详情</button><button class="btn btn-sm btn-secondary" onclick="printTransferDoc('TR20250113001')">打印</button></div></td></tr>
+                        <tr><td>TR20250112001</td><td>4只</td><td>翠湖花园</td><td>爱心宠物医院</td><td><span class="badge badge-received">已完成</span></td><td>2025-01-12 08:30</td><td><div class="actions-cell"><button class="btn btn-sm btn-secondary" onclick="viewTransferDetail('TR20250112001')">详情</button><button class="btn btn-sm btn-secondary" onclick="printTransferDoc('TR20250112001')">打印</button></div></td></tr>
+                        <tr><td>TR20250111001</td><td>6只</td><td>金色阳光城</td><td>瑞鹏宠物医院</td><td><span class="badge badge-rejected">已驳回</span></td><td>2025-01-11 16:00</td><td><div class="actions-cell"><button class="btn btn-sm btn-warning" onclick="reissueTransfer('TR20250111001')">重发</button><button class="btn btn-sm btn-secondary" onclick="viewTransferDetail('TR20250111001')">详情</button></div></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div id="rejectedTab" class="tab-content">
+            <div class="section">
+                <div class="section-header"><h3 class="section-title">驳回重办记录</h3></div>
+                <div class="info-box"><p>⚠️ 医院驳回的转运单将显示在此处。请查看驳回原因，修改信息后重新下发。</p></div>
+                <table>
+                    <thead><tr><th>原批次号</th><th>目标医院</th><th>驳回原因</th><th>驳回时间</th><th>状态</th><th>操作</th></tr></thead>
+                    <tbody>
+                        <tr><td>TR20250111001</td><td>瑞鹏宠物医院</td><td>动物健康状态存疑，需补充体检报告</td><td>2025-01-11 17:30</td><td><span class="badge badge-reissue">待重发</span></td><td><div class="actions-cell"><button class="btn btn-sm btn-warning" onclick="reissueTransfer('TR20250111001')">重新下发</button><button class="btn btn-sm btn-secondary" onclick="viewRejectDetail('TR20250111001')">详情</button></div></td></tr>
+                        <tr><td>TR20250110001</td><td>爱心宠物医院</td><td>芯片编号与档案不符，请核实</td><td>2025-01-10 15:20</td><td><span class="badge badge-pending">已重发</span></td><td><div class="actions-cell"><button class="btn btn-sm btn-secondary" onclick="viewRejectDetail('TR20250110001')">详情</button></div></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div id="recordTab" class="tab-content">
+            <div class="section">
+                <div class="section-header"><h3 class="section-title">交接单据</h3></div>
+                <div class="filter-bar">
+                    <select class="form-select"><option>全部状态</option><option>已完成</option><option>已归档</option></select>
+                    <input type="text" class="form-input" placeholder="搜索单号..." style="min-width:200px;">
+                </div>
+                <table>
+                    <thead><tr><th>单据编号</th><th>批次号</th><th>医院</th><th>动物数量</th><th>交接时间</th><th>状态</th><th>操作</th></tr></thead>
+                    <tbody>
+                        <tr><td>DOC20250113001</td><td>TR20250113001</td><td>芭比堂动物医院</td><td>8只</td><td>2025-01-13 11:15</td><td><span class="badge badge-received">已完成</span></td><td><div class="actions-cell"><button class="btn btn-sm btn-secondary" onclick="viewTransferDoc('DOC20250113001')">查看</button><button class="btn btn-sm btn-secondary" onclick="printTransferDoc('DOC20250113001')">打印</button></div></td></tr>
+                        <tr><td>DOC20250112001</td><td>TR20250112001</td><td>爱心宠物医院</td><td>4只</td><td>2025-01-12 09:45</td><td><span class="badge badge-received">已完成</span></td><td><div class="actions-cell"><button class="btn btn-sm btn-secondary" onclick="viewTransferDoc('DOC20250112001')">查看</button><button class="btn btn-sm btn-secondary" onclick="printTransferDoc('DOC20250112001')">打印</button></div></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+    <div class="modal-overlay" id="transferModal">
+        <div class="modal">
+            <div class="modal-header"><h3 class="modal-title">新建转运单</h3><button class="modal-close" onclick="closeModal('transferModal')">×</button></div>
+            <div class="form-group"><label class="form-label">来源小区</label><input type="text" class="form-input" id="transferSource" placeholder="请输入来源小区名称"></div>
+            <div class="form-group"><label class="form-label">目标医院</label><select class="form-select" id="transferHospital"><option>爱心宠物医院</option><option>瑞鹏宠物医院</option><option>芭比堂动物医院</option></select></div>
+            <div class="form-group"><label class="form-label">选择动物</label><div class="animal-list" id="animalList"></div></div>
+            <div class="form-group"><label class="form-label">预计出发时间</label><input type="datetime-local" class="form-input" id="transferTime"></div>
+            <div class="form-group"><label class="form-label">备注说明</label><textarea class="form-input" style="min-height:80px;" id="transferNote" placeholder="请输入备注说明"></textarea></div>
+            <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('transferModal')">取消</button><button class="btn btn-primary" onclick="submitTransfer()">创建转运单</button></div>
+        </div>
+    </div>
+    <div class="modal-overlay" id="reissueModal">
+        <div class="modal">
+            <div class="modal-header"><h3 class="modal-title">重新下发转运单</h3><button class="modal-close" onclick="closeModal('reissueModal')">×</button></div>
+            <div class="info-box"><p>⚠️ 请根据医院驳回原因修改信息后重新提交。</p></div>
+            <div class="form-group"><label class="form-label">原批次号</label><input type="text" class="form-input" id="reissueOriginalId" readonly></div>
+            <div class="form-group"><label class="form-label">驳回原因</label><textarea class="form-input" id="reissueRejectReason" readonly style="min-height:60px;"></textarea></div>
+            <div class="form-group"><label class="form-label">修改目标医院</label><select class="form-select" id="reissueHospital"><option>爱心宠物医院</option><option>瑞鹏宠物医院</option><option>芭比堂动物医院</option></select></div>
+            <div class="form-group"><label class="form-label">修改说明</label><textarea class="form-input" style="min-height:80px;" id="reissueNote" placeholder="请说明修改内容"></textarea></div>
+            <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('reissueModal')">取消</button><button class="btn btn-warning" onclick="submitReissue()">重新下发</button></div>
+        </div>
+    </div>
+    <script>
+        function updateTime(){const now=new Date();document.getElementById('currentTime').textContent=now.toLocaleString('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});}
+        setInterval(updateTime,1000);updateTime();
+        function switchTab(tabId){document.querySelectorAll('.tab-item').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));event.target.classList.add('active');document.getElementById(tabId+'Tab').classList.add('active');}
+        const animals=[{'id':'A001','name':'橘猫-大橘','sex':'公','age':'2岁'},{'id':'A002','name':'狸花猫-花花','sex':'母','age':'1岁'},{'id':'A003','name':'奶牛猫-小黑','sex':'公','age':'3岁'},{'id':'A004','name':'三花猫-美美','sex':'母','age':'6个月'},{'id':'A005','name':'英短-团子','sex':'公','age':'1岁半'},{'id':'A006','name':'田园猫-小白','sex':'母','age':'4岁'}];
+        function openTransferModal(){
+            const list=document.getElementById('animalList');
+            list.innerHTML='';
+            animals.forEach(a=>{
+                const item=document.createElement('div');
+                item.className='animal-item';
+                item.innerHTML=`<span>${a.name} (${a.sex} · ${a.age})</span><input type="checkbox" style="width:18px;height:18px;"></input>`;
+                item.onclick=()=>{item.classList.toggle('selected');};
+                list.appendChild(item);
+            });
+            document.getElementById('transferModal').classList.add('show');
+        }
+        function closeModal(modalId){document.getElementById(modalId).classList.remove('show');}
+        function submitTransfer(){
+            const source=document.getElementById('transferSource').value;
+            const hospital=document.getElementById('transferHospital').value;
+            const time=document.getElementById('transferTime').value;
+            const selected=document.querySelectorAll('.animal-item.selected');
+            if(!source){alert('请输入来源小区');return;}
+            if(!time){alert('请选择预计出发时间');return;}
+            if(selected.length===0){alert('请选择至少一只动物');return;}
+            alert(`转运单创建成功！\n来源小区：${source}\n目标医院：${hospital}\n动物数量：${selected.length}只\n预计出发：${time}`);
+            closeModal('transferModal');
+        }
+        function confirmDeparture(id){
+            if(confirm(`确认批次 ${id} 发车吗？`)){
+                alert(`批次 ${id} 已发车，状态更新为「转运中」`);
+            }
+        }
+        function confirmArrival(id){
+            if(confirm(`确认批次 ${id} 已到达医院吗？`)){
+                alert(`批次 ${id} 已到达，状态更新为「已完成」，请等待医院签收确认。`);
+            }
+        }
+        function reissueTransfer(id){
+            const rejectReasons={'TR20250111001':'动物健康状态存疑，需补充体检报告'};
+            document.getElementById('reissueOriginalId').value=id;
+            document.getElementById('reissueRejectReason').value=rejectReasons[id]||'信息有误';
+            document.getElementById('reissueModal').classList.add('show');
+        }
+        function submitReissue(){
+            const originalId=document.getElementById('reissueOriginalId').value;
+            const hospital=document.getElementById('reissueHospital').value;
+            const note=document.getElementById('reissueNote').value;
+            if(!note){alert('请填写修改说明');return;}
+            alert(`转运单 ${originalId} 已重新下发至 ${hospital}！`);
+            closeModal('reissueModal');
+        }
+        function viewTransferDetail(id){
+            const details={'TR20250115001':'批次号：TR20250115001\n状态：待转运\n来源：阳光花园小区\n目标：爱心宠物医院\n动物数量：5只\n创建时间：2025-01-15 09:30\n负责人：张师傅\n车牌号：浙A·88888','TR20250114002':'批次号：TR20250114002\n状态：转运中\n来源：幸福家园\n目标：瑞鹏宠物医院\n动物数量：3只\n创建时间：2025-01-14 14:00\n发车时间：2025-01-14 14:30\n负责人：李师傅\n车牌号：浙A·66666','TR20250113001':'批次号：TR20250113001\n状态：已完成\n来源：绿色新城\n目标：芭比堂动物医院\n动物数量：8只\n创建时间：2025-01-13 10:00\n发车时间：2025-01-13 10:30\n到达时间：2025-01-13 11:15\n负责人：王师傅','TR20250112001':'批次号：TR20250112001\n状态：已完成\n来源：翠湖花园\n目标：爱心宠物医院\n动物数量：4只\n创建时间：2025-01-12 08:30\n发车时间：2025-01-12 09:00\n到达时间：2025-01-12 09:45\n负责人：张师傅','TR20250111001':'批次号：TR20250111001\n状态：已驳回\n来源：金色阳光城\n目标：瑞鹏宠物医院\n动物数量：6只\n创建时间：2025-01-11 16:00\n驳回原因：动物健康状态存疑，需补充体检报告\n驳回时间：2025-01-11 17:30'};
+            alert(details[id]||'暂无详细信息');
+        }
+        function viewRejectDetail(id){
+            const details={'TR20250111001':'原批次号：TR20250111001\n目标医院：瑞鹏宠物医院\n驳回原因：动物健康状态存疑，需补充体检报告\n驳回时间：2025-01-11 17:30\n驳回人：瑞鹏宠物医院-李医生','TR20250110001':'原批次号：TR20250110001\n目标医院：爱心宠物医院\n驳回原因：芯片编号与档案不符，请核实\n驳回时间：2025-01-10 15:20\n驳回人：爱心宠物医院-王医生\n处理状态：已重新下发（TR20250110002）'};
+            alert(details[id]||'暂无详细信息');
+        }
+        function printTransferDoc(id){alert(`正在打印单据 ${id}...`);}
+        function viewTransferDoc(id){alert(`查看单据 ${id}`);}
+        function filterTransfers(){
+            const status=document.getElementById('statusFilter').value;
+            const hospital=document.getElementById('hospitalFilter').value;
+            const search=document.getElementById('searchInput').value.toLowerCase();
+            const rows=document.querySelectorAll('#transferTable tbody tr');
+            rows.forEach(row=>{
+                const stat=row.querySelector('.badge')?.textContent||'';
+                const hosp=row.cells[3].textContent;
+                const batch=row.cells[0].textContent.toLowerCase();
+                let show=true;
+                if(status&&stat!==status)show=false;
+                if(hospital&&hosp!==hospital)show=false;
+                if(search&&!batch.includes(search))show=false;
+                row.style.display=show?'table-row':'none';
+            });
+        }
+    </script>
+</body>
+</html>
