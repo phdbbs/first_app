@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>领养大厅 - 流浪动物 TNR 管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            min-height: 100vh;
+            padding-bottom: 70px;
+        }
+
+        .container {
+            max-width: 750px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* 顶部导航栏 */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 16px 20px;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #ff9a9e, #fecfef);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+        }
+
+        .logo h1 {
+            font-size: 18px;
+            color: #1a1a2e;
+            font-weight: 600;
+        }
+
+        .nav-icon {
+            font-size: 24px;
+            color: #666;
+        }
+
+        /* 筛选栏 */
+        .filter-bar {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+        }
+
+        .filter-tab {
+            padding: 8px 16px;
+            background: #f0f0f5;
+            border-radius: 20px;
+            font-size: 13px;
+            color: #666;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-tab.active {
+            background: linear-gradient(135deg, #ff9a9e, #fecfef);
+            color: white;
+        }
+
+        /* 宠物卡片列表 */
+        .pet-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .pet-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+
+        .pet-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .pet-photo {
+            aspect-ratio: 1;
+            background: #f0f0f5;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pet-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .pet-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            padding: 4px 10px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            font-size: 11px;
+            color: #ff9a9e;
+            font-weight: 600;
+        }
+
+        .pet-info {
+            padding: 12px;
+        }
+
+        .pet-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1a1a2e;
+            margin-bottom: 6px;
+        }
+
+        .pet-desc {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 8px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .pet-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .pet-tags {
+            display: flex;
+            gap: 6px;
+        }
+
+        .tag {
+            padding: 3px 8px;
+            background: #f0f0f5;
+            border-radius: 6px;
+            font-size: 10px;
+            color: #666;
+        }
+
+        .hospital-name {
+            font-size: 11px;
+            color: #ff9a9e;
+        }
+
+        /* 底部导航栏 */
+        .tab-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 8px 0;
+            display: flex;
+            justify-content: space-around;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+            z-index: 100;
+        }
+
+        .tab-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab-item.active {
+            color: #ff9a9e;
+        }
+
+        .tab-icon {
+            font-size: 22px;
+        }
+
+        .tab-label {
+            font-size: 11px;
+        }
+
+        /* 流程提示 */
+        .process-notice {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .notice-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a1a2e;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .process-steps {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+        }
+
+        .step {
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            padding: 12px;
+            background: #f8f9fc;
+            border-radius: 12px;
+            min-width: 80px;
+        }
+
+        .step-number {
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, #ff9a9e, #fecfef);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .step-text {
+            font-size: 11px;
+            color: #666;
+            text-align: center;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 480px) {
+            .pet-list {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 顶部导航 -->
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">🏠</div>
+                <h1>领养大厅</h1>
+            </div>
+            <div class="nav-icon">🔔</div>
+        </header>
+
+        <!-- 流程提示 -->
+        <div class="process-notice">
+            <div class="notice-title">📋 领养流程须知</div>
+            <div class="process-steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-text">浏览待领养宠物</div>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-text">线下联系医院/收容所</div>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-text">资质审核 + 签承诺书</div>
+                </div>
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <div class="step-text">签署领养协议</div>
+                </div>
+                <div class="step">
+                    <div class="step-number">5</div>
+                    <div class="step-text">开通账号 + 领宠</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 筛选栏 -->
+        <div class="filter-bar">
+            <div class="filter-tabs">
+                <div class="filter-tab active">全部</div>
+                <div class="filter-tab">猫咪</div>
+                <div class="filter-tab">狗狗</div>
+                <div class="filter-tab">已绝育</div>
+                <div class="filter-tab">已疫苗</div>
+                <div class="filter-tab">3 个月以下</div>
+            </div>
+        </div>
+
+        <!-- 宠物列表 -->
+        <div class="pet-list">
+            <div class="pet-card" onclick="viewDetail('A008')">
+                <div class="pet-photo">
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect fill='%23ffebee' width='200' height='200'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='80' fill='%23ef9a9a'%3E🐱%3C/text%3E%3C/svg%3E" alt="宠物照片">
+                    <div class="pet-badge">可领养</div>
+                </div>
+                <div class="pet-info">
+                    <div class="pet-name">小咪 (编号 A008)</div>
+                    <div class="pet-desc">温顺可爱的橘猫，已绝育疫苗，性格亲人，喜欢被摸头</div>
+                    <div class="pet-meta">
+                        <div class="pet-tags">
+                            <span class="tag">母</span>
+                            <span class="tag">2 岁</span>
+                            <span class="tag">已绝育</span>
+                        </div>
+                        <div class="hospital-name">🏥 爱心医院</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pet-card" onclick="viewDetail('A012')">
+                <div class="pet-photo">
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect fill='%23e3f2fd' width='200' height='200'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='80' fill='%2364b5f6'%3E🐶%3C/text%3E%3C/svg%3E" alt="宠物照片">
+                    <div class="pet-badge">可领养</div>
+                </div>
+                <div class="pet-info">
+                    <div class="pet-name">豆豆 (编号 A012)</div>
+                    <div class="pet-desc">活泼的泰迪犬，已完成诊疗，聪明听话，适合有孩子的家庭</div>
+                    <div class="pet-meta">
+                        <div class="pet-tags">
+                            <span class="tag">公</span>
+                            <span class="tag">1 岁</span>
+                            <span class="tag">已疫苗</span>
+                        </div>
+                        <div class="hospital-name">🏥 仁爱医院</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pet-card" onclick="viewDetail('A015')">
+                <div class="pet-photo">
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect fill='%23f3e5f5' width='200' height='200'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='80' fill='%23ba68c8'%3E🐱%3C/text%3E%3C/svg%3E" alt="宠物照片">
+                    <div class="pet-badge">可领养</div>
+                </div>
+                <div class="pet-info">
+                    <div class="pet-name">雪球 (编号 A015)</div>
+                    <div class="pet-desc">纯白长毛猫，颜值超高，安静乖巧，已植入芯片可溯源</div>
+                    <div class="pet-meta">
+                        <div class="pet-tags">
+                            <span class="tag">母</span>
+                            <span class="tag">1.5 岁</span>
+                            <span class="tag">有芯片</span>
+                        </div>
+                        <div class="hospital-name">🏥 爱心医院</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pet-card" onclick="viewDetail('A018')">
+                <div class="pet-photo">
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect fill='%23fff3e0' width='200' height='200'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='80' fill='%23ffb74d'%3E🐶%3C/text%3E%3C/svg%3E" alt="宠物照片">
+                    <div class="pet-badge">可领养</div>
+                </div>
+                <div class="pet-info">
+                    <div class="pet-name">旺财 (编号 A018)</div>
+                    <div class="pet-desc">中华田园犬，身体健康，忠诚护主，适合有院子的家庭</div>
+                    <div class="pet-meta">
+                        <div class="pet-tags">
+                            <span class="tag">公</span>
+                            <span class="tag">3 岁</span>
+                            <span class="tag">已绝育</span>
+                        </div>
+                        <div class="hospital-name">🏥 博爱医院</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pet-card" onclick="viewDetail('A021')">
+                <div class="pet-photo">
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect fill='%23e8f5e9' width='200' height='200'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='80' fill='%2381c784'%3E🐱%3C/text%3E%3C/svg%3E" alt="宠物照片">
+                    <div class="pet-badge">可领养</div>
+                </div>
+                <div class="pet-info">
+                    <div class="pet-name">花花 (编号 A021)</div>
+                    <div class="pet-desc">三花猫妹妹，性格独立，会用猫砂，适合上班族饲养</div>
+                    <div class="pet-meta">
+                        <div class="pet-tags">
+                            <span class="tag">母</span>
+                            <span class="tag">2 岁</span>
+                            <span class="tag">已驱虫</span>
+                        </div>
+                        <div class="hospital-name">🏥 爱心医院</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pet-card" onclick="viewDetail('A025')">
+                <div class="pet-photo">
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect fill='%23fce4ec' width='200' height='200'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='80' fill='%23f06292'%3E🐶%3C/text%3E%3C/svg%3E" alt="宠物照片">
+                    <div class="pet-badge">可领养</div>
+                </div>
+                <div class="pet-info">
+                    <div class="pet-name">球球 (编号 A025)</div>
+                    <div class="pet-desc">比熊犬，毛发蓬松可爱，已做美容，粘人爱撒娇</div>
+                    <div class="pet-meta">
+                        <div class="pet-tags">
+                            <span class="tag">公</span>
+                            <span class="tag">8 月</span>
+                            <span class="tag">已疫苗</span>
+                        </div>
+                        <div class="hospital-name">🏥 仁爱医院</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部导航栏 -->
+    <div class="tab-bar">
+        <div class="tab-item active">
+            <div class="tab-icon">🏠</div>
+            <div class="tab-label">领养大厅</div>
+        </div>
+        <div class="tab-item" onclick="alert('请先办理领养手续后查看')">
+            <div class="tab-icon">🐾</div>
+            <div class="tab-label">我的领养</div>
+        </div>
+        <div class="tab-item" onclick="alert('请先办理领养手续后打卡')">
+            <div class="tab-icon">📸</div>
+            <div class="tab-label">回访打卡</div>
+        </div>
+        <div class="tab-item">
+            <div class="tab-icon">🔔</div>
+            <div class="tab-label">消息中心</div>
+        </div>
+        <div class="tab-item">
+            <div class="tab-icon">👤</div>
+            <div class="tab-label">个人中心</div>
+        </div>
+    </div>
+
+    <script>
+        // 查看详情
+        function viewDetail(petId) {
+            alert(`跳转至宠物详情页\n\n宠物编号：${petId}\n\n您可以查看：\n- 收容记录\n- 诊疗记录\n- 绝育疫苗芯片信息\n- 所属医院联系方式\n- 领养要求及线下联系指引`);
+        }
+
+        // 筛选标签切换
+        document.querySelectorAll('.filter-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // 底部导航切换
+        document.querySelectorAll('.tab-item').forEach(item => {
+            item.addEventListener('click', function() {
+                if (this.querySelector('.tab-label').textContent === '领养大厅') {
+                    document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

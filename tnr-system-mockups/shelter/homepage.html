@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>流浪动物TNR收容绝育领养管理系统 - 收容所端首页看板</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* 顶部导航栏 */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 20px 30px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+        }
+
+        .logo h1 {
+            font-size: 24px;
+            color: #1a1a2e;
+            font-weight: 600;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            color: #666;
+        }
+
+        .current-time {
+            font-size: 14px;
+            padding: 8px 16px;
+            background: #f0f0f5;
+            border-radius: 8px;
+        }
+
+        .user-avatar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        /* 数据卡片区域 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .stat-title {
+            font-size: 14px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .icon-blue { background: #e3f2fd; color: #1976d2; }
+        .icon-green { background: #e8f5e9; color: #388e3c; }
+        .icon-orange { background: #fff3e0; color: #f57c00; }
+        .icon-purple { background: #f3e5f5; color: #7b1fa2; }
+        .icon-red { background: #ffebee; color: #d32f2f; }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 8px;
+        }
+
+        .stat-trend {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .trend-up { color: #388e3c; }
+        .trend-down { color: #d32f2f; }
+
+        /* 待办任务列表 */
+        .section {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a2e;
+        }
+
+        .view-all {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            background: #f8f9fc;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+        }
+
+        .task-item:hover {
+            background: #f0f2f8;
+            border-left-color: #667eea;
+        }
+
+        .task-priority {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 12px;
+        }
+
+        .priority-high { background: #d32f2f; }
+        .priority-medium { background: #f57c00; }
+        .priority-low { background: #388e3c; }
+
+        .task-content {
+            flex: 1;
+        }
+
+        .task-name {
+            font-size: 15px;
+            color: #1a1a2e;
+            margin-bottom: 4px;
+        }
+
+        .task-desc {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .task-time {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .task-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .badge-urgent { background: #ffebee; color: #d32f2f; }
+        .badge-normal { background: #e3f2fd; color: #1976d2; }
+
+        /* 快捷入口 */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .action-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 24px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 16px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .action-btn:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .action-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        .action-label {
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 16px;
+                text-align: center;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .quick-actions {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 顶部导航栏 -->
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">🐾</div>
+                <h1>流浪动物TNR收容绝育领养管理系统</h1>
+            </div>
+            <div class="user-info">
+                <div class="current-time" id="currentTime">2025-01-15 14:30:00</div>
+                <div class="user-avatar">
+                    <div class="avatar">管</div>
+                    <span>管理员</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- 数据统计卡片 -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-title">待收容登记</span>
+                    <div class="stat-icon icon-blue">📋</div>
+                </div>
+                <div class="stat-value">12</div>
+                <div class="stat-trend trend-up">↑ 较昨日 +3</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-title">待转运交接</span>
+                    <div class="stat-icon icon-orange">🚚</div>
+                </div>
+                <div class="stat-value">8</div>
+                <div class="stat-trend trend-down">↓ 较昨日 -2</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-title">待回收放养</span>
+                    <div class="stat-icon icon-green">🏠</div>
+                </div>
+                <div class="stat-value">24</div>
+                <div class="stat-trend trend-up">↑ 较昨日 +5</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-title">待领养审核</span>
+                    <div class="stat-icon icon-purple">👤</div>
+                </div>
+                <div class="stat-value">6</div>
+                <div class="stat-trend">→ 与昨日持平</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-title">物料库存预警</span>
+                    <div class="stat-icon icon-red">⚠️</div>
+                </div>
+                <div class="stat-value">3</div>
+                <div class="stat-trend trend-down">需及时补充</div>
+            </div>
+        </div>
+
+        <!-- 待办任务列表 -->
+        <div class="section">
+            <div class="section-header">
+                <h2 class="section-title">待办任务</h2>
+                <a href="#" class="view-all">查看全部 →</a>
+            </div>
+            <div class="task-list">
+                <div class="task-item">
+                    <div class="task-priority priority-high"></div>
+                    <div class="task-content">
+                        <div class="task-name">阳光小区流浪猫收容登记</div>
+                        <div class="task-desc">物业联系人：张经理 138****5678，待现场拍照录入</div>
+                    </div>
+                    <div class="task-time">30分钟前</div>
+                    <span class="task-badge badge-urgent">紧急</span>
+                </div>
+
+                <div class="task-item">
+                    <div class="task-priority priority-high"></div>
+                    <div class="task-content">
+                        <div class="task-name">爱心宠物医院 - 转运交接待确认</div>
+                        <div class="task-desc">批次号：TR20250115001，共5只动物待接收</div>
+                    </div>
+                    <div class="task-time">1小时前</div>
+                    <span class="task-badge badge-urgent">紧急</span>
+                </div>
+
+                <div class="task-item">
+                    <div class="task-priority priority-medium"></div>
+                    <div class="task-content">
+                        <div class="task-name">花园社区放养确认</div>
+                        <div class="task-desc">待物业签字确认放养，共8只已绝育动物</div>
+                    </div>
+                    <div class="task-time">2小时前</div>
+                    <span class="task-badge badge-normal">普通</span>
+                </div>
+
+                <div class="task-item">
+                    <div class="task-priority priority-medium"></div>
+                    <div class="task-content">
+                        <div class="task-name">领养资质审核 - 李女士</div>
+                        <div class="task-desc">申请领养编号：A003，待线下审核材料</div>
+                    </div>
+                    <div class="task-time">3小时前</div>
+                    <span class="task-badge badge-normal">普通</span>
+                </div>
+
+                <div class="task-item">
+                    <div class="task-priority priority-low"></div>
+                    <div class="task-content">
+                        <div class="task-name">疫苗库存补充采购</div>
+                        <div class="task-desc">狂犬疫苗剩余量低于安全库存，需采购</div>
+                    </div>
+                    <div class="task-time">5小时前</div>
+                    <span class="task-badge badge-normal">普通</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 快捷入口 -->
+        <div class="section">
+            <div class="section-header">
+                <h2 class="section-title">快捷入口</h2>
+            </div>
+            <div class="quick-actions">
+                <a href="#" class="action-btn">
+                    <div class="action-icon">➕</div>
+                    <div class="action-label">新增收容</div>
+                </a>
+                <a href="#" class="action-btn">
+                    <div class="action-icon">📦</div>
+                    <div class="action-label">物料采购</div>
+                </a>
+                <a href="#" class="action-btn">
+                    <div class="action-icon">🚚</div>
+                    <div class="action-label">转运管理</div>
+                </a>
+                <a href="#" class="action-btn">
+                    <div class="action-icon">🏠</div>
+                    <div class="action-label">放养管理</div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 实时更新当前时间
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            document.getElementById('currentTime').textContent = timeString;
+        }
+
+        setInterval(updateTime, 1000);
+        updateTime();
+    </script>
+</body>
+</html>

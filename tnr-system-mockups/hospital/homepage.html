@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>宠物医院端首页看板 - 流浪动物 TNR 管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* 顶部导航栏 */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 20px 30px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+        }
+
+        .logo h1 {
+            font-size: 24px;
+            color: #1a1a2e;
+            font-weight: 600;
+        }
+
+        .hospital-badge {
+            padding: 6px 16px;
+            background: #e8f5e9;
+            color: #388e3c;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            margin-left: 12px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            color: #666;
+        }
+
+        .current-time {
+            font-size: 14px;
+            padding: 8px 16px;
+            background: #f0f0f5;
+            border-radius: 8px;
+        }
+
+        .user-avatar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        /* 数据卡片区域 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #11998e, #38ef7d);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .stat-title {
+            font-size: 14px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .icon-blue { background: #e3f2fd; color: #1976d2; }
+        .icon-green { background: #e8f5e9; color: #388e3c; }
+        .icon-orange { background: #fff3e0; color: #f57c00; }
+        .icon-purple { background: #f3e5f5; color: #7b1fa2; }
+        .icon-red { background: #ffebee; color: #d32f2f; }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 8px;
+        }
+
+        .stat-trend {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .trend-up { color: #388e3c; }
+        .trend-down { color: #d32f2f; }
+
+        /* 待办任务列表 */
+        .section {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a2e;
+        }
+
+        .view-all {
+            color: #11998e;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            background: #f8f9fc;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+        }
+
+        .task-item:hover {
+            background: #f0f2f8;
+            border-left-color: #11998e;
+        }
+
+        .task-priority {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 12px;
+        }
+
+        .priority-high { background: #d32f2f; }
+        .priority-medium { background: #f57c00; }
+        .priority-low { background: #388e3c; }
+
+        .task-content {
+            flex: 1;
+        }
+
+        .task-name {
+            font-size: 15px;
+            color: #1a1a2e;
+            margin-bottom: 4px;
+        }
+
+        .task-desc {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .task-time {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .task-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .badge-urgent { background: #ffebee; color: #d32f2f; }
+        .badge-normal { background: #e3f2fd; color: #1976d2; }
+        .badge-waiting { background: #fff3e0; color: #f57c00; }
+
+        /* 快捷入口 */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .action-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 24px;
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            color: white;
+            border-radius: 16px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(17, 153, 142, 0.3);
+        }
+
+        .action-btn:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(17, 153, 142, 0.4);
+        }
+
+        .action-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        .action-label {
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        /* 库存预警提示 */
+        .alert-box {
+            background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+            border-left: 4px solid #f57c00;
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .alert-icon {
+            font-size: 32px;
+        }
+
+        .alert-content {
+            flex: 1;
+        }
+
+        .alert-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #e65100;
+            margin-bottom: 4px;
+        }
+
+        .alert-desc {
+            font-size: 13px;
+            color: #bf360c;
+        }
+
+        .alert-action {
+            padding: 8px 16px;
+            background: #f57c00;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .alert-action:hover {
+            background: #e65100;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 16px;
+                text-align: center;
+            }
+
+            .hospital-badge {
+                margin-left: 0;
+                margin-top: 8px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .quick-actions {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .alert-box {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 顶部导航栏 -->
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">🏥</div>
+                <h1>流浪动物 TNR 收容绝育领养管理系统 <span class="hospital-badge">宠物医院端</span></h1>
+            </div>
+            <div class="user-info">
+                <div class="current-time" id="currentTime">2025-01-15 14:30:00</div>
+                <div class="user-avatar">
+                    <div class="avatar">医</div>
+                    <span>爱心宠物医院</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- 库存预警提示 -->
+        <div class="alert-box">
+            <div class="alert-icon">⚠️</div>
+            <div class="alert-content">
+                <div class="alert-title">库存预警提醒</div>
+                <div class="alert-desc">狂犬疫苗剩余 8 支，低于安全库存 (20 支)；芯片剩余 15 个，请及时向收容所申请补充</div>
+            </div>
+            <button class="alert-action" onclick="alert('跳转至物料库存管理页面')">去补充</button>
+        </div>
+
+        <!-- 数据统计卡片 -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-title">待接收动物</span>
+                    <div class="stat-icon icon-blue">📥</div>
+                </div>
+                <div class="stat-value">5</div>
+                <div class="stat-trend trend-up">↑ 待签收转运单</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-title">待诊疗任务</span>
+                    <div class="stat-icon icon-orange">🩺</div>
+                </div>
+                <div class="stat-value">12</div>
+                <div class="stat-trend">需完成绝育/疫苗/芯片</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-title">待领养资料维护</span>
+                    <div class="stat-icon icon-purple">📝</div>
+                </div>
+                <div class="stat-value">4</div>
+                <div class="stat-trend trend-up">诊疗完成超 5 天</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-title">物料库存预警</span>
+                    <div class="stat-icon icon-red">💉</div>
+                </div>
+                <div class="stat-value">2</div>
+                <div class="stat-trend trend-down">需及时补充</div>
+            </div>
+        </div>
+
+        <!-- 待办任务列表 -->
+        <div class="section">
+            <div class="section-header">
+                <h2 class="section-title">待办任务</h2>
+                <a href="#" class="view-all">查看全部 →</a>
+            </div>
+            <div class="task-list">
+                <div class="task-item">
+                    <div class="task-priority priority-high"></div>
+                    <div class="task-content">
+                        <div class="task-name">转运交接待签收 - 批次 TR20250115001</div>
+                        <div class="task-desc">来源：阳光花园小区，共 5 只动物待接收确认</div>
+                    </div>
+                    <div class="task-time">30 分钟前</div>
+                    <span class="task-badge badge-urgent">紧急</span>
+                </div>
+
+                <div class="task-item">
+                    <div class="task-priority priority-high"></div>
+                    <div class="task-content">
+                        <div class="task-name">诊疗任务 - 编号 A001</div>
+                        <div class="task-desc">绝育手术 + 疫苗接种 + 芯片植入，待录入病历</div>
+                    </div>
+                    <div class="task-time">1 小时前</div>
+                    <span class="task-badge badge-urgent">紧急</span>
+                </div>
+
+                <div class="task-item">
+                    <div class="task-priority priority-medium"></div>
+                    <div class="task-content">
+                        <div class="task-name">领养资料完善 - 编号 A008</div>
+                        <div class="task-desc">诊疗已完成 6 天，待上传照片和简介至领养大厅</div>
+                    </div>
+                    <div class="task-time">2 小时前</div>
+                    <span class="task-badge badge-waiting">待处理</span>
+                </div>
+
+                <div class="task-item">
+                    <div class="task-priority priority-medium"></div>
+                    <div class="task-content">
+                        <div class="task-name">诊疗任务 - 编号 A003</div>
+                        <div class="task-desc">驱虫护理 + 疫苗接种，待执行</div>
+                    </div>
+                    <div class="task-time">3 小时前</div>
+                    <span class="task-badge badge-normal">普通</span>
+                </div>
+
+                <div class="task-item">
+                    <div class="task-priority priority-low"></div>
+                    <div class="task-content">
+                        <div class="task-name">物料入库确认 - 收容所下发</div>
+                        <div class="task-desc">批次号：WL20250115002，疫苗 50 支待确认入库</div>
+                    </div>
+                    <div class="task-time">5 小时前</div>
+                    <span class="task-badge badge-normal">普通</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 快捷入口 -->
+        <div class="section">
+            <div class="section-header">
+                <h2 class="section-title">快捷入口</h2>
+            </div>
+            <div class="quick-actions">
+                <a href="#" class="action-btn">
+                    <div class="action-icon">📥</div>
+                    <div class="action-label">交接接收</div>
+                </a>
+                <a href="#" class="action-btn">
+                    <div class="action-icon">🩺</div>
+                    <div class="action-label">诊疗操作</div>
+                </a>
+                <a href="#" class="action-btn">
+                    <div class="action-icon">💉</div>
+                    <div class="action-label">物料库存</div>
+                </a>
+                <a href="#" class="action-btn">
+                    <div class="action-icon">📝</div>
+                    <div class="action-label">领养维护</div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 实时更新当前时间
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            document.getElementById('currentTime').textContent = timeString;
+        }
+
+        setInterval(updateTime, 1000);
+        updateTime();
+    </script>
+</body>
+</html>

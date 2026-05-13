@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新增收容登记 - 流浪动物 TNR 管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* 顶部导航 */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 20px 30px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+        }
+
+        .logo h1 {
+            font-size: 20px;
+            color: #1a1a2e;
+            font-weight: 600;
+        }
+
+        .back-btn {
+            padding: 10px 20px;
+            background: #f0f0f5;
+            border: none;
+            border-radius: 8px;
+            color: #666;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: #e0e0e8;
+        }
+
+        /* 表单卡片 */
+        .form-card {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #f0f0f5;
+        }
+
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a2e;
+        }
+
+        /* 表单元素 */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .required::before {
+            content: '*';
+            color: #d32f2f;
+            margin-right: 4px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e8;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .location-input-wrapper {
+            position: relative;
+        }
+
+        .location-btn {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            padding: 6px 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .location-btn:hover {
+            background: #5568d3;
+        }
+
+        /* 宠物编号列表 */
+        .pet-id-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .pet-id-tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 8px 16px;
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            color: #1976d2;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .pet-id-tag .id-number {
+            background: #1976d2;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin-left: 6px;
+        }
+
+        /* 照片上传区域 */
+        .upload-section {
+            margin-top: 16px;
+        }
+
+        .upload-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 16px;
+            margin-top: 12px;
+        }
+
+        .upload-item {
+            aspect-ratio: 1;
+            border: 2px dashed #e0e0e8;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #fafafc;
+        }
+
+        .upload-item:hover {
+            border-color: #667eea;
+            background: #f0f2f8;
+        }
+
+        .upload-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+            color: #999;
+        }
+
+        .upload-text {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .photo-preview {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .photo-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .photo-tag {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 4px 8px;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        /* 电子签名区域 */
+        .signature-pad {
+            border: 2px solid #e0e0e8;
+            border-radius: 12px;
+            background: #fafafc;
+            margin-top: 12px;
+        }
+
+        .signature-canvas {
+            width: 100%;
+            height: 200px;
+            border-radius: 10px;
+            cursor: crosshair;
+        }
+
+        .signature-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .btn-secondary {
+            background: #f0f0f5;
+            color: #666;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e8;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-large {
+            padding: 16px 32px;
+            font-size: 16px;
+        }
+
+        /* 提示框 */
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #1976d2;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .info-box p {
+            font-size: 14px;
+            color: #1976d2;
+            line-height: 1.6;
+        }
+
+        /* 底部操作栏 */
+        .form-actions {
+            display: flex;
+            gap: 16px;
+            justify-content: flex-end;
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 2px solid #f0f0f5;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .form-card {
+                padding: 20px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 顶部导航 -->
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">🐾</div>
+                <h1>流浪动物 TNR 收容绝育领养管理系统</h1>
+            </div>
+            <button class="back-btn" onclick="history.back()">← 返回</button>
+        </header>
+
+        <!-- 小区物业信息区 -->
+        <div class="form-card">
+            <div class="card-header">
+                <div class="card-icon">🏢</div>
+                <h2 class="card-title">小区物业信息</h2>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label required">物业名称</label>
+                    <input type="text" class="form-input" placeholder="请输入物业公司名称">
+                </div>
+                <div class="form-group">
+                    <label class="form-label required">所在小区</label>
+                    <div class="location-input-wrapper">
+                        <input type="text" class="form-input" id="community" value="阳光花园小区" placeholder="自动定位或手动输入">
+                        <button class="location-btn" onclick="getLocation()">📍 定位</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label required">详细门牌号</label>
+                    <input type="text" class="form-input" placeholder="请输入详细地址">
+                </div>
+                <div class="form-group">
+                    <label class="form-label required">物业交接人姓名</label>
+                    <input type="text" class="form-input" placeholder="请输入交接人姓名">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label required">联系电话</label>
+                <input type="tel" class="form-input" placeholder="请输入联系电话">
+            </div>
+        </div>
+
+        <!-- 收容动物信息区 -->
+        <div class="form-card">
+            <div class="card-header">
+                <div class="card-icon">🐱</div>
+                <h2 class="card-title">收容动物信息</h2>
+            </div>
+
+            <div class="info-box">
+                <p>💡 系统将根据您输入的收容数量，自动批量生成宠物唯一编号（格式：001、002、003...）</p>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label required">收容总数量</label>
+                <input type="number" class="form-input" id="petCount" value="3" min="1" max="50" onchange="generatePetIds()">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">自动生成宠物编号</label>
+                <div class="pet-id-list" id="petIdList">
+                    <span class="pet-id-tag">宠物编号 <span class="id-number">001</span></span>
+                    <span class="pet-id-tag">宠物编号 <span class="id-number">002</span></span>
+                    <span class="pet-id-tag">宠物编号 <span class="id-number">003</span></span>
+                </div>
+            </div>
+
+            <div class="upload-section">
+                <label class="form-label required">整体合影上传</label>
+                <div class="upload-grid">
+                    <div class="upload-item" onclick="uploadPhoto(this)">
+                        <div class="upload-icon">📷</div>
+                        <div class="upload-text">点击上传<br>批次合影</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="upload-section">
+                <label class="form-label required">单只编号单独拍照</label>
+                <div class="upload-grid" id="singlePhotoGrid">
+                    <div class="upload-item" onclick="uploadPhoto(this)">
+                        <div class="upload-icon">📷</div>
+                        <div class="upload-text">编号 001<br>单独照片</div>
+                    </div>
+                    <div class="upload-item" onclick="uploadPhoto(this)">
+                        <div class="upload-icon">📷</div>
+                        <div class="upload-text">编号 002<br>单独照片</div>
+                    </div>
+                    <div class="upload-item" onclick="uploadPhoto(this)">
+                        <div class="upload-icon">📷</div>
+                        <div class="upload-text">编号 003<br>单独照片</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 确认区 -->
+        <div class="form-card">
+            <div class="card-header">
+                <div class="card-icon">✍️</div>
+                <h2 class="card-title">物业电子签名确认</h2>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label required">请物业交接人在下方签字区域手写签名</label>
+                <div class="signature-pad">
+                    <canvas class="signature-canvas" id="signatureCanvas"></canvas>
+                </div>
+                <div class="signature-actions">
+                    <button class="btn btn-secondary" onclick="clearSignature()">🗑️ 清除重签</button>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button class="btn btn-secondary">💾 暂存草稿</button>
+                <button class="btn btn-primary btn-large" onclick="submitForm()">✅ 提交保存并生成收容单据</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 获取定位
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        document.getElementById('community').value = '阳光花园小区 (已定位)';
+                        alert('定位成功！');
+                    },
+                    (error) => {
+                        alert('定位失败，请手动输入小区名称');
+                    }
+                );
+            } else {
+                alert('您的浏览器不支持定位功能');
+            }
+        }
+
+        // 生成宠物编号
+        function generatePetIds() {
+            const count = parseInt(document.getElementById('petCount').value);
+            const petIdList = document.getElementById('petIdList');
+            const singlePhotoGrid = document.getElementById('singlePhotoGrid');
+            
+            petIdList.innerHTML = '';
+            singlePhotoGrid.innerHTML = '';
+            
+            for (let i = 1; i <= count; i++) {
+                const id = String(i).padStart(3, '0');
+                
+                // 添加编号标签
+                const tag = document.createElement('span');
+                tag.className = 'pet-id-tag';
+                tag.innerHTML = `宠物编号 <span class="id-number">${id}</span>`;
+                petIdList.appendChild(tag);
+                
+                // 添加照片上传项
+                const uploadItem = document.createElement('div');
+                uploadItem.className = 'upload-item';
+                uploadItem.onclick = function() { uploadPhoto(this); };
+                uploadItem.innerHTML = `
+                    <div class="upload-icon">📷</div>
+                    <div class="upload-text">编号 ${id}<br>单独照片</div>
+                `;
+                singlePhotoGrid.appendChild(uploadItem);
+            }
+        }
+
+        // 照片上传模拟
+        function uploadPhoto(element) {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        element.innerHTML = `
+                            <div class="photo-preview">
+                                <img src="${event.target.result}" alt="预览">
+                                <div class="photo-tag">已上传</div>
+                            </div>
+                        `;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+            input.click();
+        }
+
+        // 电子签名画布
+        const canvas = document.getElementById('signatureCanvas');
+        const ctx = canvas.getContext('2d');
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+
+        // 设置画布尺寸
+        function resizeCanvas() {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+        }
+
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // 鼠标事件
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseout', stopDrawing);
+
+        // 触摸事件
+        canvas.addEventListener('touchstart', handleTouchStart);
+        canvas.addEventListener('touchmove', handleTouchMove);
+        canvas.addEventListener('touchend', stopDrawing);
+
+        function startDrawing(e) {
+            isDrawing = true;
+            [lastX, lastY] = [e.offsetX, e.offsetY];
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(e.offsetX, e.offsetY);
+            ctx.stroke();
+            [lastX, lastY] = [e.offsetX, e.offsetY];
+        }
+
+        function stopDrawing() {
+            isDrawing = false;
+        }
+
+        function handleTouchStart(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const rect = canvas.getBoundingClientRect();
+            isDrawing = true;
+            lastX = touch.clientX - rect.left;
+            lastY = touch.clientY - rect.top;
+        }
+
+        function handleTouchMove(e) {
+            e.preventDefault();
+            if (!isDrawing) return;
+            const touch = e.touches[0];
+            const rect = canvas.getBoundingClientRect();
+            const x = touch.clientX - rect.left;
+            const y = touch.clientY - rect.top;
+            
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            [lastX, lastY] = [x, y];
+        }
+
+        function clearSignature() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        // 提交表单
+        function submitForm() {
+            // 验证必填项
+            const inputs = document.querySelectorAll('.required');
+            let isValid = true;
+            
+            inputs.forEach(input => {
+                if (input.tagName === 'INPUT' && !input.value.trim()) {
+                    input.style.borderColor = '#d32f2f';
+                    isValid = false;
+                }
+            });
+
+            // 检查签名
+            const isEmpty = ctx.getImageData(0, 0, canvas.width, canvas.height).data.every((val) => val === 0 || val === 255);
+            if (isEmpty) {
+                alert('请物业交接人完成电子签名');
+                isValid = false;
+            }
+
+            if (isValid) {
+                alert('✅ 收容登记成功！\n\n状态：在途\n已自动生成收容台账和单据');
+                // 这里可以跳转到详情页或列表页
+            } else {
+                alert('请填写所有必填项并完成签名');
+            }
+        }
+    </script>
+</body>
+</html>

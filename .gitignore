@@ -1,16 +1,7 @@
-# Web development
-*.html
-*.css
-*.js
-*.json
-*.xml
-*.svg
-*.ico
-*.woff
-*.woff2
-*.ttf
-*.eot
-*.map
+# Web development (keep source files, ignore build artifacts)
+# *.min.js
+# *.min.css
+# *.map
 
 # Dependencies
 node_modules/

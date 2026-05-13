@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>诊疗操作详情 - 流浪动物 TNR 管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        /* 顶部导航 */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 20px 30px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+        }
+
+        .logo h1 {
+            font-size: 20px;
+            color: #1a1a2e;
+            font-weight: 600;
+        }
+
+        .back-btn {
+            padding: 10px 20px;
+            background: #f0f0f5;
+            border: none;
+            border-radius: 8px;
+            color: #666;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: #e0e0e8;
+        }
+
+        /* 宠物信息卡片 */
+        .pet-info-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            display: flex;
+            gap: 24px;
+            align-items: flex-start;
+        }
+
+        .pet-photo {
+            width: 150px;
+            height: 150px;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #f0f0f5;
+            flex-shrink: 0;
+        }
+
+        .pet-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .pet-details {
+            flex: 1;
+        }
+
+        .pet-id {
+            font-size: 24px;
+            font-weight: 700;
+            color: #11998e;
+            margin-bottom: 12px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 8px;
+        }
+
+        .info-label {
+            font-size: 13px;
+            color: #666;
+            min-width: 80px;
+        }
+
+        .info-value {
+            font-size: 14px;
+            color: #1a1a2e;
+            font-weight: 500;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            background: #fff3e0;
+            color: #f57c00;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            margin-top: 12px;
+        }
+
+        /* 表单卡片 */
+        .form-card {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #f0f0f5;
+        }
+
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a2e;
+        }
+
+        /* 诊疗项目选择 */
+        .treatment-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .treatment-option {
+            border: 2px solid #e0e0e8;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .treatment-option:hover {
+            border-color: #11998e;
+            background: #f0fdf4;
+        }
+
+        .treatment-option.selected {
+            border-color: #11998e;
+            background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+            box-shadow: 0 4px 15px rgba(17, 153, 142, 0.2);
+        }
+
+        .treatment-icon {
+            font-size: 36px;
+            margin-bottom: 12px;
+        }
+
+        .treatment-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a1a2e;
+            margin-bottom: 8px;
+        }
+
+        .treatment-desc {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .checkbox-wrapper {
+            margin-top: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .custom-checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #11998e;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+        }
+
+        .treatment-option.selected .custom-checkbox {
+            background: #11998e;
+        }
+
+        /* 表单元素 */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .required::before {
+            content: '*';
+            color: #d32f2f;
+            margin-right: 4px;
+        }
+
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e8;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            outline: none;
+            border-color: #11998e;
+            box-shadow: 0 0 0 3px rgba(17, 153, 142, 0.1);
+        }
+
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        /* 库存提示 */
+        .stock-info {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: #e3f2fd;
+            color: #1976d2;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-left: 12px;
+        }
+
+        .stock-warning {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        /* 芯片选择器 */
+        .chip-selector {
+            border: 2px solid #e0e0e8;
+            border-radius: 10px;
+            padding: 16px;
+            margin-top: 12px;
+        }
+
+        .chip-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .chip-item {
+            padding: 10px;
+            border: 2px solid #e0e0e8;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .chip-item:hover {
+            border-color: #11998e;
+        }
+
+        .chip-item.selected {
+            border-color: #11998e;
+            background: #e8f5e9;
+        }
+
+        .chip-item.unavailable {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: #f5f5f5;
+        }
+
+        .chip-number {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a1a2e;
+        }
+
+        .chip-status {
+            font-size: 11px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        /* 底部操作栏 */
+        .form-actions {
+            display: flex;
+            gap: 16px;
+            justify-content: flex-end;
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 2px solid #f0f0f5;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .btn-secondary {
+            background: #f0f0f5;
+            color: #666;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e8;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            color: white;
+            box-shadow: 0 4px 15px rgba(17, 153, 142, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(17, 153, 142, 0.4);
+        }
+
+        .btn-large {
+            padding: 16px 32px;
+            font-size: 16px;
+        }
+
+        /* 弹窗样式 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1a1a2e;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: #f0f0f5;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            color: #666;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .pet-info-card {
+                flex-direction: column;
+            }
+
+            .pet-photo {
+                width: 100%;
+                height: 200px;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-card {
+                padding: 20px;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 顶部导航 -->
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">🏥</div>
+                <h1>诊疗操作详情</h1>
+            </div>
+            <button class="back-btn" onclick="history.back()">← 返回</button>
+        </header>
+
+        <!-- 宠物基础信息 -->
+        <div class="pet-info-card">
+            <div class="pet-photo">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 150 150'%3E%3Crect fill='%23f0f0f5' width='150' height='150'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='48' fill='%23ccc'%3E🐱%3C/text%3E%3C/svg%3E" alt="宠物照片">
+            </div>
+            <div class="pet-details">
+                <div class="pet-id">宠物编号：A001</div>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">来源小区:</span>
+                        <span class="info-value">阳光花园小区</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">收容时间:</span>
+                        <span class="info-value">2025-01-10</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">动物类型:</span>
+                        <span class="info-value">猫</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">估计年龄:</span>
+                        <span class="info-value">约 2 岁</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">体重:</span>
+                        <span class="info-value">4.5kg</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">性别:</span>
+                        <span class="info-value">母</span>
+                    </div>
+                </div>
+                <div class="status-badge">📋 状态：待诊疗</div>
+            </div>
+        </div>
+
+        <!-- 诊疗操作表单 -->
+        <div class="form-card">
+            <div class="card-header">
+                <div class="card-icon">🩺</div>
+                <h2 class="card-title">诊疗项目选择与执行</h2>
+            </div>
+
+            <!-- 诊疗项目选择 -->
+            <div class="treatment-options">
+                <div class="treatment-option selected" onclick="toggleTreatment(this, 'neuter')">
+                    <div class="treatment-icon">🔪</div>
+                    <div class="treatment-name">绝育手术</div>
+                    <div class="treatment-desc">必填病历档案</div>
+                    <div class="checkbox-wrapper">
+                        <div class="custom-checkbox">✓</div>
+                        <span>已选</span>
+                    </div>
+                </div>
+
+                <div class="treatment-option selected" onclick="toggleTreatment(this, 'vaccine')">
+                    <div class="treatment-icon">💉</div>
+                    <div class="treatment-name">疫苗接种</div>
+                    <div class="treatment-desc">自动扣减库存</div>
+                    <div class="checkbox-wrapper">
+                        <div class="custom-checkbox">✓</div>
+                        <span>已选</span>
+                    </div>
+                </div>
+
+                <div class="treatment-option selected" onclick="toggleTreatment(this, 'deworm')">
+                    <div class="treatment-icon">💊</div>
+                    <div class="treatment-name">驱虫护理</div>
+                    <div class="treatment-desc">自动扣减库存</div>
+                    <div class="checkbox-wrapper">
+                        <div class="custom-checkbox">✓</div>
+                        <span>已选</span>
+                    </div>
+                </div>
+
+                <div class="treatment-option selected" onclick="toggleTreatment(this, 'chip')">
+                    <div class="treatment-icon">📟</div>
+                    <div class="treatment-name">芯片植入</div>
+                    <div class="treatment-desc">选择芯片编号</div>
+                    <div class="checkbox-wrapper">
+                        <div class="custom-checkbox">✓</div>
+                        <span>已选</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 绝育病历录入 -->
+            <div id="neuter-section" class="form-group">
+                <label class="form-label required">绝育手术病历档案</label>
+                <textarea class="form-textarea" placeholder="请详细记录手术过程、麻醉方式、伤口处理情况、术后注意事项等..."></textarea>
+            </div>
+
+            <!-- 疫苗信息 -->
+            <div id="vaccine-section" class="form-row">
+                <div class="form-group">
+                    <label class="form-label required">疫苗类型</label>
+                    <select class="form-select">
+                        <option value="">请选择疫苗类型</option>
+                        <option value="rabies">狂犬疫苗</option>
+                        <option value="cat三联">猫三联</option>
+                        <option value="犬多联">犬多联</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label required">疫苗批号</label>
+                    <input type="text" class="form-input" placeholder="请输入疫苗批号">
+                    <span class="stock-info">当前库存：32 支</span>
+                </div>
+            </div>
+
+            <!-- 驱虫信息 -->
+            <div id="deworm-section" class="form-row">
+                <div class="form-group">
+                    <label class="form-label required">驱虫药类型</label>
+                    <select class="form-select">
+                        <option value="">请选择驱虫药类型</option>
+                        <option value="体内">体内驱虫</option>
+                        <option value="体外">体外驱虫</option>
+                        <option value="内外同驱">内外同驱</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label required">用药剂量</label>
+                    <input type="text" class="form-input" placeholder="请输入用药剂量">
+                    <span class="stock-info">当前库存：45 盒</span>
+                </div>
+            </div>
+
+            <!-- 芯片选择 -->
+            <div id="chip-section" class="form-group">
+                <label class="form-label required">选择芯片编号</label>
+                <div class="chip-selector">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <span style="font-size: 14px; color: #666;">请选择可用芯片（绿色为可用，灰色为已使用）</span>
+                        <span class="stock-info stock-warning">当前库存：15 个</span>
+                    </div>
+                    <div class="chip-list">
+                        <div class="chip-item selected" onclick="selectChip(this)">
+                            <div class="chip-number">1000010023</div>
+                            <div class="chip-status" style="color: #388e3c;">可用</div>
+                        </div>
+                        <div class="chip-item" onclick="selectChip(this)">
+                            <div class="chip-number">1000010024</div>
+                            <div class="chip-status" style="color: #388e3c;">可用</div>
+                        </div>
+                        <div class="chip-item" onclick="selectChip(this)">
+                            <div class="chip-number">1000010025</div>
+                            <div class="chip-status" style="color: #388e3c;">可用</div>
+                        </div>
+                        <div class="chip-item unavailable">
+                            <div class="chip-number">1000010001</div>
+                            <div class="chip-status">已使用</div>
+                        </div>
+                        <div class="chip-item unavailable">
+                            <div class="chip-number">1000010005</div>
+                            <div class="chip-status">已使用</div>
+                        </div>
+                        <div class="chip-item" onclick="selectChip(this)">
+                            <div class="chip-number">1000010026</div>
+                            <div class="chip-status" style="color: #388e3c;">可用</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 其他备注 -->
+            <div class="form-group">
+                <label class="form-label">其他备注说明</label>
+                <textarea class="form-textarea" placeholder="如有其他需要说明的情况，请在此填写..."></textarea>
+            </div>
+
+            <!-- 底部操作 -->
+            <div class="form-actions">
+                <button class="btn btn-secondary">💾 暂存草稿</button>
+                <button class="btn btn-primary btn-large" onclick="submitTreatment()">✅ 保存并生成诊疗档案</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 切换诊疗项目选择
+        function toggleTreatment(element, type) {
+            element.classList.toggle('selected');
+            
+            // 显示/隐藏对应区域
+            const section = document.getElementById(type + '-section');
+            if (section) {
+                section.style.display = element.classList.contains('selected') ? 'block' : 'none';
+            }
+        }
+
+        // 选择芯片
+        function selectChip(element) {
+            if (element.classList.contains('unavailable')) return;
+            
+            // 移除其他选中状态
+            document.querySelectorAll('.chip-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            
+            // 添加当前选中状态
+            element.classList.add('selected');
+        }
+
+        // 提交诊疗记录
+        function submitTreatment() {
+            // 验证必填项
+            const requiredInputs = document.querySelectorAll('.required');
+            let isValid = true;
+            
+            requiredInputs.forEach(input => {
+                if ((input.tagName === 'INPUT' || input.tagName === 'TEXTAREA' || input.tagName === 'SELECT') && !input.value.trim()) {
+                    input.style.borderColor = '#d32f2f';
+                    isValid = false;
+                }
+            });
+
+            // 检查是否选择了芯片
+            const selectedChip = document.querySelector('.chip-item.selected:not(.unavailable)');
+            if (!selectedChip) {
+                alert('请选择芯片编号');
+                isValid = false;
+            }
+
+            if (isValid) {
+                alert('✅ 诊疗记录保存成功！\n\n已执行操作：\n- 绝育手术病历已归档\n- 疫苗库存 -1\n- 驱虫药库存 -1\n- 芯片 1000010023 已绑定并标记为不可复用\n\n宠物状态已更新为：待观察');
+                // 这里可以跳转到详情页或列表页
+            } else {
+                alert('请填写所有必填项');
+            }
+        }
+
+        // 初始化显示状态
+        document.addEventListener('DOMContentLoaded', function() {
+            // 默认隐藏所有可选区域，根据选中状态显示
+            ['neuter', 'vaccine', 'deworm', 'chip'].forEach(type => {
+                const option = document.querySelector(`.treatment-option[onclick*="${type}"]`);
+                const section = document.getElementById(type + '-section');
+                if (section) {
+                    section.style.display = option && option.classList.contains('selected') ? 'block' : 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
