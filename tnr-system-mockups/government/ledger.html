@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>台账中心 - 流浪动物 TNR 管理系统</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'PingFang SC','Microsoft YaHei',sans-serif;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);min-height:100vh;color:white;padding:20px}
+        .container{max-width:1400px;margin:0 auto}
+        .header{display:flex;justify-content:space-between;align-items:center;padding:20px 30px;background:rgba(255,255,255,0.05);backdrop-filter:blur(10px);border-radius:16px;margin-bottom:24px;border:1px solid rgba(255,255,255,0.1)}
+        .logo{display:flex;align-items:center;gap:12px}
+        .logo-icon{width:44px;height:44px;background:linear-gradient(135deg,#00d2ff,#3a7bd5);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px}
+        .logo h1{font-size:20px;font-weight:600}
+        .back-btn{padding:10px 20px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:8px;color:white;cursor:pointer;text-decoration:none;font-size:14px}
+        .section{background:rgba(255,255,255,0.05);backdrop-filter:blur(10px);border-radius:16px;padding:24px;margin-bottom:24px;border:1px solid rgba(255,255,255,0.1)}
+        .section-title{font-size:18px;font-weight:600;margin-bottom:20px;display:flex;align-items:center;gap:10px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,0.1)}
+        .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px}
+        .stat-card{background:rgba(255,255,255,0.05);border-radius:12px;padding:20px;text-align:center;border:1px solid rgba(255,255,255,0.1)}
+        .stat-value{font-size:32px;font-weight:700;color:#00d2ff}
+        .stat-label{font-size:14px;color:rgba(255,255,255,0.6);margin-top:4px}
+        .tab-bar{display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap}
+        .tab-item{padding:10px 20px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;cursor:pointer;font-size:14px;transition:all 0.3s}
+        .tab-item.active{background:linear-gradient(135deg,#00d2ff,#3a7bd5);border-color:transparent}
+        .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px}
+        .search-box{display:flex;gap:8px}
+        .search-input{padding:10px 16px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:10px;color:white;font-size:14px;width:250px}
+        .search-input::placeholder{color:rgba(255,255,255,0.4)}
+        .search-input:focus{outline:none;border-color:#00d2ff}
+        .btn{padding:10px 20px;border:none;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;transition:all 0.3s;font-family:inherit}
+        .btn-primary{background:linear-gradient(135deg,#00d2ff,#3a7bd5);color:white}
+        .btn-secondary{background:rgba(255,255,255,0.1);color:white;border:1px solid rgba(255,255,255,0.2)}
+        table{width:100%;border-collapse:separate;border-spacing:0}
+        th{background:rgba(255,255,255,0.05);padding:14px 16px;text-align:left;font-size:14px;color:rgba(255,255,255,0.6);border-bottom:1px solid rgba(255,255,255,0.1)}
+        td{padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.05);font-size:14px}
+        tr:hover td{background:rgba(255,255,255,0.03)}
+        .status-badge{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:500}
+        .status-complete{background:rgba(0,255,136,0.2);color:#00ff88}
+        .status-pending{background:rgba(255,149,0,0.2);color:#ff9500}
+        .filter-bar{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+        .filter-item{padding:8px 16px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;font-size:13px;cursor:pointer;transition:all 0.3s}
+        .filter-item.active{background:rgba(0,210,255,0.2);border-color:#00d2ff;color:#00d2ff}
+        .report-card{background:rgba(255,255,255,0.05);border-radius:12px;padding:20px;margin-bottom:16px;border:1px solid rgba(255,255,255,0.1);display:flex;justify-content:space-between;align-items:center}
+        .report-info{flex:1}
+        .report-title{font-size:16px;font-weight:500;margin-bottom:4px}
+        .report-desc{font-size:13px;color:rgba(255,255,255,0.5)}
+        .report-actions{display:flex;gap:8px}
+        @media(max-width:768px){.stats-grid{grid-template-columns:repeat(2,1fr)}table{font-size:12px}th,td{padding:10px 8px}}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo"><div class="logo-icon">📑</div><h1>台账中心</h1></div>
+            <a href="dashboard.html" class="back-btn">← 返回大屏</a>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card"><div class="stat-value">156</div><div class="stat-label">捕捉台账</div></div>
+            <div class="stat-card"><div class="stat-value">89</div><div class="stat-label">绝育台账</div></div>
+            <div class="stat-card"><div class="stat-value">42</div><div class="stat-label">领养台账</div></div>
+            <div class="stat-card"><div class="stat-value">23</div><div class="stat-label">放养台账</div></div>
+            <div class="stat-card"><div class="stat-value">2</div><div class="stat-label">安乐死台账</div></div>
+        </div>
+
+        <div class="tab-bar">
+            <button class="tab-item active" onclick="switchTab(this,'capture')">捕捉台账</button>
+            <button class="tab-item" onclick="switchTab(this,'sterilization')">绝育台账</button>
+            <button class="tab-item" onclick="switchTab(this,'adoption')">领养台账</button>
+            <button class="tab-item" onclick="switchTab(this,'release')">放养台账</button>
+            <button class="tab-item" onclick="switchTab(this,'reports')">报表导出</button>
+        </div>
+
+        <div class="section" id="captureTab">
+            <div class="toolbar">
+                <div class="filter-bar">
+                    <div class="filter-item active" onclick="filterTime(this,'all')">全部</div>
+                    <div class="filter-item" onclick="filterTime(this,'today')">今日</div>
+                    <div class="filter-item" onclick="filterTime(this,'week')">本周</div>
+                    <div class="filter-item" onclick="filterTime(this,'month')">本月</div>
+                    <div class="filter-item" onclick="filterTime(this,'quarter')">本季度</div>
+                </div>
+            </div>
+            <div class="toolbar">
+                <div class="search-box"><input type="text" class="search-input" placeholder="搜索编号/小区/操作人..."><button class="btn btn-primary">搜索</button></div>
+                <div style="display:flex;gap:8px"><button class="btn btn-secondary" onclick="exportLedger('capture')">📥 导出Excel</button><button class="btn btn-secondary" onclick="printLedger('capture')">🖨️ 打印</button></div>
+            </div>
+            <table>
+                <thead><tr><th>编号</th><th>捕捉日期</th><th>捕捉来源</th><th>动物类型</th><th>捕捉人</th><th>交接医院</th><th>状态</th><th>操作</th></tr></thead>
+                <tbody>
+                    <tr><td>A001</td><td>2025-01-10</td><td>阳光花园小区</td><td>猫/母/约2岁</td><td>张师傅</td><td>爱心医院</td><td><span class="status-badge status-complete">已完成</span></td><td><button class="btn btn-secondary" style="padding:6px 12px;font-size:12px" onclick="viewLedgerDetail('A001','capture')">详情</button></td></tr>
+                    <tr><td>A002</td><td>2025-01-10</td><td>阳光花园小区</td><td>猫/公/约1岁</td><td>张师傅</td><td>爱心医院</td><td><span class="status-badge status-complete">已完成</span></td><td><button class="btn btn-secondary" style="padding:6px 12px;font-size:12px" onclick="viewLedgerDetail('A002','capture')">详情</button></td></tr>
+                    <tr><td>A008</td><td>2025-01-08</td><td>翠湖花园</td><td>猫/母/约2岁</td><td>李师傅</td><td>爱心医院</td><td><span class="status-badge status-complete">已完成</span></td><td><button class="btn btn-secondary" style="padding:6px 12px;font-size:12px" onclick="viewLedgerDetail('A008','capture')">详情</button></td></tr>
+                    <tr><td>A012</td><td>2025-01-06</td><td>锦绣家园</td><td>犬/公/约1岁</td><td>张师傅</td><td>仁爱医院</td><td><span class="status-badge status-complete">已完成</span></td><td><button class="btn btn-secondary" style="padding:6px 12px;font-size:12px" onclick="viewLedgerDetail('A012','capture')">详情</button></td></tr>
+                    <tr><td>A015</td><td>2025-01-05</td><td>碧水湾小区</td><td>猫/母/约3岁</td><td>李师傅</td><td>博爱医院</td><td><span class="status-badge status-pending">流程中</span></td><td><button class="btn btn-secondary" style="padding:6px 12px;font-size:12px" onclick="viewLedgerDetail('A015','capture')">详情</button></td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section" id="sterilizationTab" style="display:none">
+            <div class="toolbar">
+                <div class="search-box"><input type="text" class="search-input" placeholder="搜索编号/医院..."><button class="btn btn-primary">搜索</button></div>
+                <div style="display:flex;gap:8px"><button class="btn btn-secondary">📥 导出Excel</button><button class="btn btn-secondary">🖨️ 打印</button></div>
+            </div>
+            <table>
+                <thead><tr><th>编号</th><th>绝育日期</th><th>绝育医院</th><th>动物类型</th><th>手术医生</th><th>麻醉方式</th><th>术后状况</th><th>操作</th></tr></thead>
+                <tbody>
+                    <tr><td>A001</td><td>2025-01-12</td><td>爱心医院</td><td>猫/母</td><td>王医生</td><td>吸入麻醉</td><td>恢复良好</td><td><button class="btn btn-secondary" style="padding:6px 12px;font-size:12px">详情</button></td></tr>
+                    <tr><td>A008</td><td>2025-01-09</td><td>爱心医院</td><td>猫/母</td><td>王医生</td><td>注射麻醉</td><td>恢复良好</td><td><button class="btn btn-secondary" style="padding:6px 12px;font-size:12px">详情</button></td></tr>
+                    <tr><td>A012</td><td>2025-01-07</td><td>仁爱医院</td><td>犬/公</td><td>李医生</td><td>吸入麻醉</td><td>恢复良好</td><td><button class="btn btn-secondary" style="padding:6px 12px;font-size:12px">详情</button></td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section" id="adoptionTab" style="display:none">
+            <div class="toolbar">
+                <div class="search-box"><input type="text" class="search-input" placeholder="搜索编号/领养人..."><button class="btn btn-primary">搜索</button></div>
+                <div style="display:flex;gap:8px"><button class="btn btn-secondary">📥 导出Excel</button><button class="btn btn-secondary">🖨️ 打印</button></div>
+            </div>
+            <table>
+                <thead><tr><th>编号</th><th>领养日期</th><th>动物类型</th><th>领养人</th><th>联系电话</th><th>来源医院</th><th>回访状态</th><th>操作</th></tr></thead>
+                <tbody>
+                    <tr><td>A008</td><td>2025-01-12</td><td>猫/母</td><td>张女士</td><td>138****6789</td><td>爱心医院</td><td>1/12次</td><td><button class="btn btn-secondary" style="padding:6px 12px;font-size:12px">详情</button></td></tr>
+                    <tr><td>A012</td><td>2025-01-08</td><td>犬/公</td><td>李先生</td><td>139****1234</td><td>仁爱医院</td><td>4/12次</td><td><button class="btn btn-secondary" style="padding:6px 12px;font-size:12px">详情</button></td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section" id="releaseTab" style="display:none">
+            <div class="toolbar">
+                <div class="search-box"><input type="text" class="search-input" placeholder="搜索编号/小区..."><button class="btn btn-primary">搜索</button></div>
+                <div style="display:flex;gap:8px"><button class="btn btn-secondary">📥 导出Excel</button><button class="btn btn-secondary">🖨️ 打印</button></div>
+            </div>
+            <table>
+                <thead><tr><th>编号</th><th>放养日期</th><th>动物类型</th><th>放养小区</th><th>物业确认</th><th>耳标状态</th><th>操作</th></tr></thead>
+                <tbody>
+                    <tr><td>A018</td><td>2025-01-13</td><td>猫/公</td><td>和谐家园</td><td>✅ 已确认</td><td>✅ 已剪耳</td><td><button class="btn btn-secondary" style="padding:6px 12px;font-size:12px">详情</button></td></tr>
+                    <tr><td>A003</td><td>2025-01-11</td><td>猫/母</td><td>碧水湾小区</td><td>✅ 已确认</td><td>✅ 已剪耳</td><td><button class="btn btn-secondary" style="padding:6px 12px;font-size:12px">详情</button></td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section" id="reportsTab" style="display:none">
+            <div class="section-title">📊 报表导出</div>
+            <div class="report-card">
+                <div class="report-info"><div class="report-title">📋 捕捉台账报表</div><div class="report-desc">包含所有捕捉记录的完整台账，含捕捉来源、动物信息、交接状态</div></div>
+                <div class="report-actions"><button class="btn btn-secondary" onclick="previewReport('capture')">预览</button><button class="btn btn-primary" onclick="exportReport('capture')">📥 导出</button></div>
+            </div>
+            <div class="report-card">
+                <div class="report-info"><div class="report-title">🏥 绝育台账报表</div><div class="report-desc">包含所有绝育手术记录，含医院、医生、麻醉方式、术后恢复</div></div>
+                <div class="report-actions"><button class="btn btn-secondary">预览</button><button class="btn btn-primary">📥 导出</button></div>
+            </div>
+            <div class="report-card">
+                <div class="report-info"><div class="report-title">❤️ 领养台账报表</div><div class="report-desc">包含所有领养记录，含领养人信息、回访状态、承诺书签署</div></div>
+                <div class="report-actions"><button class="btn btn-secondary">预览</button><button class="btn btn-primary">📥 导出</button></div>
+            </div>
+            <div class="report-card">
+                <div class="report-info"><div class="report-title">🌳 放养台账报表</div><div class="report-desc">包含所有放养记录，含放养小区、物业确认、耳标状态</div></div>
+                <div class="report-actions"><button class="btn btn-secondary">预览</button><button class="btn btn-primary">📥 导出</button></div>
+            </div>
+            <div class="report-card">
+                <div class="report-info"><div class="report-title">📦 物料台账报表</div><div class="report-desc">包含所有物料出入库记录，含采购、调拨、使用流水</div></div>
+                <div class="report-actions"><button class="btn btn-secondary">预览</button><button class="btn btn-primary">📥 导出</button></div>
+            </div>
+            <div class="report-card">
+                <div class="report-info"><div class="report-title">📊 综合统计报表</div><div class="report-desc">包含TNR全流程综合统计数据，含趋势图、对比分析</div></div>
+                <div class="report-actions"><button class="btn btn-secondary">预览</button><button class="btn btn-primary">📥 导出</button></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(el,tab){
+            document.querySelectorAll('.tab-item').forEach(t=>t.classList.remove('active'));
+            el.classList.add('active');
+            ['capture','sterilization','adoption','release','reports'].forEach(t=>{
+                document.getElementById(t+'Tab').style.display=t===tab?'block':'none';
+            });
+        }
+        function filterTime(el,type){
+            document.querySelectorAll('.filter-item').forEach(f=>f.classList.remove('active'));
+            el.classList.add('active');
+        }
+        function viewLedgerDetail(id,type){
+            var types={'capture':'捕捉台账','sterilization':'绝育台账','adoption':'领养台账','release':'放养台账'};
+            alert('查看 '+id+' 完整'+(types[type]||'台账')+'\n\n包含信息：\n- 基础信息\n- 流程记录\n- 单据照片\n- 操作日志');
+        }
+        function exportLedger(type){alert('✅ 正在导出'+(type==='capture'?'捕捉':'')+'台账Excel文件\n\n文件将自动下载...')}
+        function printLedger(type){alert('正在打印'+(type==='capture'?'捕捉':'')+'台账\n\n请确保打印机已连接')}
+        function previewReport(type){alert('预览捕捉台账报表\n\n报表将新窗口打开显示')}
+        function exportReport(type){alert('✅ 正在导出Excel文件\n\n文件将自动下载...')}
+    </script>
+</body>
+</html>

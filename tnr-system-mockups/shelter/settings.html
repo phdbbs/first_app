@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -77,7 +77,7 @@
         <div class="sidebar-logo"><div class="sidebar-logo-icon">🐾</div><h1>TNR管理系统</h1></div>
         <nav class="nav-menu">
             <a href="homepage.html" class="nav-item"><span class="nav-icon">🏠</span><span class="nav-label">首页看板</span></a>
-            <a href="add-shelter.html" class="nav-item"><span class="nav-icon">➕</span><span class="nav-label">新增收容</span></a>
+            <a href="add-shelter.html" class="nav-item"><span class="nav-icon">➕</span><span class="nav-label">新增捕捉</span></a>
             <a href="owner-return.html" class="nav-item"><span class="nav-icon">🏠</span><span class="nav-label">主人领回</span></a>
             <div class="nav-divider"></div>
             <a href="material.html" class="nav-item"><span class="nav-icon">📦</span><span class="nav-label">物料管理</span></a>
@@ -101,10 +101,10 @@
         <div id="basicTab" class="tab-content active">
         <div class="section">
             <div class="section-header"><h3 class="section-title">基本信息</h3></div>
-            <div class="form-group"><label class="form-label">收容所名称</label><input type="text" class="form-input" id="shelterName" value="爱心流浪动物收容所"></div>
+            <div class="form-group"><label class="form-label">捕捉站名称</label><input type="text" class="form-input" id="shelterName" value="爱心流浪动物捕捉站"></div>
             <div class="form-group"><label class="form-label">联系电话</label><input type="text" class="form-input" id="shelterPhone" value="0571-88888888"></div>
-            <div class="form-group"><label class="form-label">收容所地址</label><input type="text" class="form-input" id="shelterAddress" value="杭州市西湖区爱心路88号"></div>
-            <div class="form-group"><label class="form-label">备注说明</label><textarea class="form-textarea" id="shelterNote">本收容所专注于流浪猫TNR管理，服务周边15个社区。</textarea></div>
+            <div class="form-group"><label class="form-label">捕捉站地址</label><input type="text" class="form-input" id="shelterAddress" value="杭州市西湖区爱心路88号"></div>
+            <div class="form-group"><label class="form-label">备注说明</label><textarea class="form-textarea" id="shelterNote">本捕捉站专注于流浪猫TNR管理，服务周边15个社区。</textarea></div>
             <button class="btn btn-primary" onclick="saveBasicInfo()">💾 保存修改</button>
         </div>
         <div class="section">
@@ -115,7 +115,7 @@
             </div>
             <div class="info-box">
                 <div class="info-title">🏘️ 小区管理</div>
-                <div class="info-desc">小区信息无需预先设置，在新增收容登记、搜索筛选等操作时直接输入小区名称即可使用。</div>
+                <div class="info-desc">小区信息无需预先设置，在新增捕捉登记、搜索筛选等操作时直接输入小区名称即可使用。</div>
             </div>
         </div>
         </div>
@@ -137,7 +137,7 @@
         <div id="noticeTab" class="tab-content">
             <div class="section">
                 <div class="section-header"><h3 class="section-title">通知设置</h3></div>
-                <div class="setting-row"><div class="setting-info"><div class="setting-name">收容登记通知</div><div class="setting-desc">新动物收容登记时发送通知</div></div><div class="toggle active" onclick="toggleSetting(this)"></div></div>
+                <div class="setting-row"><div class="setting-info"><div class="setting-name">捕捉登记通知</div><div class="setting-desc">新动物捕捉登记时发送通知</div></div><div class="toggle active" onclick="toggleSetting(this)"></div></div>
                 <div class="setting-row"><div class="setting-info"><div class="setting-name">物料预警通知</div><div class="setting-desc">物料库存低于安全值时发送预警</div></div><div class="toggle active" onclick="toggleSetting(this)"></div></div>
                 <div class="setting-row"><div class="setting-info"><div class="setting-name">领养审核通知</div><div class="setting-desc">收到新的领养申请时发送通知</div></div><div class="toggle active" onclick="toggleSetting(this)"></div></div>
                 <div class="setting-row"><div class="setting-info"><div class="setting-name">转运到达通知</div><div class="setting-desc">动物到达医院时发送通知</div></div><div class="toggle" onclick="toggleSetting(this)"></div></div>
@@ -150,7 +150,7 @@
                 <table class="data-table">
                     <thead><tr><th>操作时间</th><th>操作人</th><th>操作类型</th><th>操作内容</th><th>IP地址</th></tr></thead>
                     <tbody>
-                        <tr><td>2025-01-15 14:30:22</td><td>管理员</td><td>收容登记</td><td>新增收容登记，阳光花园小区，3只动物</td><td>192.168.1.100</td></tr>
+                        <tr><td>2025-01-15 14:30:22</td><td>管理员</td><td>捕捉登记</td><td>新增捕捉登记，阳光花园小区，3只动物</td><td>192.168.1.100</td></tr>
                         <tr><td>2025-01-15 13:20:15</td><td>管理员</td><td>物料管理</td><td>物料下发出库，芯片50个→瑞鹏宠物医院</td><td>192.168.1.100</td></tr>
                         <tr><td>2025-01-15 11:45:08</td><td>管理员</td><td>转运管理</td><td>转运下发完成，批次号TR20250115001</td><td>192.168.1.100</td></tr>
                         <tr><td>2025-01-15 10:15:33</td><td>管理员</td><td>领养审核</td><td>审核通过领养申请 AD20250113001</td><td>192.168.1.100</td></tr>

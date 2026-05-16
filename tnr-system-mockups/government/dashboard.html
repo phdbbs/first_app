@@ -85,6 +85,9 @@
             font-size: 14px;
             font-weight: 600;
         }
+        .nav-bar{display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap}
+        .nav-item{padding:12px 24px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;cursor:pointer;font-size:14px;font-weight:500;transition:all 0.3s;text-decoration:none;color:white;display:flex;align-items:center;gap:8px}
+        .nav-item:hover,.nav-item.active{background:linear-gradient(135deg,#00d2ff,#3a7bd5);border-color:transparent}
 
         /* 核心数据概览 */
         .stats-overview {
@@ -480,13 +483,21 @@
         <header class="header">
             <div class="logo">
                 <div class="logo-icon">🏛️</div>
-                <h1>流浪动物 TNR 收容绝育领养管理系统</h1>
+                <h1>流浪动物 TNR 捕捉绝育领养管理系统</h1>
             </div>
             <div class="header-info">
                 <div class="current-time" id="currentTime">2025-01-15 14:30:00</div>
                 <div class="admin-badge">👤 市级管理员</div>
             </div>
         </header>
+
+        <nav class="nav-bar">
+            <a href="dashboard.html" class="nav-item active">📊 数据大屏</a>
+            <a href="institutions.html" class="nav-item">🏛️ 机构管理</a>
+            <a href="supervision.html" class="nav-item">🔍 全业务监管</a>
+            <a href="material.html" class="nav-item">📦 物料监管</a>
+            <a href="ledger.html" class="nav-item">📑 台账中心</a>
+        </nav>
 
         <!-- 预警提示 -->
         <div class="alert-banner">
@@ -495,14 +506,14 @@
                 <div class="alert-title">库存预警提醒</div>
                 <div class="alert-desc">仁爱宠物医院狂犬疫苗库存低于安全线，博爱宠物医院芯片库存不足，请及时处理</div>
             </div>
-            <button class="alert-action" onclick="alert('跳转至物料监管详情页')">查看详情</button>
+            <button class="alert-action" onclick="location.href='material.html'">查看详情</button>
         </div>
 
         <!-- 核心数据概览 -->
         <div class="stats-overview">
             <div class="stat-card">
                 <div class="stat-icon">📦</div>
-                <div class="stat-title">累计收容总量</div>
+                <div class="stat-title">累计捕捉总量</div>
                 <div class="stat-value value-blue">1,842</div>
                 <div class="stat-trend">↑ 本月 +156</div>
             </div>
@@ -593,7 +604,7 @@
                         <div class="rank-number rank-1">1</div>
                         <div class="rank-info">
                             <div class="rank-name">爱心宠物医院</div>
-                            <div class="rank-stats">收容 328 只 | 诊疗 312 只 | 领养 89 只</div>
+                            <div class="rank-stats">捕捉 328 只 | 诊疗 312 只 | 领养 89 只</div>
                         </div>
                         <div class="rank-score">98.5</div>
                     </div>
@@ -601,7 +612,7 @@
                         <div class="rank-number rank-2">2</div>
                         <div class="rank-info">
                             <div class="rank-name">仁爱宠物医院</div>
-                            <div class="rank-stats">收容 286 只 | 诊疗 274 只 | 领养 76 只</div>
+                            <div class="rank-stats">捕捉 286 只 | 诊疗 274 只 | 领养 76 只</div>
                         </div>
                         <div class="rank-score">96.2</div>
                     </div>
@@ -609,7 +620,7 @@
                         <div class="rank-number rank-3">3</div>
                         <div class="rank-info">
                             <div class="rank-name">博爱宠物医院</div>
-                            <div class="rank-stats">收容 245 只 | 诊疗 238 只 | 领养 65 只</div>
+                            <div class="rank-stats">捕捉 245 只 | 诊疗 238 只 | 领养 65 只</div>
                         </div>
                         <div class="rank-score">94.8</div>
                     </div>
@@ -617,7 +628,7 @@
                         <div class="rank-number rank-other">4</div>
                         <div class="rank-info">
                             <div class="rank-name">和谐动物医院</div>
-                            <div class="rank-stats">收容 198 只 | 诊疗 192 只 | 领养 52 只</div>
+                            <div class="rank-stats">捕捉 198 只 | 诊疗 192 只 | 领养 52 只</div>
                         </div>
                         <div class="rank-score">92.1</div>
                     </div>
@@ -625,7 +636,7 @@
                         <div class="rank-number rank-other">5</div>
                         <div class="rank-info">
                             <div class="rank-name">康瑞宠物诊所</div>
-                            <div class="rank-stats">收容 156 只 | 诊疗 148 只 | 领养 38 只</div>
+                            <div class="rank-stats">捕捉 156 只 | 诊疗 148 只 | 领养 38 只</div>
                         </div>
                         <div class="rank-score">89.5</div>
                     </div>

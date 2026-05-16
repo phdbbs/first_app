@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -92,7 +92,7 @@
         <div class="sidebar-logo"><div class="sidebar-logo-icon">🐾</div><h1>TNR管理系统</h1></div>
         <nav class="nav-menu">
             <a href="homepage.html" class="nav-item"><span class="nav-icon">🏠</span><span class="nav-label">首页看板</span></a>
-            <a href="add-shelter.html" class="nav-item"><span class="nav-icon">➕</span><span class="nav-label">新增收容</span></a>
+            <a href="add-shelter.html" class="nav-item"><span class="nav-icon">➕</span><span class="nav-label">新增捕捉</span></a>
             <a href="owner-return.html" class="nav-item"><span class="nav-icon">🏠</span><span class="nav-label">主人领回</span></a>
             <div class="nav-divider"></div>
             <a href="material.html" class="nav-item"><span class="nav-icon">📦</span><span class="nav-label">物料管理</span></a>
@@ -108,7 +108,7 @@
     <main class="main-content">
         <div class="header-bar"><h2 class="page-title">数据报表</h2><div class="current-time" id="currentTime"></div></div>
         <div class="stats-grid">
-            <div class="stat-card yellow"><span class="stat-icon">📋</span><span class="stat-value">128</span><span class="stat-label">本月收容</span></div>
+            <div class="stat-card yellow"><span class="stat-icon">📋</span><span class="stat-value">128</span><span class="stat-label">本月捕捉</span></div>
             <div class="stat-card green"><span class="stat-icon">✅</span><span class="stat-value">86</span><span class="stat-label">已绝育</span></div>
             <div class="stat-card cyan"><span class="stat-icon">🌿</span><span class="stat-value">52</span><span class="stat-label">已放养</span></div>
             <div class="stat-card blue"><span class="stat-icon">🏠</span><span class="stat-value">22</span><span class="stat-label">已领养</span></div>
@@ -119,7 +119,7 @@
         </div>
         <div class="tab-bar">
             <div class="tab-item active" onclick="switchReportTab('overview')">数据总览</div>
-            <div class="tab-item" onclick="switchReportTab('shelter')">收容统计</div>
+            <div class="tab-item" onclick="switchReportTab('shelter')">捕捉统计</div>
             <div class="tab-item" onclick="switchReportTab('medical')">诊疗统计</div>
             <div class="tab-item" onclick="switchReportTab('material')">物料统计</div>
             <div class="tab-item" onclick="switchReportTab('adoption')">领养统计</div>
@@ -127,7 +127,7 @@
         <div id="overviewTab" class="tab-content active">
         <div class="chart-container">
             <div class="chart-box">
-                <div class="chart-title">月度收容趋势</div>
+                <div class="chart-title">月度捕捉趋势</div>
                 <div class="bar-chart">
                     <div class="bar-group"><div class="bar-value">45</div><div class="bar" style="height:90px;background:linear-gradient(180deg,#f6ad55,#ed8936);"></div><div class="bar-label">7月</div></div>
                     <div class="bar-group"><div class="bar-value">62</div><div class="bar" style="height:124px;background:linear-gradient(180deg,#f6ad55,#ed8936);"></div><div class="bar-label">8月</div></div>
@@ -145,15 +145,15 @@
                         <div class="legend-item"><div class="legend-color" style="background:#48bb78;"></div><div class="legend-text">放养 <span class="legend-value">42%</span></div></div>
                         <div class="legend-item"><div class="legend-color" style="background:#ed8936;"></div><div class="legend-text">领养 <span class="legend-value">28%</span></div></div>
                         <div class="legend-item"><div class="legend-color" style="background:#4299e1;"></div><div class="legend-text">主人领回 <span class="legend-value">20%</span></div></div>
-                        <div class="legend-item"><div class="legend-color" style="background:#fc8181;"></div><div class="legend-text">在收容 <span class="legend-value">10%</span></div></div>
+                        <div class="legend-item"><div class="legend-color" style="background:#fc8181;"></div><div class="legend-text">在捕捉 <span class="legend-value">10%</span></div></div>
                     </div>
                 </div>
             </div>
         </div>
         <div class="section">
-            <div class="section-header"><h3 class="section-title">各小区收容统计</h3></div>
+            <div class="section-header"><h3 class="section-title">各小区捕捉统计</h3></div>
             <table class="data-table">
-                <thead><tr><th>小区名称</th><th>收容数量</th><th>绝育数量</th><th>放养数量</th><th>领养数量</th><th>环比变化</th></tr></thead>
+                <thead><tr><th>小区名称</th><th>捕捉数量</th><th>绝育数量</th><th>放养数量</th><th>领养数量</th><th>环比变化</th></tr></thead>
                 <tbody>
                     <tr><td>阳光花园小区</td><td>35</td><td>28</td><td>18</td><td>8</td><td><span class="trend-up">↑ 12%</span></td></tr>
                     <tr><td>幸福家园</td><td>28</td><td>22</td><td>14</td><td>6</td><td><span class="trend-up">↑ 8%</span></td></tr>
@@ -167,14 +167,14 @@
         <div id="shelterTab" class="tab-content">
             <div class="section">
                 <div class="section-header">
-                    <h3 class="section-title">收容统计明细</h3>
+                    <h3 class="section-title">捕捉统计明细</h3>
                     <div style="display:flex;gap:8px;">
                         <button class="btn btn-cyan" onclick="exportReport('shelter')">📥 导出Excel</button>
                         <button class="btn btn-secondary" onclick="printReport('shelter')">🖨️ 打印报表</button>
                     </div>
                 </div>
                 <table class="data-table">
-                    <thead><tr><th>月份</th><th>小区名称</th><th>收容数量</th><th>在途数量</th><th>已转运数量</th><th>待回收数量</th><th>环比变化</th></tr></thead>
+                    <thead><tr><th>月份</th><th>小区名称</th><th>捕捉数量</th><th>在途数量</th><th>已转运数量</th><th>待回收数量</th><th>环比变化</th></tr></thead>
                     <tbody>
                         <tr><td>2025-01</td><td>阳光花园小区</td><td>35</td><td>3</td><td>28</td><td>4</td><td><span class="trend-up">↑ 12%</span></td></tr>
                         <tr><td>2025-01</td><td>幸福家园</td><td>28</td><td>2</td><td>22</td><td>4</td><td><span class="trend-up">↑ 8%</span></td></tr>
@@ -251,11 +251,11 @@
             document.getElementById(tabName+'Tab').classList.add('active');
         }
         function exportReport(type){
-            const typeNames={'shelter':'收容统计','medical':'诊疗统计','material':'物料统计','adoption':'领养统计'};
+            const typeNames={'shelter':'捕捉统计','medical':'诊疗统计','material':'物料统计','adoption':'领养统计'};
             alert(`正在导出 ${typeNames[type]||'报表'}...\n\n报表包含以下内容：\n1. 数据明细表格\n2. 统计图表\n3. 汇总分析\n\n请选择导出格式：\n• Excel (.xlsx)\n• CSV (.csv)\n• PDF (.pdf)`);
         }
         function printReport(type){
-            const typeNames={'shelter':'收容统计','medical':'诊疗统计','material':'物料统计','adoption':'领养统计'};
+            const typeNames={'shelter':'捕捉统计','medical':'诊疗统计','material':'物料统计','adoption':'领养统计'};
             alert(`正在准备打印 ${typeNames[type]||'报表'}...\n\n打印设置：\n• 纸张：A4\n• 方向：纵向\n• 边距：标准\n• 页眉：系统名称 + 日期\n• 页脚：页码\n\n点击确定打开打印预览。`);
         }
     </script>

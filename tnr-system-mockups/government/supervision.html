@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>全业务监管 - 流浪动物 TNR 管理系统</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'PingFang SC','Microsoft YaHei',sans-serif;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);min-height:100vh;color:white;padding:20px}
+        .container{max-width:1400px;margin:0 auto}
+        .header{display:flex;justify-content:space-between;align-items:center;padding:20px 30px;background:rgba(255,255,255,0.05);backdrop-filter:blur(10px);border-radius:16px;margin-bottom:24px;border:1px solid rgba(255,255,255,0.1)}
+        .logo{display:flex;align-items:center;gap:12px}
+        .logo-icon{width:44px;height:44px;background:linear-gradient(135deg,#00d2ff,#3a7bd5);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px}
+        .logo h1{font-size:20px;font-weight:600}
+        .back-btn{padding:10px 20px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:8px;color:white;cursor:pointer;text-decoration:none;font-size:14px}
+        .section{background:rgba(255,255,255,0.05);backdrop-filter:blur(10px);border-radius:16px;padding:24px;margin-bottom:24px;border:1px solid rgba(255,255,255,0.1)}
+        .section-title{font-size:18px;font-weight:600;margin-bottom:20px;display:flex;align-items:center;gap:10px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,0.1)}
+        .tab-bar{display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap}
+        .tab-item{padding:10px 20px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;cursor:pointer;font-size:14px;transition:all 0.3s}
+        .tab-item.active{background:linear-gradient(135deg,#00d2ff,#3a7bd5);border-color:transparent}
+        .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px}
+        .search-box{display:flex;gap:8px}
+        .search-input{padding:10px 16px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:10px;color:white;font-size:14px;width:250px}
+        .search-input::placeholder{color:rgba(255,255,255,0.4)}
+        .search-input:focus{outline:none;border-color:#00d2ff}
+        .btn{padding:10px 20px;border:none;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;transition:all 0.3s;font-family:inherit}
+        .btn-primary{background:linear-gradient(135deg,#00d2ff,#3a7bd5);color:white}
+        .btn-secondary{background:rgba(255,255,255,0.1);color:white;border:1px solid rgba(255,255,255,0.2)}
+        table{width:100%;border-collapse:separate;border-spacing:0}
+        th{background:rgba(255,255,255,0.05);padding:14px 16px;text-align:left;font-size:14px;color:rgba(255,255,255,0.6);border-bottom:1px solid rgba(255,255,255,0.1)}
+        td{padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.05);font-size:14px}
+        tr:hover td{background:rgba(255,255,255,0.03)}
+        .status-badge{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:500}
+        .status-flow{background:rgba(0,210,255,0.2);color:#00d2ff}
+        .status-treating{background:rgba(255,149,0,0.2);color:#ff9500}
+        .status-released{background:rgba(0,255,136,0.2);color:#00ff88}
+        .status-adopted{background:rgba(255,107,157,0.2);color:#ff6b9d}
+        .status-returned{background:rgba(167,139,250,0.2);color:#a78bfa}
+        .status-euthanized{background:rgba(229,57,53,0.2);color:#e53935}
+        .detail-link{color:#00d2ff;cursor:pointer;text-decoration:underline}
+        @media(max-width:768px){table{font-size:12px}th,td{padding:10px 8px}}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo"><div class="logo-icon">🔍</div><h1>全业务监管</h1></div>
+            <a href="dashboard.html" class="back-btn">← 返回大屏</a>
+        </header>
+
+        <div class="tab-bar">
+            <button class="tab-item active" onclick="switchTab(this,'capture')">捕捉记录</button>
+            <button class="tab-item" onclick="switchTab(this,'transfer')">转运记录</button>
+            <button class="tab-item" onclick="switchTab(this,'treatment')">诊疗记录</button>
+            <button class="tab-item" onclick="switchTab(this,'release')">放养记录</button>
+            <button class="tab-item" onclick="switchTab(this,'adoption')">领养记录</button>
+            <button class="tab-item" onclick="switchTab(this,'euthanasia')">安乐死记录</button>
+        </div>
+
+        <div class="section" id="captureTab">
+            <div class="toolbar">
+                <div class="search-box"><input type="text" class="search-input" placeholder="搜索编号/小区..."><button class="btn btn-primary">搜索</button></div>
+                <div style="display:flex;gap:8px"><button class="btn btn-secondary">导出Excel</button></div>
+            </div>
+            <table>
+                <thead><tr><th>宠物编号</th><th>捕捉时间</th><th>捕捉来源</th><th>动物类型</th><th>当前状态</th><th>操作</th></tr></thead>
+                <tbody>
+                    <tr><td>A001</td><td>2025-01-10</td><td>阳光花园小区</td><td>猫/母</td><td><span class="status-badge status-treating">诊疗中</span></td><td><span class="detail-link" onclick="viewAnimalProfile('A001')">查看档案</span></td></tr>
+                    <tr><td>A008</td><td>2025-01-08</td><td>翠湖花园</td><td>猫/母</td><td><span class="status-badge status-adopted">已领养</span></td><td><span class="detail-link" onclick="viewAnimalProfile('A008')">查看档案</span></td></tr>
+                    <tr><td>A012</td><td>2025-01-06</td><td>锦绣家园</td><td>犬/公</td><td><span class="status-badge status-adopted">已领养</span></td><td><span class="detail-link" onclick="viewAnimalProfile('A012')">查看档案</span></td></tr>
+                    <tr><td>A015</td><td>2025-01-05</td><td>碧水湾小区</td><td>猫/母</td><td><span class="status-badge status-flow">待领养</span></td><td><span class="detail-link" onclick="viewAnimalProfile('A015')">查看档案</span></td></tr>
+                    <tr><td>A018</td><td>2025-01-04</td><td>和谐家园</td><td>犬/公</td><td><span class="status-badge status-released">已放养</span></td><td><span class="detail-link" onclick="viewAnimalProfile('A018')">查看档案</span></td></tr>
+                    <tr><td>A021</td><td>2025-01-03</td><td>朝阳小区</td><td>猫/母</td><td><span class="status-badge status-flow">待领养</span></td><td><span class="detail-link" onclick="viewAnimalProfile('A021')">查看档案</span></td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section" id="transferTab" style="display:none">
+            <div class="toolbar"><div class="search-box"><input type="text" class="search-input" placeholder="搜索转运单号..."><button class="btn btn-primary">搜索</button></div></div>
+            <table>
+                <thead><tr><th>转运单号</th><th>发出时间</th><th>来源</th><th>目标医院</th><th>动物数量</th><th>状态</th><th>操作</th></tr></thead>
+                <tbody>
+                    <tr><td>TR20250115001</td><td>2025-01-15</td><td>阳光花园</td><td>爱心医院</td><td>5只</td><td><span class="status-badge status-treating">待接收</span></td><td><span class="detail-link">详情</span></td></tr>
+                    <tr><td>TR20250114003</td><td>2025-01-14</td><td>锦绣家园</td><td>仁爱医院</td><td>4只</td><td><span class="status-badge status-released">已接收</span></td><td><span class="detail-link">详情</span></td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section" id="treatmentTab" style="display:none">
+            <div class="toolbar"><div class="search-box"><input type="text" class="search-input" placeholder="搜索诊疗记录..."><button class="btn btn-primary">搜索</button></div></div>
+            <table>
+                <thead><tr><th>宠物编号</th><th>诊疗日期</th><th>诊疗医院</th><th>诊疗项目</th><th>操作医生</th><th>操作</th></tr></thead>
+                <tbody>
+                    <tr><td>A001</td><td>2025-01-12</td><td>爱心医院</td><td>绝育+疫苗+芯片</td><td>王医生</td><td><span class="detail-link">查看病历</span></td></tr>
+                    <tr><td>A008</td><td>2025-01-09</td><td>爱心医院</td><td>绝育+疫苗+驱虫+芯片</td><td>王医生</td><td><span class="detail-link">查看病历</span></td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section" id="releaseTab" style="display:none">
+            <div class="toolbar"><div class="search-box"><input type="text" class="search-input" placeholder="搜索放养记录..."><button class="btn btn-primary">搜索</button></div></div>
+            <table>
+                <thead><tr><th>宠物编号</th><th>放养日期</th><th>放养小区</th><th>物业确认</th><th>操作</th></tr></thead>
+                <tbody>
+                    <tr><td>A018</td><td>2025-01-13</td><td>和谐家园</td><td>✅ 已确认</td><td><span class="detail-link">详情</span></td></tr>
+                    <tr><td>A003</td><td>2025-01-11</td><td>碧水湾小区</td><td>✅ 已确认</td><td><span class="detail-link">详情</span></td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section" id="adoptionTab" style="display:none">
+            <div class="toolbar"><div class="search-box"><input type="text" class="search-input" placeholder="搜索领养记录..."><button class="btn btn-primary">搜索</button></div></div>
+            <table>
+                <thead><tr><th>宠物编号</th><th>领养日期</th><th>领养人</th><th>来源医院</th><th>回访状态</th><th>操作</th></tr></thead>
+                <tbody>
+                    <tr><td>A008</td><td>2025-01-12</td><td>张女士</td><td>爱心医院</td><td>1/12次</td><td><span class="detail-link">详情</span></td></tr>
+                    <tr><td>A012</td><td>2025-01-08</td><td>李先生</td><td>仁爱医院</td><td>4/12次</td><td><span class="detail-link">详情</span></td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section" id="euthanasiaTab" style="display:none">
+            <div class="toolbar"><div class="search-box"><input type="text" class="search-input" placeholder="搜索安乐死记录..."><button class="btn btn-primary">搜索</button></div></div>
+            <table>
+                <thead><tr><th>宠物编号</th><th>处置日期</th><th>处置医院</th><th>处置原因</th><th>审批状态</th><th>操作</th></tr></thead>
+                <tbody>
+                    <tr><td>A007</td><td>2025-01-10</td><td>博爱医院</td><td>严重传染病</td><td><span class="status-badge status-released">已审批</span></td><td><span class="detail-link">详情</span></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(el,tab){
+            document.querySelectorAll('.tab-item').forEach(t=>t.classList.remove('active'));
+            el.classList.add('active');
+            ['capture','transfer','treatment','release','adoption','euthanasia'].forEach(t=>{
+                document.getElementById(t+'Tab').style.display=t===tab?'block':'none';
+            });
+        }
+        function viewAnimalProfile(id){alert('查看 '+id+' 全生命周期档案\n\n包含信息：\n- 捕捉记录（来源、时间、捕捉人）\n- 转运记录（医院、交接单据）\n- 诊疗记录（绝育、疫苗、芯片）\n- 流向记录（领养/放养/主人领回）\n- 回访记录（领养人打卡）')}
+    </script>
+</body>
+</html>

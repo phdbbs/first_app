@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>新增收容登记 - 流浪动物 TNR 管理系统</title>
+    <title>新增捕捉登记 - 流浪动物 TNR 管理系统</title>
     <style>
         * {
             margin: 0;
@@ -429,7 +429,7 @@
     <div class="container">
         <!-- 头部 -->
         <div class="header">
-            <h1>🐾 新增收容登记</h1>
+            <h1>🐾 新增捕捉登记</h1>
             <div class="header-info">
                 <span id="currentDate"></span> | 
                 <span id="operatorName">操作员：张管理员</span>
@@ -490,17 +490,17 @@
                     </div>
                 </div>
 
-                <!-- 收容动物信息区 -->
+                <!-- 捕捉动物信息区 -->
                 <div class="section">
                     <div class="section-header">
                         <div class="section-icon">🐕</div>
-                        <div class="section-title">收容动物信息</div>
+                        <div class="section-title">捕捉动物信息</div>
                     </div>
                     <div class="section-body">
                         <div class="form-grid">
                             <div class="form-group">
                                 <label class="form-label">
-                                    <span class="required">*</span> 收容总数量
+                                    <span class="required">*</span> 捕捉总数量
                                 </label>
                                 <div class="number-input-wrapper">
                                     <input type="number" class="form-input number-input" id="petCount" min="1" max="100" placeholder="输入数量" onchange="generatePetIds()" required>
@@ -513,7 +513,7 @@
                             <div class="form-group full-width">
                                 <label class="form-label">自动生成宠物编号</label>
                                 <div class="pet-id-list" id="petIdList">
-                                    <span style="color: #999; font-size: 14px;">请输入收容数量后点击"生成编号"</span>
+                                    <span style="color: #999; font-size: 14px;">请输入捕捉数量后点击"生成编号"</span>
                                 </div>
                             </div>
                             
@@ -577,13 +577,13 @@
         <div class="modal-content">
             <div class="success-animation">
                 <div class="success-icon">✓</div>
-                <h3 style="margin-bottom: 16px; color: #333;">收容登记成功！</h3>
+                <h3 style="margin-bottom: 16px; color: #333;">捕捉登记成功！</h3>
                 <p style="color: #666; margin-bottom: 24px;">
-                    已生成收容单据，宠物状态：<span class="status-badge status-in-transit">在途</span>
+                    已生成捕捉单据，宠物状态：<span class="status-badge status-in-transit">在途</span>
                 </p>
                 
                 <div class="document-preview">
-                    <div class="document-title">流浪动物收容登记表</div>
+                    <div class="document-title">流浪动物捕捉登记表</div>
                     <div id="documentContent"></div>
                 </div>
                 
@@ -791,7 +791,7 @@
                 <div>操作员：张管理员</div>
                 <div>------------------------</div>
                 <div>所在小区：${community}</div>
-                <div>收容数量：${petCount} 只</div>
+                <div>捕捉数量：${petCount} 只</div>
                 <div>宠物编号：${petIds}</div>
                 <div>------------------------</div>
                 <div>状态：<span class="status-badge status-in-transit">在途</span></div>

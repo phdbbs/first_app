@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>新增收容登记 - 流浪动物 TNR 管理系统</title>
+    <title>新增捕捉登记 - 流浪动物 TNR 管理系统</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%); min-height: 100vh; display: flex; }
@@ -72,7 +72,7 @@
         <div class="sidebar-logo"><div class="sidebar-logo-icon">🐾</div><h1>TNR管理系统</h1></div>
         <nav class="nav-menu">
             <a href="homepage.html" class="nav-item"><span class="nav-icon">🏠</span><span class="nav-label">首页看板</span></a>
-            <a href="add-shelter.html" class="nav-item active"><span class="nav-icon">➕</span><span class="nav-label">新增收容</span></a>
+            <a href="add-shelter.html" class="nav-item active"><span class="nav-icon">➕</span><span class="nav-label">新增捕捉</span></a>
             <a href="owner-return.html" class="nav-item"><span class="nav-icon">🏠</span><span class="nav-label">主人领回</span></a>
             <div class="nav-divider"></div>
             <a href="material.html" class="nav-item"><span class="nav-icon">📦</span><span class="nav-label">物料管理</span></a>
@@ -86,7 +86,7 @@
         <div class="user-section"><div class="user-info"><div class="user-avatar">管</div><div class="user-details"><div class="user-name">管理员</div><div class="user-role">系统管理员</div></div></div></div>
     </aside>
     <main class="main-content">
-        <div class="header-bar"><h2 class="page-title">新增收容登记</h2><div class="current-time" id="currentTime"></div></div>
+        <div class="header-bar"><h2 class="page-title">新增捕捉登记</h2><div class="current-time" id="currentTime"></div></div>
         <div class="section">
             <div class="section-header"><div class="section-icon">🏢</div><h3 class="section-title">小区物业信息</h3></div>
             <div class="form-row">
@@ -100,9 +100,9 @@
             <div class="form-group"><label class="form-label required">联系电话</label><input type="tel" class="form-input" placeholder="请输入联系电话"></div>
         </div>
         <div class="section">
-            <div class="section-header"><div class="section-icon">🐱</div><h3 class="section-title">收容动物信息</h3></div>
-            <div class="info-box"><p>💡 系统将根据您输入的收容数量，自动批量生成宠物唯一编号（格式：001、002、003...）</p></div>
-            <div class="form-group"><label class="form-label required">收容总数量</label><input type="number" class="form-input" id="petCount" value="3" min="1" max="50" onchange="generatePetIds()"></div>
+            <div class="section-header"><div class="section-icon">🐱</div><h3 class="section-title">捕捉动物信息</h3></div>
+            <div class="info-box"><p>💡 系统将根据您输入的捕捉数量，自动批量生成宠物唯一编号（格式：001、002、003...）</p></div>
+            <div class="form-group"><label class="form-label required">捕捉总数量</label><input type="number" class="form-input" id="petCount" value="3" min="1" max="50" onchange="generatePetIds()"></div>
             <div class="form-group"><label class="form-label">自动生成宠物编号</label><div class="pet-id-list" id="petIdList"><span class="pet-id-tag">宠物编号 <span class="id-number">001</span></span><span class="pet-id-tag">宠物编号 <span class="id-number">002</span></span><span class="pet-id-tag">宠物编号 <span class="id-number">003</span></span></div></div>
             <div class="form-group"><label class="form-label required">整体合影上传</label><div class="upload-grid"><div class="upload-item" onclick="uploadPhoto(this)"><div class="upload-icon">📷</div><div class="upload-text">点击上传<br>批次合影</div></div></div></div>
             <div class="form-group"><label class="form-label required">单只编号单独拍照</label><div class="upload-grid" id="singlePhotoGrid"><div class="upload-item" onclick="uploadPhoto(this)"><div class="upload-icon">📷</div><div class="upload-text">编号 001<br>单独照片</div></div><div class="upload-item" onclick="uploadPhoto(this)"><div class="upload-icon">📷</div><div class="upload-text">编号 002<br>单独照片</div></div><div class="upload-item" onclick="uploadPhoto(this)"><div class="upload-icon">📷</div><div class="upload-text">编号 003<br>单独照片</div></div></div></div>
@@ -110,7 +110,7 @@
         <div class="section">
             <div class="section-header"><div class="section-icon">✍️</div><h3 class="section-title">物业电子签名确认</h3></div>
             <div class="form-group"><label class="form-label required">请物业交接人在下方签字区域手写签名</label><div class="signature-pad"><canvas class="signature-canvas" id="signatureCanvas"></canvas></div><div class="signature-actions"><button class="btn btn-secondary" onclick="clearSignature()">🗑️ 清除重签</button></div></div>
-            <div class="form-actions"><button class="btn btn-secondary">💾 暂存草稿</button><button class="btn btn-primary btn-large" onclick="submitForm()">✅ 提交保存并生成收容单据</button></div>
+            <div class="form-actions"><button class="btn btn-secondary">💾 暂存草稿</button><button class="btn btn-primary btn-large" onclick="submitForm()">✅ 提交保存并生成捕捉单据</button></div>
         </div>
     </main>
     <script>
@@ -129,7 +129,7 @@
         function handleTouchStart(e){e.preventDefault();const touch=e.touches[0];const rect=canvas.getBoundingClientRect();lastX=touch.clientX-rect.left;lastY=touch.clientY-rect.top;isDrawing=true;}
         function handleTouchMove(e){e.preventDefault();if(!isDrawing)return;const touch=e.touches[0];const rect=canvas.getBoundingClientRect();const x=touch.clientX-rect.left;const y=touch.clientY-rect.top;ctx.beginPath();ctx.moveTo(lastX,lastY);ctx.lineTo(x,y);ctx.stroke();[lastX,lastY]=[x,y];}
         function clearSignature(){ctx.clearRect(0,0,canvas.width,canvas.height);}
-        function submitForm(){alert('收容登记已提交保存！');}
+        function submitForm(){alert('捕捉登记已提交保存！');}
     </script>
 </body>
 </html>

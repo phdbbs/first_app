@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -99,7 +99,7 @@
         <div class="sidebar-logo"><div class="sidebar-logo-icon">🐾</div><h1>TNR管理系统</h1></div>
         <nav class="nav-menu">
             <a href="homepage.html" class="nav-item"><span class="nav-icon">🏠</span><span class="nav-label">首页看板</span></a>
-            <a href="add-shelter.html" class="nav-item"><span class="nav-icon">➕</span><span class="nav-label">新增收容</span></a>
+            <a href="add-shelter.html" class="nav-item"><span class="nav-icon">➕</span><span class="nav-label">新增捕捉</span></a>
             <a href="owner-return.html" class="nav-item"><span class="nav-icon">🏠</span><span class="nav-label">主人领回</span></a>
             <div class="nav-divider"></div>
             <a href="material.html" class="nav-item"><span class="nav-icon">📦</span><span class="nav-label">物料管理</span></a>
@@ -273,7 +273,7 @@
             const hospital=document.getElementById('recoverHospital').value;
             const selected=document.querySelectorAll('#recoverAnimalList .animal-item.selected');
             if(selected.length===0){alert('请选择至少一只动物');return;}
-            alert(`动物回收成功！\n来源医院：${hospital}\n回收数量：${selected.length}只\n动物已纳入收容所库存。`);
+            alert(`动物回收成功！\n来源医院：${hospital}\n回收数量：${selected.length}只\n动物已纳入捕捉站库存。`);
             closeModal('recoverModal');
         }
         function confirmRecover(id){if(confirm(`确认回收动物 ${id} 吗？`)){alert(`动物 ${id} 已回收成功！`);}}

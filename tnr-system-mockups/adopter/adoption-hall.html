@@ -309,7 +309,7 @@
                 </div>
                 <div class="step">
                     <div class="step-number">2</div>
-                    <div class="step-text">线下联系医院/收容所</div>
+                    <div class="step-text">线下联系医院/捕捉站</div>
                 </div>
                 <div class="step">
                     <div class="step-number">3</div>
@@ -462,28 +462,28 @@
             <div class="tab-icon">🏠</div>
             <div class="tab-label">领养大厅</div>
         </div>
-        <div class="tab-item" onclick="alert('请先办理领养手续后查看')">
+        <a href="my-adoption.html" class="tab-item" style="text-decoration:none;color:inherit">
             <div class="tab-icon">🐾</div>
             <div class="tab-label">我的领养</div>
-        </div>
-        <div class="tab-item" onclick="alert('请先办理领养手续后打卡')">
+        </a>
+        <a href="checkin.html" class="tab-item" style="text-decoration:none;color:inherit">
             <div class="tab-icon">📸</div>
             <div class="tab-label">回访打卡</div>
-        </div>
-        <div class="tab-item">
+        </a>
+        <a href="messages.html" class="tab-item" style="text-decoration:none;color:inherit">
             <div class="tab-icon">🔔</div>
             <div class="tab-label">消息中心</div>
-        </div>
-        <div class="tab-item">
+        </a>
+        <a href="profile.html" class="tab-item" style="text-decoration:none;color:inherit">
             <div class="tab-icon">👤</div>
             <div class="tab-label">个人中心</div>
-        </div>
+        </a>
     </div>
 
     <script>
         // 查看详情
         function viewDetail(petId) {
-            alert(`跳转至宠物详情页\n\n宠物编号：${petId}\n\n您可以查看：\n- 收容记录\n- 诊疗记录\n- 绝育疫苗芯片信息\n- 所属医院联系方式\n- 领养要求及线下联系指引`);
+            alert(`跳转至宠物详情页\n\n宠物编号：${petId}\n\n您可以查看：\n- 捕捉记录\n- 诊疗记录\n- 绝育疫苗芯片信息\n- 所属医院联系方式\n- 领养要求及线下联系指引`);
         }
 
         // 筛选标签切换

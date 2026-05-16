@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的领养 - 流浪动物 TNR 管理系统</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'PingFang SC','Microsoft YaHei',sans-serif;background:linear-gradient(135deg,#ff9a9e 0%,#fecfef 100%);min-height:100vh;padding-bottom:70px}
+        .container{max-width:750px;margin:0 auto;padding:20px}
+        .header{background:rgba(255,255,255,0.95);backdrop-filter:blur(10px);border-radius:16px;padding:16px 20px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 4px 20px rgba(0,0,0,0.08)}
+        .logo{display:flex;align-items:center;gap:10px}
+        .logo-icon{width:36px;height:36px;background:linear-gradient(135deg,#ff9a9e,#fecfef);border-radius:10px;display:flex;align-items:center;justify-content:center;color:white;font-size:18px}
+        .logo h1{font-size:18px;color:#1a1a2e;font-weight:600}
+        .pet-card{background:white;border-radius:16px;padding:20px;margin-bottom:16px;box-shadow:0 4px 20px rgba(0,0,0,0.08)}
+        .pet-header{display:flex;gap:16px;margin-bottom:16px}
+        .pet-avatar{width:80px;height:80px;border-radius:16px;background:#f0f0f5;display:flex;align-items:center;justify-content:center;font-size:40px;flex-shrink:0}
+        .pet-basic{flex:1}
+        .pet-name{font-size:18px;font-weight:600;color:#1a1a2e;margin-bottom:4px}
+        .pet-id{font-size:13px;color:#999;margin-bottom:8px}
+        .pet-tags{display:flex;gap:6px;flex-wrap:wrap}
+        .tag{padding:3px 10px;background:#f0f0f5;border-radius:6px;font-size:11px;color:#666}
+        .info-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px}
+        .info-item{padding:12px;background:#f8f9fc;border-radius:10px}
+        .info-label{font-size:12px;color:#999;margin-bottom:4px}
+        .info-value{font-size:14px;color:#1a1a2e;font-weight:500}
+        .timeline{margin-bottom:16px;padding-left:20px;border-left:3px solid #f0f0f5}
+        .timeline-item{position:relative;padding:12px 0 12px 20px}
+        .timeline-item::before{content:'';position:absolute;left:-27px;top:18px;width:12px;height:12px;border-radius:50%;background:#f0f0f5;border:3px solid white}
+        .timeline-item.done::before{background:#68d391}
+        .timeline-item.current::before{background:#f6ad55;box-shadow:0 0 0 4px rgba(246,173,85,0.2)}
+        .timeline-title{font-size:14px;font-weight:500;color:#1a1a2e}
+        .timeline-desc{font-size:12px;color:#999;margin-top:4px}
+        .action-bar{display:flex;gap:12px}
+        .btn{padding:12px 24px;border:none;border-radius:12px;font-size:14px;font-weight:500;cursor:pointer;transition:all 0.3s;font-family:inherit;flex:1;text-align:center}
+        .btn-primary{background:linear-gradient(135deg,#ff9a9e,#fecfef);color:white}
+        .btn-secondary{background:#f0f0f5;color:#666}
+        .tab-bar{position:fixed;bottom:0;left:0;right:0;background:white;padding:8px 0;display:flex;justify-content:space-around;box-shadow:0 -2px 10px rgba(0,0,0,0.05);z-index:100}
+        .tab-item{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 16px;cursor:pointer;transition:all 0.3s}
+        .tab-item.active{color:#ff9a9e}
+        .tab-icon{font-size:22px}
+        .tab-label{font-size:11px}
+        .empty-state{text-align:center;padding:60px 20px;color:#999}
+        .empty-icon{font-size:60px;margin-bottom:16px}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">🐾</div>
+                <h1>我的领养</h1>
+            </div>
+            <div style="font-size:24px;color:#666;cursor:pointer" onclick="location.href='adoption-hall.html'">🔍</div>
+        </header>
+
+        <div class="pet-card">
+            <div class="pet-header">
+                <div class="pet-avatar">🐱</div>
+                <div class="pet-basic">
+                    <div class="pet-name">小咪</div>
+                    <div class="pet-id">编号 A008</div>
+                    <div class="pet-tags">
+                        <span class="tag">橘猫</span>
+                        <span class="tag">2岁</span>
+                        <span class="tag">已绝育</span>
+                        <span class="tag">有芯片</span>
+                    </div>
+                </div>
+            </div>
+            <div class="info-grid">
+                <div class="info-item"><div class="info-label">领养日期</div><div class="info-value">2025-01-12</div></div>
+                <div class="info-item"><div class="info-label">领养状态</div><div class="info-value" style="color:#388e3c">✅ 已完成</div></div>
+                <div class="info-item"><div class="info-label">来源医院</div><div class="info-value">爱心宠物医院</div></div>
+                <div class="info-item"><div class="info-label">回访打卡</div><div class="info-value" style="color:#f57c00">1/12 次</div></div>
+            </div>
+            <div class="timeline">
+                <div class="timeline-item done"><div class="timeline-title">✅ 领养申请通过</div><div class="timeline-desc">2025-01-11 审核通过</div></div>
+                <div class="timeline-item done"><div class="timeline-title">✅ 签署领养协议</div><div class="timeline-desc">2025-01-12 线下签署</div></div>
+                <div class="timeline-item done"><div class="timeline-title">✅ 领取宠物</div><div class="timeline-desc">2025-01-12 从爱心宠物医院领取</div></div>
+                <div class="timeline-item current"><div class="timeline-title">📍 月度回访打卡中</div><div class="timeline-desc">每月需打卡1次，已打卡1次</div></div>
+            </div>
+            <div class="action-bar">
+                <button class="btn btn-primary" onclick="location.href='checkin.html'">📸 去打卡</button>
+                <button class="btn btn-secondary" onclick="viewPetProfile('A008')">📋 查看档案</button>
+            </div>
+        </div>
+
+        <div class="pet-card">
+            <div class="pet-header">
+                <div class="pet-avatar">🐶</div>
+                <div class="pet-basic">
+                    <div class="pet-name">豆豆</div>
+                    <div class="pet-id">编号 A012</div>
+                    <div class="pet-tags">
+                        <span class="tag">泰迪犬</span>
+                        <span class="tag">1岁</span>
+                        <span class="tag">已疫苗</span>
+                    </div>
+                </div>
+            </div>
+            <div class="info-grid">
+                <div class="info-item"><div class="info-label">领养日期</div><div class="info-value">2025-01-08</div></div>
+                <div class="info-item"><div class="info-label">领养状态</div><div class="info-value" style="color:#388e3c">✅ 已完成</div></div>
+                <div class="info-item"><div class="info-label">来源医院</div><div class="info-value">仁爱宠物医院</div></div>
+                <div class="info-item"><div class="info-label">回访打卡</div><div class="info-value" style="color:#388e3c">4/12 次</div></div>
+            </div>
+            <div class="action-bar">
+                <button class="btn btn-primary" onclick="location.href='checkin.html'">📸 去打卡</button>
+                <button class="btn btn-secondary" onclick="viewPetProfile('A012')">📋 查看档案</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-bar">
+        <div class="tab-item" onclick="location.href='adoption-hall.html'">
+            <div class="tab-icon">🏠</div>
+            <div class="tab-label">领养大厅</div>
+        </div>
+        <div class="tab-item active">
+            <div class="tab-icon">🐾</div>
+            <div class="tab-label">我的领养</div>
+        </div>
+        <div class="tab-item" onclick="location.href='checkin.html'">
+            <div class="tab-icon">📸</div>
+            <div class="tab-label">回访打卡</div>
+        </div>
+        <div class="tab-item" onclick="location.href='messages.html'">
+            <div class="tab-icon">🔔</div>
+            <div class="tab-label">消息中心</div>
+        </div>
+        <div class="tab-item" onclick="location.href='profile.html'">
+            <div class="tab-icon">👤</div>
+            <div class="tab-label">个人中心</div>
+        </div>
+    </div>
+
+    <script>
+        function viewPetProfile(id){alert('查看宠物全生命周期档案\n\n宠物编号：'+id+'\n\n捕捉记录 → 转运记录 → 诊疗记录 → 绝育疫苗 → 芯片植入 → 领养出库')}
+    </script>
+</body>
+</html>

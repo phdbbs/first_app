@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>交接接收 - 流浪动物 TNR 管理系统</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'PingFang SC','Microsoft YaHei',sans-serif;background:linear-gradient(135deg,#11998e 0%,#38ef7d 100%);min-height:100vh;padding:20px}
+        .container{max-width:1200px;margin:0 auto}
+        .header{background:rgba(255,255,255,0.95);backdrop-filter:blur(10px);border-radius:16px;padding:20px 30px;margin-bottom:24px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 4px 20px rgba(0,0,0,0.1)}
+        .logo{display:flex;align-items:center;gap:12px}
+        .logo-icon{width:40px;height:40px;background:linear-gradient(135deg,#11998e,#38ef7d);border-radius:10px;display:flex;align-items:center;justify-content:center;color:white;font-size:20px}
+        .logo h1{font-size:20px;color:#1a1a2e;font-weight:600}
+        .back-btn{padding:10px 20px;background:#f0f0f5;border:none;border-radius:8px;color:#666;cursor:pointer;font-size:14px;text-decoration:none}
+        .back-btn:hover{background:#e0e0e8}
+        .section{background:white;border-radius:16px;padding:24px;margin-bottom:24px;box-shadow:0 4px 20px rgba(0,0,0,0.08)}
+        .section-title{font-size:18px;font-weight:600;color:#1a1a2e;margin-bottom:20px;display:flex;align-items:center;gap:10px;padding-bottom:16px;border-bottom:2px solid #f0f0f5}
+        .section-title::before{content:'';width:4px;height:20px;background:linear-gradient(180deg,#11998e,#38ef7d);border-radius:2px}
+        .transfer-card{border:2px solid #e0e0e8;border-radius:16px;padding:24px;margin-bottom:16px;transition:all 0.3s;cursor:pointer}
+        .transfer-card:hover{border-color:#11998e;box-shadow:0 4px 15px rgba(17,153,142,0.15)}
+        .transfer-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+        .transfer-id{font-size:16px;font-weight:600;color:#11998e}
+        .transfer-status{padding:6px 16px;border-radius:20px;font-size:13px;font-weight:500}
+        .status-pending{background:#fff3e0;color:#f57c00}
+        .status-received{background:#e8f5e9;color:#388e3c}
+        .status-rejected{background:#ffebee;color:#d32f2f}
+        .transfer-info{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:16px}
+        .info-item{display:flex;gap:8px;font-size:14px}
+        .info-label{color:#666;min-width:80px}
+        .info-value{color:#1a1a2e;font-weight:500}
+        .pet-list{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+        .pet-tag{padding:8px 16px;background:#e8f5e9;color:#2e7d32;border-radius:20px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:6px}
+        .pet-tag .pet-type{font-size:16px}
+        .transfer-actions{display:flex;gap:12px;margin-top:16px;justify-content:flex-end}
+        .btn{padding:12px 24px;border:none;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;transition:all 0.3s;font-family:inherit}
+        .btn-primary{background:linear-gradient(135deg,#11998e,#38ef7d);color:white;box-shadow:0 4px 15px rgba(17,153,142,0.3)}
+        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(17,153,142,0.4)}
+        .btn-danger{background:linear-gradient(135deg,#e53935,#c62828);color:white}
+        .btn-danger:hover{transform:translateY(-2px)}
+        .btn-secondary{background:#f0f0f5;color:#666}
+        .btn-secondary:hover{background:#e0e0e8}
+        .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;z-index:1000}
+        .modal-overlay.active{display:flex}
+        .modal{background:white;border-radius:16px;padding:32px;max-width:600px;width:90%;max-height:80vh;overflow-y:auto}
+        .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+        .modal-title{font-size:20px;font-weight:600;color:#1a1a2e}
+        .modal-close{width:32px;height:32px;border:none;background:#f0f0f5;border-radius:8px;cursor:pointer;font-size:18px;color:#666}
+        .form-group{margin-bottom:20px}
+        .form-label{display:block;font-size:14px;font-weight:500;color:#333;margin-bottom:8px}
+        .form-input,.form-textarea,.form-select{width:100%;padding:12px 16px;border:2px solid #e0e0e8;border-radius:10px;font-size:14px;font-family:inherit;transition:all 0.3s}
+        .form-input:focus,.form-textarea:focus,.form-select:focus{outline:none;border-color:#11998e;box-shadow:0 0 0 3px rgba(17,153,142,0.1)}
+        .form-textarea{min-height:100px;resize:vertical}
+        .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+        .stat-card{background:white;border-radius:16px;padding:20px;box-shadow:0 4px 20px rgba(0,0,0,0.08);text-align:center}
+        .stat-value{font-size:32px;font-weight:700;color:#11998e}
+        .stat-title{font-size:14px;color:#666;margin-top:4px}
+        .filter-bar{display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap}
+        .filter-btn{padding:10px 20px;border:2px solid #e0e0e8;border-radius:10px;background:white;cursor:pointer;font-size:14px;transition:all 0.3s;font-family:inherit}
+        .filter-btn.active{background:linear-gradient(135deg,#11998e,#38ef7d);color:white;border-color:transparent}
+        @media(max-width:768px){.transfer-info{grid-template-columns:1fr}.transfer-actions{flex-direction:column}}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">📥</div>
+                <h1>交接接收管理</h1>
+            </div>
+            <a href="homepage.html" class="back-btn">← 返回首页</a>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value">5</div>
+                <div class="stat-title">待接收转运单</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">128</div>
+                <div class="stat-title">累计接收动物</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">3</div>
+                <div class="stat-title">已驳回转运单</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">0</div>
+                <div class="stat-title">待处理异常</div>
+            </div>
+        </div>
+
+        <div class="filter-bar">
+            <button class="filter-btn active" onclick="filterTransfer('all')">全部</button>
+            <button class="filter-btn" onclick="filterTransfer('pending')">待接收</button>
+            <button class="filter-btn" onclick="filterTransfer('received')">已接收</button>
+            <button class="filter-btn" onclick="filterTransfer('rejected')">已驳回</button>
+        </div>
+
+        <div class="section">
+            <div class="section-title">转运交接列表</div>
+
+            <div class="transfer-card" data-status="pending">
+                <div class="transfer-header">
+                    <div class="transfer-id">📋 转运单号：TR20250115001</div>
+                    <span class="transfer-status status-pending">⏳ 待接收</span>
+                </div>
+                <div class="transfer-info">
+                    <div class="info-item"><span class="info-label">来源：</span><span class="info-value">阳光花园小区</span></div>
+                    <div class="info-item"><span class="info-label">发出时间：</span><span class="info-value">2025-01-15 10:30</span></div>
+                    <div class="info-item"><span class="info-label">动物数量：</span><span class="info-value">5 只</span></div>
+                    <div class="info-item"><span class="info-label">转运人员：</span><span class="info-value">张师傅</span></div>
+                </div>
+                <div class="pet-list">
+                    <span class="pet-tag"><span class="pet-type">🐱</span> A001 母猫</span>
+                    <span class="pet-tag"><span class="pet-type">🐱</span> A002 公猫</span>
+                    <span class="pet-tag"><span class="pet-type">🐶</span> A003 母犬</span>
+                    <span class="pet-tag"><span class="pet-type">🐱</span> A004 幼猫</span>
+                    <span class="pet-tag"><span class="pet-type">🐶</span> A005 公犬</span>
+                </div>
+                <div class="transfer-actions">
+                    <button class="btn btn-secondary" onclick="viewDetail('TR20250115001')">查看详情</button>
+                    <button class="btn btn-danger" onclick="rejectTransfer('TR20250115001')">驳回</button>
+                    <button class="btn btn-primary" onclick="receiveTransfer('TR20250115001')">确认接收</button>
+                </div>
+            </div>
+
+            <div class="transfer-card" data-status="pending">
+                <div class="transfer-header">
+                    <div class="transfer-id">📋 转运单号：TR20250115002</div>
+                    <span class="transfer-status status-pending">⏳ 待接收</span>
+                </div>
+                <div class="transfer-info">
+                    <div class="info-item"><span class="info-label">来源：</span><span class="info-value">翠湖花园</span></div>
+                    <div class="info-item"><span class="info-label">发出时间：</span><span class="info-value">2025-01-15 14:00</span></div>
+                    <div class="info-item"><span class="info-label">动物数量：</span><span class="info-value">3 只</span></div>
+                    <div class="info-item"><span class="info-label">转运人员：</span><span class="info-value">李师傅</span></div>
+                </div>
+                <div class="pet-list">
+                    <span class="pet-tag"><span class="pet-type">🐱</span> A006 母猫</span>
+                    <span class="pet-tag"><span class="pet-type">🐶</span> A007 幼犬</span>
+                    <span class="pet-tag"><span class="pet-type">🐱</span> A008 公猫</span>
+                </div>
+                <div class="transfer-actions">
+                    <button class="btn btn-secondary" onclick="viewDetail('TR20250115002')">查看详情</button>
+                    <button class="btn btn-danger" onclick="rejectTransfer('TR20250115002')">驳回</button>
+                    <button class="btn btn-primary" onclick="receiveTransfer('TR20250115002')">确认接收</button>
+                </div>
+            </div>
+
+            <div class="transfer-card" data-status="received">
+                <div class="transfer-header">
+                    <div class="transfer-id">📋 转运单号：TR20250114003</div>
+                    <span class="transfer-status status-received">✅ 已接收</span>
+                </div>
+                <div class="transfer-info">
+                    <div class="info-item"><span class="info-label">来源：</span><span class="info-value">锦绣家园</span></div>
+                    <div class="info-item"><span class="info-label">接收时间：</span><span class="info-value">2025-01-14 16:20</span></div>
+                    <div class="info-item"><span class="info-label">动物数量：</span><span class="info-value">4 只</span></div>
+                    <div class="info-item"><span class="info-label">接收人：</span><span class="info-value">王医生</span></div>
+                </div>
+                <div class="transfer-actions">
+                    <button class="btn btn-secondary" onclick="viewDetail('TR20250114003')">查看详情</button>
+                </div>
+            </div>
+
+            <div class="transfer-card" data-status="rejected">
+                <div class="transfer-header">
+                    <div class="transfer-id">📋 转运单号：TR20250113004</div>
+                    <span class="transfer-status status-rejected">❌ 已驳回</span>
+                </div>
+                <div class="transfer-info">
+                    <div class="info-item"><span class="info-label">来源：</span><span class="info-value">碧水湾小区</span></div>
+                    <div class="info-item"><span class="info-label">驳回时间：</span><span class="info-value">2025-01-13 11:30</span></div>
+                    <div class="info-item"><span class="info-label">动物数量：</span><span class="info-value">2 只</span></div>
+                    <div class="info-item"><span class="info-label">驳回原因：</span><span class="info-value">动物健康状态异常，需重新体检</span></div>
+                </div>
+                <div class="transfer-actions">
+                    <button class="btn btn-secondary" onclick="viewDetail('TR20250113004')">查看详情</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="receiveModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">确认接收转运单</div>
+                <button class="modal-close" onclick="closeModal('receiveModal')">×</button>
+            </div>
+            <div class="form-group">
+                <label class="form-label">接收人签字确认</label>
+                <div id="signArea" style="border:2px dashed #e0e0e8;border-radius:12px;height:120px;display:flex;align-items:center;justify-content:center;color:#999;cursor:pointer;position:relative;overflow:hidden" onclick="startSign(this)">✍️ 点击此处手写签字</div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">动物健康初步检查</label>
+                <select class="form-select">
+                    <option>全部健康</option>
+                    <option>部分异常</option>
+                    <option>严重异常</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">备注说明</label>
+                <textarea class="form-textarea" placeholder="如有异常情况请详细说明..."></textarea>
+            </div>
+            <div style="display:flex;gap:12px;justify-content:flex-end">
+                <button class="btn btn-secondary" onclick="closeModal('receiveModal')">取消</button>
+                <button class="btn btn-primary" onclick="confirmReceive()">确认接收</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="rejectModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">驳回转运单</div>
+                <button class="modal-close" onclick="closeModal('rejectModal')">×</button>
+            </div>
+            <div class="form-group">
+                <label class="form-label">驳回原因（必填）</label>
+                <select class="form-select" id="rejectReason">
+                    <option value="">请选择驳回原因</option>
+                    <option>动物健康状态异常</option>
+                    <option>转运单信息与实际不符</option>
+                    <option>动物数量不匹配</option>
+                    <option>缺少必要单据</option>
+                    <option>其他原因</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">详细说明</label>
+                <textarea class="form-textarea" placeholder="请详细说明驳回原因..."></textarea>
+            </div>
+            <div style="display:flex;gap:12px;justify-content:flex-end">
+                <button class="btn btn-secondary" onclick="closeModal('rejectModal')">取消</button>
+                <button class="btn btn-danger" onclick="confirmReject()">确认驳回</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function filterTransfer(status){
+            document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+            event.target.classList.add('active');
+            document.querySelectorAll('.transfer-card').forEach(card=>{
+                if(status==='all'||card.dataset.status===status){card.style.display='block'}
+                else{card.style.display='none'}
+            });
+        }
+        function viewDetail(id){alert('查看转运单详情\n\n转运单号：'+id+'\n\n包含信息：\n- 转运来源及路线\n- 动物清单及照片\n- 交接签字单据\n- 物料随车清单')}
+        function receiveTransfer(id){document.getElementById('receiveModal').classList.add('active')}
+        function rejectTransfer(id){document.getElementById('rejectModal').classList.add('active')}
+        function closeModal(id){document.getElementById(id).classList.remove('active')}
+        function confirmReceive(){if(!document.getElementById('signArea').dataset.signed){alert('请先完成签字确认');return}alert('✅ 接收成功！\n\n动物已入库，状态更新为：待诊疗\n物料已自动入库登记');closeModal('receiveModal')}
+        function startSign(el){el.innerHTML='<canvas id="signCanvas" width="400" height="100" style="border:1px solid #ddd;border-radius:8px;background:white;cursor:crosshair"></canvas><br><div style="display:flex;gap:8px;margin-top:6px;justify-content:center"><button class="btn btn-secondary" style="padding:4px 12px;font-size:12px" onclick="clearSign()">清除</button><button class="btn btn-primary" style="padding:4px 12px;font-size:12px" onclick="confirmSign()">确认签字</button></div>';var c=document.getElementById('signCanvas'),ctx=c.getContext('2d'),drawing=false;ctx.strokeStyle='#333';ctx.lineWidth=2;ctx.lineCap='round';c.onmousedown=function(e){drawing=true;ctx.beginPath();ctx.moveTo(e.offsetX,e.offsetY)};c.onmousemove=function(e){if(drawing){ctx.lineTo(e.offsetX,e.offsetY);ctx.stroke()}};c.onmouseup=function(){drawing=false};c.ontouchstart=function(e){e.preventDefault();drawing=true;var t=e.touches[0],r=c.getBoundingClientRect();ctx.beginPath();ctx.moveTo(t.clientX-r.left,t.clientY-r.top)};c.ontouchmove=function(e){e.preventDefault();if(drawing){var t=e.touches[0],r=c.getBoundingClientRect();ctx.lineTo(t.clientX-r.left,t.clientY-r.top);ctx.stroke()}};c.ontouchend=function(){drawing=false}}
+        function clearSign(){var c=document.getElementById('signCanvas');if(c)c.getContext('2d').clearRect(0,0,c.width,c.height)}
+        function confirmSign(){document.getElementById('signArea').dataset.signed='true';document.getElementById('signArea').style.borderColor='#48bb78';document.getElementById('signArea').style.background='#f0fff4';alert('✅ 签字确认成功')}
+        function confirmReject(){var r=document.getElementById('rejectReason').value;if(!r){alert('请选择驳回原因');return}alert('✅ 已驳回转运单\n\n捕捉站端将收到驳回通知，可重新提交');closeModal('rejectModal')}
+    </script>
+</body>
+</html>
