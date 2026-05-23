@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>一宠一档 - 收容中心端</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+        
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* 侧边栏 */
+        .sidebar {
+            width: 240px;
+            background: linear-gradient(180deg, #1f2937 0%, #111827 100%);
+            color: white;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+        
+        .logo {
+            padding: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            border-bottom: 1px solid #374151;
+            background: rgba(255,255,255,0.05);
+        }
+        
+        .nav-menu {
+            list-style: none;
+            padding: 10px 0;
+        }
+        
+        .nav-item {
+            margin: 2px 10px;
+        }
+        
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            color: #d1d5db;
+            text-decoration: none;
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+        
+        .nav-link:hover, .nav-link.active {
+            background: rgba(255,255,255,0.1);
+            color: #fbbf24;
+        }
+        
+        .nav-icon {
+            margin-right: 10px;
+            font-size: 18px;
+        }
+        
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 240px;
+            padding: 20px;
+        }
+        
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .page-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1f2937;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #059669;
+        }
+        
+        .btn-secondary {
+            background: #f59e0b;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #d97706;
+        }
+        
+        .btn-outline {
+            background: white;
+            border: 1px solid #d1d5db;
+            color: #6b7280;
+        }
+        
+        .btn-outline:hover {
+            background: #f9fafb;
+        }
+        
+        /* 搜索区 */
+        .search-box {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .form-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #6b7280;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        /* 档案表格 */
+        .archive-card {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        
+        .archive-header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #10b981;
+            padding-bottom: 15px;
+        }
+        
+        .archive-title {
+            font-size: 22px;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 10px;
+        }
+        
+        .archive-number {
+            font-size: 16px;
+            color: #6b7280;
+        }
+        
+        .archive-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .archive-item {
+            padding: 12px;
+            background: #f9fafb;
+            border-radius: 6px;
+            border-left: 3px solid #10b981;
+        }
+        
+        .archive-label {
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 5px;
+        }
+        
+        .archive-value {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .section-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #1f2937;
+            margin: 25px 0 15px 0;
+            padding-left: 10px;
+            border-left: 4px solid #f59e0b;
+        }
+        
+        .medical-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        .medical-table th,
+        .medical-table td {
+            border: 1px solid #d1d5db;
+            padding: 10px;
+            text-align: left;
+            font-size: 14px;
+        }
+        
+        .medical-table th {
+            background: #f3f4f6;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .medical-table tr:nth-child(even) {
+            background: #f9fafb;
+        }
+        
+        .add-row-btn {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            margin-top: 10px;
+        }
+        
+        .add-row-btn:hover {
+            background: #059669;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            gap: 30px;
+            margin-top: 10px;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .checkbox-item input[type="radio"] {
+            width: 18px;
+            height: 18px;
+        }
+        
+        .attachment-area {
+            border: 2px dashed #d1d5db;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            background: #f9fafb;
+            margin-top: 20px;
+        }
+        
+        .attachment-icon {
+            font-size: 40px;
+            color: #9ca3af;
+            margin-bottom: 10px;
+        }
+        
+        .attachment-text {
+            color: #6b7280;
+            margin-bottom: 15px;
+        }
+        
+        .file-list {
+            margin-top: 15px;
+            text-align: left;
+        }
+        
+        .file-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px;
+            background: white;
+            border-radius: 4px;
+            margin-bottom: 5px;
+        }
+        
+        .print-preview {
+            display: none;
+        }
+        
+        @media print {
+            .sidebar, .header, .search-box, .action-buttons, .add-row-btn, .attachment-area {
+                display: none !important;
+            }
+            
+            .main-content {
+                margin-left: 0;
+                padding: 0;
+            }
+            
+            .archive-card {
+                box-shadow: none;
+                border: 1px solid #ddd;
+            }
+            
+            .print-preview {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="logo">🐾 收容中心端</div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="homepage.html" class="nav-link">
+                        <span class="nav-icon">🏠</span>
+                        首页看板
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="add-shelter.html" class="nav-link">
+                        <span class="nav-icon">📝</span>
+                        捕捉登记
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="owner-return.html" class="nav-link">
+                        <span class="nav-icon">👤</span>
+                        主人领回
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="transfer-split.html" class="nav-link">
+                        <span class="nav-icon">🚚</span>
+                        转运拆分
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="material-purchase.html" class="nav-link">
+                        <span class="nav-icon">📦</span>
+                        物料管理
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="recycle-return.html" class="nav-link">
+                        <span class="nav-icon">🔄</span>
+                        回收放归
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="adoption-audit.html" class="nav-link">
+                        <span class="nav-icon">✅</span>
+                        领养审核
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="visit-management.html" class="nav-link">
+                        <span class="nav-icon">📅</span>
+                        回访管理
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="ledger-center.html" class="nav-link">
+                        <span class="nav-icon">📊</span>
+                        台账中心
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="pet-archive.html" class="nav-link active">
+                        <span class="nav-icon">📋</span>
+                        一宠一档
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="euthanasia-record.html" class="nav-link">
+                        <span class="nav-icon">⚰️</span>
+                        安乐死备案
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="system-settings.html" class="nav-link">
+                        <span class="nav-icon">⚙️</span>
+                        系统设置
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <!-- 顶部标题栏 -->
+            <div class="header">
+                <h1 class="page-title">📋 一宠一档</h1>
+                <div class="action-buttons">
+                    <button class="btn btn-outline" onclick="searchArchive()">
+                        🔍 查询档案
+                    </button>
+                    <button class="btn btn-secondary" onclick="exportPDF()">
+                        📄 导出 PDF
+                    </button>
+                    <button class="btn btn-primary" onclick="printArchive()">
+                        🖨️ 打印档案
+                    </button>
+                </div>
+            </div>
+
+            <!-- 搜索区 -->
+            <div class="search-box">
+                <div class="form-group">
+                    <label class="form-label">档案编号</label>
+                    <input type="text" class="form-input" placeholder="输入档案编号查询">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">芯片号码</label>
+                    <input type="text" class="form-input" placeholder="输入芯片号查询">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">捕捉日期</label>
+                    <input type="date" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">动物状态</label>
+                    <select class="form-input">
+                        <option value="">全部</option>
+                        <option value="在途">在途</option>
+                        <option value="待诊疗">待诊疗</option>
+                        <option value="待领养">待领养</option>
+                        <option value="已领养">已领养</option>
+                        <option value="已放归">已放归</option>
+                        <option value="已领回">已领回</option>
+                        <option value="已安乐死">已安乐死</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 档案卡片 -->
+            <div class="archive-card">
+                <div class="archive-header">
+                    <h2 class="archive-title">康茁流浪犬猫收容中心档案表</h2>
+                    <p class="archive-number">档案编号：000000</p>
+                </div>
+
+                <!-- 基础信息 -->
+                <div class="archive-grid">
+                    <div class="archive-item">
+                        <div class="archive-label">分类</div>
+                        <div class="archive-value">犬</div>
+                    </div>
+                    <div class="archive-item">
+                        <div class="archive-label">品种</div>
+                        <div class="archive-value">中华田园犬</div>
+                    </div>
+                    <div class="archive-item">
+                        <div class="archive-label">性别</div>
+                        <div class="archive-value">母</div>
+                    </div>
+                    <div class="archive-item">
+                        <div class="archive-label">年龄</div>
+                        <div class="archive-value">约 2 岁</div>
+                    </div>
+                    <div class="archive-item">
+                        <div class="archive-label">芯片号码</div>
+                        <div class="archive-value">1000010001</div>
+                    </div>
+                    <div class="archive-item">
+                        <div class="archive-label">进站时间</div>
+                        <div class="archive-value">2024-01-15 10:30</div>
+                    </div>
+                    <div class="archive-item">
+                        <div class="archive-label">收容原因</div>
+                        <div class="archive-value">小区流浪</div>
+                    </div>
+                    <div class="archive-item">
+                        <div class="archive-label">送达单位</div>
+                        <div class="archive-value">阳光花园物业</div>
+                    </div>
+                </div>
+
+                <!-- 出库信息 -->
+                <div class="section-title">出库信息</div>
+                <div class="archive-grid">
+                    <div class="archive-item">
+                        <div class="archive-label">出库时间</div>
+                        <div class="archive-value">-</div>
+                    </div>
+                    <div class="archive-item">
+                        <div class="archive-label">出库原因</div>
+                        <div class="archive-value">-</div>
+                    </div>
+                    <div class="archive-item" style="grid-column: span 2;">
+                        <div class="archive-label">收容登记表档案号</div>
+                        <div class="archive-value">SL-20240115-001</div>
+                    </div>
+                </div>
+
+                <!-- 绝育情况 -->
+                <div class="section-title">绝育情况</div>
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="radio" id="sterilized_yes" name="sterilized" checked>
+                        <label for="sterilized_yes">是</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="radio" id="sterilized_no" name="sterilized">
+                        <label for="sterilized_no">否</label>
+                    </div>
+                </div>
+                <div style="margin-top: 15px;">
+                    <div class="form-label">绝育时间</div>
+                    <div class="archive-value">2024-01-18 14:00</div>
+                </div>
+
+                <!-- 驱虫记录 -->
+                <div class="section-title">驱虫记录</div>
+                <table class="medical-table">
+                    <thead>
+                        <tr>
+                            <th width="40%">药品名</th>
+                            <th width="30%">时间</th>
+                            <th width="30%">操作人</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>海乐宠驱虫药</td>
+                            <td>2024-01-16 09:00</td>
+                            <td>张医生</td>
+                        </tr>
+                        <tr>
+                            <td>福来恩滴剂</td>
+                            <td>2024-02-16 10:30</td>
+                            <td>李医生</td>
+                        </tr>
+                        <tr>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>-</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button class="add-row-btn" onclick="addMedicalRow('drive')">+ 添加驱虫记录</button>
+
+                <!-- 免疫记录 -->
+                <div class="section-title">免疫记录</div>
+                <table class="medical-table">
+                    <thead>
+                        <tr>
+                            <th width="33%">药品名</th>
+                            <th width="33%">时间</th>
+                            <th width="34%">操作人</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>狂犬疫苗（英特威）</td>
+                            <td>2024-01-17 11:00</td>
+                            <td>张医生</td>
+                        </tr>
+                        <tr>
+                            <td>卫佳捌五联疫苗</td>
+                            <td>2024-01-17 11:15</td>
+                            <td>张医生</td>
+                        </tr>
+                        <tr>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>-</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button class="add-row-btn" onclick="addMedicalRow('vaccine')">+ 添加免疫记录</button>
+
+                <!-- 附件区 -->
+                <div class="section-title">其他附件</div>
+                <div class="attachment-area">
+                    <div class="attachment-icon">📎</div>
+                    <div class="attachment-text">拖拽文件到此处或点击上传<br>支持 JPG、PNG、PDF 格式</div>
+                    <input type="file" id="fileUpload" multiple style="display: none;" onchange="handleFileSelect(event)">
+                    <button class="btn btn-outline" onclick="document.getElementById('fileUpload').click()">
+                        选择文件
+                    </button>
+                    <div class="file-list" id="fileList">
+                        <div class="file-item">
+                            <span>📄</span>
+                            <span>收容前照片.jpg</span>
+                            <span style="color: #9ca3af; font-size: 12px;">(2.3MB)</span>
+                        </div>
+                        <div class="file-item">
+                            <span>📄</span>
+                            <span>诊疗后照片.jpg</span>
+                            <span style="color: #9ca3af; font-size: 12px;">(1.8MB)</span>
+                        </div>
+                        <div class="file-item">
+                            <span>📄</span>
+                            <span>绝育病历.pdf</span>
+                            <span style="color: #9ca3af; font-size: 12px;">(567KB)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // 查询档案
+        function searchArchive() {
+            alert('查询功能：根据条件筛选档案列表');
+        }
+
+        // 导出 PDF
+        function exportPDF() {
+            alert('正在生成 PDF 文件...\n文件将包含完整档案信息及所有附件');
+        }
+
+        // 打印档案
+        function printArchive() {
+            window.print();
+        }
+
+        // 添加医疗记录行
+        function addMedicalRow(type) {
+            const table = event.target.previousElementSibling;
+            const tbody = table.querySelector('tbody');
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td><input type="text" class="form-input" placeholder="药品名称" style="border:none;background:transparent;"></td>
+                <td><input type="date" class="form-input" style="border:none;background:transparent;"></td>
+                <td><input type="text" class="form-input" placeholder="操作人" style="border:none;background:transparent;"></td>
+            `;
+            tbody.appendChild(newRow);
+        }
+
+        // 处理文件选择
+        function handleFileSelect(event) {
+            const files = event.target.files;
+            const fileList = document.getElementById('fileList');
+            
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const size = (file.size / 1024 / 1024).toFixed(2) + 'MB';
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                fileItem.innerHTML = `
+                    <span>📄</span>
+                    <span>${file.name}</span>
+                    <span style="color: #9ca3af; font-size: 12px;">(${size})</span>
+                `;
+                fileList.appendChild(fileItem);
+            }
+        }
+    </script>
+</body>
+</html>
