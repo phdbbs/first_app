@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -59,15 +59,17 @@
             <div class="stat-card"><div class="stat-value">156</div><div class="stat-label">捕捉台账</div></div>
             <div class="stat-card"><div class="stat-value">89</div><div class="stat-label">绝育台账</div></div>
             <div class="stat-card"><div class="stat-value">42</div><div class="stat-label">领养台账</div></div>
-            <div class="stat-card"><div class="stat-value">23</div><div class="stat-label">放养台账</div></div>
+            <div class="stat-card"><div class="stat-value">23</div><div class="stat-label">放归台账</div></div>
             <div class="stat-card"><div class="stat-value">2</div><div class="stat-label">安乐死台账</div></div>
+            <div class="stat-card"><div class="stat-value">156</div><div class="stat-label">宠物档案</div></div>
         </div>
 
         <div class="tab-bar">
             <button class="tab-item active" onclick="switchTab(this,'capture')">捕捉台账</button>
             <button class="tab-item" onclick="switchTab(this,'sterilization')">绝育台账</button>
             <button class="tab-item" onclick="switchTab(this,'adoption')">领养台账</button>
-            <button class="tab-item" onclick="switchTab(this,'release')">放养台账</button>
+            <button class="tab-item" onclick="switchTab(this,'release')">放归台账</button>
+            <button class="tab-item" onclick="switchTab(this,'petfile')">一宠一档</button>
             <button class="tab-item" onclick="switchTab(this,'reports')">报表导出</button>
         </div>
 
@@ -132,7 +134,7 @@
                 <div style="display:flex;gap:8px"><button class="btn btn-secondary">📥 导出Excel</button><button class="btn btn-secondary">🖨️ 打印</button></div>
             </div>
             <table>
-                <thead><tr><th>编号</th><th>放养日期</th><th>动物类型</th><th>放养小区</th><th>物业确认</th><th>耳标状态</th><th>操作</th></tr></thead>
+                <thead><tr><th>编号</th><th>放归日期</th><th>动物类型</th><th>放归小区</th><th>物业确认</th><th>耳标状态</th><th>操作</th></tr></thead>
                 <tbody>
                     <tr><td>A018</td><td>2025-01-13</td><td>猫/公</td><td>和谐家园</td><td>✅ 已确认</td><td>✅ 已剪耳</td><td><button class="btn btn-secondary" style="padding:6px 12px;font-size:12px">详情</button></td></tr>
                     <tr><td>A003</td><td>2025-01-11</td><td>猫/母</td><td>碧水湾小区</td><td>✅ 已确认</td><td>✅ 已剪耳</td><td><button class="btn btn-secondary" style="padding:6px 12px;font-size:12px">详情</button></td></tr>
@@ -155,7 +157,7 @@
                 <div class="report-actions"><button class="btn btn-secondary">预览</button><button class="btn btn-primary">📥 导出</button></div>
             </div>
             <div class="report-card">
-                <div class="report-info"><div class="report-title">🌳 放养台账报表</div><div class="report-desc">包含所有放养记录，含放养小区、物业确认、耳标状态</div></div>
+                <div class="report-info"><div class="report-title">🌳 放归台账报表</div><div class="report-desc">包含所有放归记录，含放归小区、物业确认、耳标状态</div></div>
                 <div class="report-actions"><button class="btn btn-secondary">预览</button><button class="btn btn-primary">📥 导出</button></div>
             </div>
             <div class="report-card">
@@ -167,13 +169,39 @@
                 <div class="report-actions"><button class="btn btn-secondary">预览</button><button class="btn btn-primary">📥 导出</button></div>
             </div>
         </div>
+
+        <div class="section" id="petfileTab" style="display:none">
+            <div class="toolbar">
+                <div class="filter-bar">
+                    <div class="filter-item active">全部</div>
+                    <div class="filter-item">已建档</div>
+                    <div class="filter-item">未建档</div>
+                </div>
+                <div style="display:flex;gap:8px">
+                    <button class="btn btn-primary" onclick="addPetFile()">+ 新建档案</button>
+                    <button class="btn btn-secondary">📥 导出档案</button>
+                </div>
+            </div>
+            <div class="toolbar">
+                <div class="search-box"><input type="text" class="search-input" placeholder="搜索编号/品种/来源..."><button class="btn btn-primary">搜索</button></div>
+            </div>
+            <table>
+                <thead><tr><th>档案编号</th><th>动物类型</th><th>品种</th><th>性别</th><th>来源</th><th>建档日期</th><th>建档状态</th><th>操作</th></tr></thead>
+                <tbody>
+                    <tr><td>000001</td><td>犬</td><td>中华田园犬</td><td>♂</td><td>阳光花园小区</td><td>2025-01-10</td><td><span class="status-badge status-complete">已建档</span></td><td><button class="btn btn-secondary" style="padding:6px 12px;font-size:12px" onclick="viewPetFile('000001')">查看档案</button></td></tr>
+                    <tr><td>000002</td><td>猫</td><td>橘猫</td><td>♀</td><td>翠湖花园</td><td>2025-01-08</td><td><span class="status-badge status-complete">已建档</span></td><td><button class="btn btn-secondary" style="padding:6px 12px;font-size:12px" onclick="viewPetFile('000002')">查看档案</button></td></tr>
+                    <tr><td>000003</td><td>猫</td><td>狸花猫</td><td>♂</td><td>锦绣家园</td><td>2025-01-06</td><td><span class="status-badge status-pending">待完善</span></td><td><button class="btn btn-secondary" style="padding:6px 12px;font-size:12px" onclick="viewPetFile('000003')">编辑档案</button></td></tr>
+                    <tr><td>000004</td><td>犬</td><td>泰迪</td><td>♀</td><td>碧水湾小区</td><td>2025-01-05</td><td><span class="status-badge status-pending">待完善</span></td><td><button class="btn btn-secondary" style="padding:6px 12px;font-size:12px" onclick="viewPetFile('000004')">编辑档案</button></td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <script>
         function switchTab(el,tab){
             document.querySelectorAll('.tab-item').forEach(t=>t.classList.remove('active'));
             el.classList.add('active');
-            ['capture','sterilization','adoption','release','reports'].forEach(t=>{
+            ['capture','sterilization','adoption','release','petfile','reports'].forEach(t=>{
                 document.getElementById(t+'Tab').style.display=t===tab?'block':'none';
             });
         }
@@ -182,13 +210,15 @@
             el.classList.add('active');
         }
         function viewLedgerDetail(id,type){
-            var types={'capture':'捕捉台账','sterilization':'绝育台账','adoption':'领养台账','release':'放养台账'};
+            var types={'capture':'捕捉台账','sterilization':'绝育台账','adoption':'领养台账','release':'放归台账'};
             alert('查看 '+id+' 完整'+(types[type]||'台账')+'\n\n包含信息：\n- 基础信息\n- 流程记录\n- 单据照片\n- 操作日志');
         }
         function exportLedger(type){alert('✅ 正在导出'+(type==='capture'?'捕捉':'')+'台账Excel文件\n\n文件将自动下载...')}
         function printLedger(type){alert('正在打印'+(type==='capture'?'捕捉':'')+'台账\n\n请确保打印机已连接')}
         function previewReport(type){alert('预览捕捉台账报表\n\n报表将新窗口打开显示')}
         function exportReport(type){alert('✅ 正在导出Excel文件\n\n文件将自动下载...')}
+        function viewPetFile(id){window.location.href='../shelter/pet-archive.html?id='+id}
+        function addPetFile(){alert('新建宠物档案\n\n请填写宠物基本信息')}
     </script>
 </body>
 </html>

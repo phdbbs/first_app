@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -52,7 +52,7 @@
             <button class="tab-item active" onclick="switchTab(this,'capture')">捕捉记录</button>
             <button class="tab-item" onclick="switchTab(this,'transfer')">转运记录</button>
             <button class="tab-item" onclick="switchTab(this,'treatment')">诊疗记录</button>
-            <button class="tab-item" onclick="switchTab(this,'release')">放养记录</button>
+            <button class="tab-item" onclick="switchTab(this,'release')">放归记录</button>
             <button class="tab-item" onclick="switchTab(this,'adoption')">领养记录</button>
             <button class="tab-item" onclick="switchTab(this,'euthanasia')">安乐死记录</button>
         </div>
@@ -69,7 +69,7 @@
                     <tr><td>A008</td><td>2025-01-08</td><td>翠湖花园</td><td>猫/母</td><td><span class="status-badge status-adopted">已领养</span></td><td><span class="detail-link" onclick="viewAnimalProfile('A008')">查看档案</span></td></tr>
                     <tr><td>A012</td><td>2025-01-06</td><td>锦绣家园</td><td>犬/公</td><td><span class="status-badge status-adopted">已领养</span></td><td><span class="detail-link" onclick="viewAnimalProfile('A012')">查看档案</span></td></tr>
                     <tr><td>A015</td><td>2025-01-05</td><td>碧水湾小区</td><td>猫/母</td><td><span class="status-badge status-flow">待领养</span></td><td><span class="detail-link" onclick="viewAnimalProfile('A015')">查看档案</span></td></tr>
-                    <tr><td>A018</td><td>2025-01-04</td><td>和谐家园</td><td>犬/公</td><td><span class="status-badge status-released">已放养</span></td><td><span class="detail-link" onclick="viewAnimalProfile('A018')">查看档案</span></td></tr>
+                    <tr><td>A018</td><td>2025-01-04</td><td>和谐家园</td><td>犬/公</td><td><span class="status-badge status-released">已放归</span></td><td><span class="detail-link" onclick="viewAnimalProfile('A018')">查看档案</span></td></tr>
                     <tr><td>A021</td><td>2025-01-03</td><td>朝阳小区</td><td>猫/母</td><td><span class="status-badge status-flow">待领养</span></td><td><span class="detail-link" onclick="viewAnimalProfile('A021')">查看档案</span></td></tr>
                 </tbody>
             </table>
@@ -98,9 +98,9 @@
         </div>
 
         <div class="section" id="releaseTab" style="display:none">
-            <div class="toolbar"><div class="search-box"><input type="text" class="search-input" placeholder="搜索放养记录..."><button class="btn btn-primary">搜索</button></div></div>
+            <div class="toolbar"><div class="search-box"><input type="text" class="search-input" placeholder="搜索放归记录..."><button class="btn btn-primary">搜索</button></div></div>
             <table>
-                <thead><tr><th>宠物编号</th><th>放养日期</th><th>放养小区</th><th>物业确认</th><th>操作</th></tr></thead>
+                <thead><tr><th>宠物编号</th><th>放归日期</th><th>放归小区</th><th>物业确认</th><th>操作</th></tr></thead>
                 <tbody>
                     <tr><td>A018</td><td>2025-01-13</td><td>和谐家园</td><td>✅ 已确认</td><td><span class="detail-link">详情</span></td></tr>
                     <tr><td>A003</td><td>2025-01-11</td><td>碧水湾小区</td><td>✅ 已确认</td><td><span class="detail-link">详情</span></td></tr>
@@ -138,7 +138,7 @@
                 document.getElementById(t+'Tab').style.display=t===tab?'block':'none';
             });
         }
-        function viewAnimalProfile(id){alert('查看 '+id+' 全生命周期档案\n\n包含信息：\n- 捕捉记录（来源、时间、捕捉人）\n- 转运记录（医院、交接单据）\n- 诊疗记录（绝育、疫苗、芯片）\n- 流向记录（领养/放养/主人领回）\n- 回访记录（领养人打卡）')}
+        function viewAnimalProfile(id){alert('查看 '+id+' 全生命周期档案\n\n包含信息：\n- 捕捉记录（来源、时间、捕捉人）\n- 转运记录（医院、交接单据）\n- 诊疗记录（绝育、疫苗、芯片）\n- 流向记录（领养/放归/主人领回）\n- 回访记录（领养人打卡）')}
     </script>
 </body>
 </html>

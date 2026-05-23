@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -123,7 +123,7 @@
             document.getElementById('shelterTab').style.display=tab==='shelter'?'block':'none';
             document.getElementById('hospitalTab').style.display=tab==='hospital'?'block':'none';
         }
-        function viewShelterDetail(name){alert('捕捉站详情\n\n机构名称：'+name+'\n负责人：王站长\n联系电话：010-8888xxxx\n地址：朝阳区xxx路1号\n\n累计捕捉：1,842只\n累计转运：1,654只\n放养回归：892只\n成功领养：534只')}
+        function viewShelterDetail(name){alert('捕捉站详情\n\n机构名称：'+name+'\n负责人：王站长\n联系电话：010-8888xxxx\n地址：朝阳区xxx路1号\n\n累计捕捉：1,842只\n累计转运：1,654只\n放归回归：892只\n成功领养：534只')}
         function viewHospitalDetail(name){alert('合作医院详情\n\n医院名称：'+name+'\n负责人：张院长\n联系电话：010-6666xxxx\n地址：朝阳区xxx路10号\n合作状态：正常合作\n\n累计接收：328只\n累计诊疗：312只\n成功领养：89只')}
         function disableHospital(name){if(confirm('确认停用 '+name+' 的合作资格？\n\n停用后该医院将无法接收新的转运动物。')){alert('✅ 已停用 '+name+' 的合作资格')}}
         function addHospital(){var inputs=document.querySelectorAll('#addHospitalModal input');var name=inputs[0].value;if(!name){alert('请输入医院名称');return}alert('✅ 合作医院已添加\n\n医院名称：'+name+'\n状态：待审核\n审核通过后将正式生效');document.getElementById('addHospitalModal').classList.remove('active')}

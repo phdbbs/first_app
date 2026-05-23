@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>动物回收放养管理 - 流浪动物 TNR 管理系统</title>
+    <title>动物回收放归管理 - 流浪动物 TNR 管理系统</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%); min-height: 100vh; display: flex; }
@@ -104,7 +104,7 @@
             <div class="nav-divider"></div>
             <a href="material.html" class="nav-item"><span class="nav-icon">📦</span><span class="nav-label">物料管理</span></a>
             <a href="transfer.html" class="nav-item"><span class="nav-icon">🚚</span><span class="nav-label">转运管理</span></a>
-            <a href="release.html" class="nav-item active"><span class="nav-icon">🌿</span><span class="nav-label">放养管理</span></a>
+            <a href="release.html" class="nav-item active"><span class="nav-icon">🌿</span><span class="nav-label">放归管理</span></a>
             <a href="adoption.html" class="nav-item"><span class="nav-icon">👤</span><span class="nav-label">领养管理</span></a>
             <div class="nav-divider"></div>
             <a href="report.html" class="nav-item"><span class="nav-icon">📊</span><span class="nav-label">数据报表</span></a>
@@ -113,18 +113,18 @@
         <div class="user-section"><div class="user-info"><div class="user-avatar">管</div><div class="user-details"><div class="user-name">管理员</div><div class="user-role">系统管理员</div></div></div></div>
     </aside>
     <main class="main-content">
-        <div class="header-bar"><h2 class="page-title">动物回收放养管理</h2><div class="current-time" id="currentTime"></div></div>
+        <div class="header-bar"><h2 class="page-title">动物回收放归管理</h2><div class="current-time" id="currentTime"></div></div>
         <div class="stats-grid">
             <div class="stat-card purple"><span class="stat-icon">🏥</span><span class="stat-value">12</span><span class="stat-label">待回收</span></div>
-            <div class="stat-card cyan"><span class="stat-icon">🌿</span><span class="stat-value">24</span><span class="stat-label">待放养</span></div>
+            <div class="stat-card cyan"><span class="stat-icon">🌿</span><span class="stat-value">24</span><span class="stat-label">待放归</span></div>
             <div class="stat-card yellow"><span class="stat-icon">📋</span><span class="stat-value">12</span><span class="stat-label">待物业确认</span></div>
-            <div class="stat-card green"><span class="stat-icon">✅</span><span class="stat-value">86</span><span class="stat-label">已放养</span></div>
+            <div class="stat-card green"><span class="stat-icon">✅</span><span class="stat-value">86</span><span class="stat-label">已放归</span></div>
         </div>
         <div class="tab-bar">
             <div class="tab-item active" onclick="switchTab('recover')">治愈回收</div>
-            <div class="tab-item" onclick="switchTab('release')">放养登记</div>
-            <div class="tab-item" onclick="switchTab('confirm')">放养确认</div>
-            <div class="tab-item" onclick="switchTab('record')">放养台账</div>
+            <div class="tab-item" onclick="switchTab('release')">放归登记</div>
+            <div class="tab-item" onclick="switchTab('confirm')">放归确认</div>
+            <div class="tab-item" onclick="switchTab('record')">放归台账</div>
         </div>
         <div id="recoverTab" class="tab-content active">
             <div class="section">
@@ -151,31 +151,31 @@
         <div id="releaseTab" class="tab-content">
             <div class="section">
                 <div class="section-header">
-                    <h3 class="section-title">小区放养登记</h3>
-                    <button class="btn btn-primary" onclick="openReleaseModal()">➕ 新建放养单</button>
+                    <h3 class="section-title">小区放归登记</h3>
+                    <button class="btn btn-primary" onclick="openReleaseModal()">➕ 新建放归单</button>
                 </div>
                 <div class="filter-bar">
                     <select class="form-select" id="communityFilter" onchange="filterReleases()"><option value="">全部小区</option><option value="阳光花园小区">阳光花园小区</option><option value="幸福家园">幸福家园</option><option value="绿色新城">绿色新城</option><option value="翠湖花园">翠湖花园</option></select>
-                    <select class="form-select" id="releaseStatusFilter" onchange="filterReleases()"><option value="">全部状态</option><option value="待放养">待放养</option><option value="待物业确认">待物业确认</option><option value="已放养">已放养</option></select>
+                    <select class="form-select" id="releaseStatusFilter" onchange="filterReleases()"><option value="">全部状态</option><option value="待放归">待放归</option><option value="待物业确认">待物业确认</option><option value="已放归">已放归</option></select>
                     <input type="text" class="form-input" id="searchInput" placeholder="搜索编号..." onkeyup="filterReleases()" style="min-width:200px;">
                 </div>
                 <table id="releaseTable">
-                    <thead><tr><th>放养编号</th><th>动物数量</th><th>放养小区</th><th>绝育状态</th><th>放养状态</th><th>计划日期</th><th>操作</th></tr></thead>
+                    <thead><tr><th>放归编号</th><th>动物数量</th><th>放归小区</th><th>绝育状态</th><th>放归状态</th><th>计划日期</th><th>操作</th></tr></thead>
                     <tbody>
-                        <tr><td>RL20250115001</td><td>8只</td><td>花园社区</td><td>已绝育</td><td><span class="badge badge-wait">待放养</span></td><td>2025-01-16</td><td><div class="actions-cell"><button class="btn btn-sm btn-green" onclick="confirmRelease('RL20250115001')">放养</button><button class="btn btn-sm btn-secondary" onclick="viewReleaseDetail('RL20250115001')">详情</button></div></td></tr>
+                        <tr><td>RL20250115001</td><td>8只</td><td>花园社区</td><td>已绝育</td><td><span class="badge badge-wait">待放归</span></td><td>2025-01-16</td><td><div class="actions-cell"><button class="btn btn-sm btn-green" onclick="confirmRelease('RL20250115001')">放归</button><button class="btn btn-sm btn-secondary" onclick="viewReleaseDetail('RL20250115001')">详情</button></div></td></tr>
                         <tr><td>RL20250114001</td><td>5只</td><td>阳光花园小区</td><td>已绝育</td><td><span class="badge badge-confirm">待物业确认</span></td><td>2025-01-15</td><td><div class="actions-cell"><button class="btn btn-sm btn-warning" onclick="remindProperty('RL20250114001')">催促</button><button class="btn btn-sm btn-secondary" onclick="viewReleaseDetail('RL20250114001')">详情</button></div></td></tr>
-                        <tr><td>RL20250113001</td><td>6只</td><td>幸福家园</td><td>已绝育</td><td><span class="badge badge-done">已放养</span></td><td>2025-01-13</td><td><div class="actions-cell"><button class="btn btn-sm btn-secondary" onclick="viewReleaseDetail('RL20250113001')">详情</button></div></td></tr>
-                        <tr><td>RL20250112001</td><td>4只</td><td>绿色新城</td><td>已绝育</td><td><span class="badge badge-done">已放养</span></td><td>2025-01-12</td><td><div class="actions-cell"><button class="btn btn-sm btn-secondary" onclick="viewReleaseDetail('RL20250112001')">详情</button></div></td></tr>
-                        <tr><td>RL20250111001</td><td>10只</td><td>翠湖花园</td><td>已绝育</td><td><span class="badge badge-wait">待放养</span></td><td>2025-01-17</td><td><div class="actions-cell"><button class="btn btn-sm btn-green" onclick="confirmRelease('RL20250111001')">放养</button><button class="btn btn-sm btn-secondary" onclick="viewReleaseDetail('RL20250111001')">详情</button></div></td></tr>
+                        <tr><td>RL20250113001</td><td>6只</td><td>幸福家园</td><td>已绝育</td><td><span class="badge badge-done">已放归</span></td><td>2025-01-13</td><td><div class="actions-cell"><button class="btn btn-sm btn-secondary" onclick="viewReleaseDetail('RL20250113001')">详情</button></div></td></tr>
+                        <tr><td>RL20250112001</td><td>4只</td><td>绿色新城</td><td>已绝育</td><td><span class="badge badge-done">已放归</span></td><td>2025-01-12</td><td><div class="actions-cell"><button class="btn btn-sm btn-secondary" onclick="viewReleaseDetail('RL20250112001')">详情</button></div></td></tr>
+                        <tr><td>RL20250111001</td><td>10只</td><td>翠湖花园</td><td>已绝育</td><td><span class="badge badge-wait">待放归</span></td><td>2025-01-17</td><td><div class="actions-cell"><button class="btn btn-sm btn-green" onclick="confirmRelease('RL20250111001')">放归</button><button class="btn btn-sm btn-secondary" onclick="viewReleaseDetail('RL20250111001')">详情</button></div></td></tr>
                     </tbody>
                 </table>
             </div>
         </div>
         <div id="confirmTab" class="tab-content">
             <div class="section">
-                <div class="section-header"><h3 class="section-title">放养物业确认</h3></div>
+                <div class="section-header"><h3 class="section-title">放归物业确认</h3></div>
                 <table>
-                    <thead><tr><th>放养编号</th><th>放养小区</th><th>物业联系人</th><th>联系电话</th><th>放养数量</th><th>确认状态</th><th>操作</th></tr></thead>
+                    <thead><tr><th>放归编号</th><th>放归小区</th><th>物业联系人</th><th>联系电话</th><th>放归数量</th><th>确认状态</th><th>操作</th></tr></thead>
                     <tbody>
                         <tr><td>RL20250114001</td><td>阳光花园小区</td><td>张经理</td><td>138****5678</td><td>5只</td><td><span class="badge badge-confirm">待确认</span></td><td><div class="actions-cell"><button class="btn btn-sm btn-green" onclick="propertyConfirm('RL20250114001')">物业确认</button><button class="btn btn-sm btn-secondary" onclick="viewPropertyConfirm('RL20250114001')">详情</button></div></td></tr>
                         <tr><td>RL20250110001</td><td>金色阳光城</td><td>李经理</td><td>139****1234</td><td>7只</td><td><span class="badge badge-done">已确认</span></td><td><div class="actions-cell"><button class="btn btn-sm btn-secondary" onclick="viewPropertyConfirm('RL20250110001')">详情</button></div></td></tr>
@@ -186,7 +186,7 @@
         <div id="recordTab" class="tab-content">
             <div class="section">
                 <div class="section-header">
-                    <h3 class="section-title">放养台账</h3>
+                    <h3 class="section-title">放归台账</h3>
                     <div style="display:flex;gap:12px;">
                         <button class="btn btn-secondary" onclick="exportReleaseRecord()">📥 导出</button>
                         <button class="btn btn-secondary" onclick="printReleaseRecord()">🖨️ 打印</button>
@@ -198,7 +198,7 @@
                     <button class="btn btn-secondary">🔍 查询</button>
                 </div>
                 <table>
-                    <thead><tr><th>放养编号</th><th>放养小区</th><th>动物数量</th><th>放养日期</th><th>物业确认人</th><th>确认时间</th><th>操作</th></tr></thead>
+                    <thead><tr><th>放归编号</th><th>放归小区</th><th>动物数量</th><th>放归日期</th><th>物业确认人</th><th>确认时间</th><th>操作</th></tr></thead>
                     <tbody>
                         <tr><td>RL20250113001</td><td>幸福家园</td><td>6只</td><td>2025-01-13</td><td>王经理</td><td>2025-01-13 18:00</td><td><button class="btn btn-sm btn-secondary" onclick="viewReleaseDetail('RL20250113001')">详情</button></td></tr>
                         <tr><td>RL20250112001</td><td>绿色新城</td><td>4只</td><td>2025-01-12</td><td>赵经理</td><td>2025-01-12 17:00</td><td><button class="btn btn-sm btn-secondary" onclick="viewReleaseDetail('RL20250112001')">详情</button></td></tr>
@@ -219,24 +219,24 @@
     </div>
     <div class="modal-overlay" id="releaseModal">
         <div class="modal">
-            <div class="modal-header"><h3 class="modal-title">新建放养单</h3><button class="modal-close" onclick="closeModal('releaseModal')">×</button></div>
-            <div class="form-group"><label class="form-label">放养小区</label><input type="text" class="form-input" id="releaseCommunity" placeholder="请输入放养小区名称"></div>
+            <div class="modal-header"><h3 class="modal-title">新建放归单</h3><button class="modal-close" onclick="closeModal('releaseModal')">×</button></div>
+            <div class="form-group"><label class="form-label">放归小区</label><input type="text" class="form-input" id="releaseCommunity" placeholder="请输入放归小区名称"></div>
             <div class="form-group"><label class="form-label">选择动物</label><div class="animal-list" id="releaseAnimalList"></div></div>
-            <div class="form-group"><label class="form-label">计划放养日期</label><input type="date" class="form-input" id="releaseDate"></div>
-            <div class="form-group"><label class="form-label">放养地点</label><input type="text" class="form-input" id="releaseLocation" placeholder="请输入具体放养地点"></div>
+            <div class="form-group"><label class="form-label">计划放归日期</label><input type="date" class="form-input" id="releaseDate"></div>
+            <div class="form-group"><label class="form-label">放归地点</label><input type="text" class="form-input" id="releaseLocation" placeholder="请输入具体放归地点"></div>
             <div class="form-group"><label class="form-label">备注说明</label><textarea class="form-input" style="min-height:80px;" id="releaseNote" placeholder="请输入备注说明"></textarea></div>
-            <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('releaseModal')">取消</button><button class="btn btn-primary" onclick="submitRelease()">创建放养单</button></div>
+            <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('releaseModal')">取消</button><button class="btn btn-primary" onclick="submitRelease()">创建放归单</button></div>
         </div>
     </div>
     <div class="modal-overlay" id="propertyConfirmModal">
         <div class="modal">
-            <div class="modal-header"><h3 class="modal-title">物业确认放养</h3><button class="modal-close" onclick="closeModal('propertyConfirmModal')">×</button></div>
-            <div class="form-group"><label class="form-label">放养编号</label><input type="text" class="form-input" id="confirmReleaseId" readonly></div>
+            <div class="modal-header"><h3 class="modal-title">物业确认放归</h3><button class="modal-close" onclick="closeModal('propertyConfirmModal')">×</button></div>
+            <div class="form-group"><label class="form-label">放归编号</label><input type="text" class="form-input" id="confirmReleaseId" readonly></div>
             <div class="form-group"><label class="form-label">物业确认人</label><input type="text" class="form-input" id="propertyName" placeholder="请输入物业确认人姓名"></div>
             <div class="form-group"><label class="form-label">联系电话</label><input type="tel" class="form-input" id="propertyPhone" placeholder="请输入联系电话"></div>
             <div class="form-group"><label class="form-label">确认时间</label><input type="datetime-local" class="form-input" id="confirmTime"></div>
             <div class="form-group"><label class="form-label">备注</label><textarea class="form-input" style="min-height:60px;" id="confirmNote" placeholder="请输入备注"></textarea></div>
-            <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('propertyConfirmModal')">取消</button><button class="btn btn-green" onclick="submitPropertyConfirm()">确认放养</button></div>
+            <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('propertyConfirmModal')">取消</button><button class="btn btn-green" onclick="submitPropertyConfirm()">确认放归</button></div>
         </div>
     </div>
     <script>
@@ -282,15 +282,15 @@
             const date=document.getElementById('releaseDate').value;
             const location=document.getElementById('releaseLocation').value;
             const selected=document.querySelectorAll('#releaseAnimalList .animal-item.selected');
-            if(!community){alert('请输入放养小区');return;}
-            if(!date){alert('请选择计划放养日期');return;}
+            if(!community){alert('请输入放归小区');return;}
+            if(!date){alert('请选择计划放归日期');return;}
             if(selected.length===0){alert('请选择至少一只动物');return;}
-            alert(`放养单创建成功！\n放养小区：${community}\n放养地点：${location}\n动物数量：${selected.length}只\n计划日期：${date}`);
+            alert(`放归单创建成功！\n放归小区：${community}\n放归地点：${location}\n动物数量：${selected.length}只\n计划日期：${date}`);
             closeModal('releaseModal');
         }
         function confirmRelease(id){
-            if(confirm(`确认编号 ${id} 的动物已放养吗？`)){
-                alert(`编号 ${id} 已确认放养，状态更新为「待物业确认」`);
+            if(confirm(`确认编号 ${id} 的动物已放归吗？`)){
+                alert(`编号 ${id} 已确认放归，状态更新为「待物业确认」`);
             }
         }
         function remindProperty(id){alert(`已发送催促通知给物业\n编号：${id}`);}
@@ -304,17 +304,17 @@
             const phone=document.getElementById('propertyPhone').value;
             const time=document.getElementById('confirmTime').value;
             if(!name||!phone||!time){alert('请填写完整信息');return;}
-            alert(`放养确认成功！\n放养编号：${id}\n物业确认人：${name}\n确认时间：${time}\n放养闭环已完成！`);
+            alert(`放归确认成功！\n放归编号：${id}\n物业确认人：${name}\n确认时间：${time}\n放归闭环已完成！`);
             closeModal('propertyConfirmModal');
         }
         function viewReleaseDetail(id){
-            const details={'RL20250115001':'放养编号：RL20250115001\n状态：待放养\n放养小区：花园社区\n动物数量：8只\n计划日期：2025-01-16\n负责人：王阿姨\n备注：傍晚时分放养','RL20250114001':'放养编号：RL20250114001\n状态：待物业确认\n放养小区：阳光花园小区\n动物数量：5只\n计划日期：2025-01-15\n实际放养：2025-01-15 17:30\n负责人：李阿姨\n物业联系人：张经理','RL20250113001':'放养编号：RL20250113001\n状态：已放养\n放养小区：幸福家园\n动物数量：6只\n计划日期：2025-01-13\n实际放养：2025-01-13 18:00\n物业确认：2025-01-14 09:00','RL20250112001':'放养编号：RL20250112001\n状态：已放养\n放养小区：绿色新城\n动物数量：4只\n计划日期：2025-01-12\n实际放养：2025-01-12 16:30\n物业确认：2025-01-12 17:00','RL20250111001':'放养编号：RL20250111001\n状态：待放养\n放养小区：翠湖花园\n动物数量：10只\n计划日期：2025-01-17\n负责人：赵阿姨'};
+            const details={'RL20250115001':'放归编号：RL20250115001\n状态：待放归\n放归小区：花园社区\n动物数量：8只\n计划日期：2025-01-16\n负责人：王阿姨\n备注：傍晚时分放归','RL20250114001':'放归编号：RL20250114001\n状态：待物业确认\n放归小区：阳光花园小区\n动物数量：5只\n计划日期：2025-01-15\n实际放归：2025-01-15 17:30\n负责人：李阿姨\n物业联系人：张经理','RL20250113001':'放归编号：RL20250113001\n状态：已放归\n放归小区：幸福家园\n动物数量：6只\n计划日期：2025-01-13\n实际放归：2025-01-13 18:00\n物业确认：2025-01-14 09:00','RL20250112001':'放归编号：RL20250112001\n状态：已放归\n放归小区：绿色新城\n动物数量：4只\n计划日期：2025-01-12\n实际放归：2025-01-12 16:30\n物业确认：2025-01-12 17:00','RL20250111001':'放归编号：RL20250111001\n状态：待放归\n放归小区：翠湖花园\n动物数量：10只\n计划日期：2025-01-17\n负责人：赵阿姨'};
             alert(details[id]||'暂无详细信息');
         }
         function viewAnimalDetail(id){alert(`查看动物 ${id} 详细信息`);}
-        function viewPropertyConfirm(id){alert(`查看放养确认详情 ${id}`);}
-        function exportReleaseRecord(){alert('正在导出放养台账...');}
-        function printReleaseRecord(){alert('正在打印放养台账...');}
+        function viewPropertyConfirm(id){alert(`查看放归确认详情 ${id}`);}
+        function exportReleaseRecord(){alert('正在导出放归台账...');}
+        function printReleaseRecord(){alert('正在打印放归台账...');}
         function filterReleases(){
             const community=document.getElementById('communityFilter').value;
             const status=document.getElementById('releaseStatusFilter').value;
