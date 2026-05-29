@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>领养维护 - 流浪动物 TNR 管理系统</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'PingFang SC','Microsoft YaHei',sans-serif;background:linear-gradient(135deg,#11998e 0%,#38ef7d 100%);min-height:100vh;padding:20px}
+        .container{max-width:1200px;margin:0 auto}
+        .header{background:rgba(255,255,255,0.95);backdrop-filter:blur(10px);border-radius:16px;padding:20px 30px;margin-bottom:24px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 4px 20px rgba(0,0,0,0.1)}
+        .logo{display:flex;align-items:center;gap:12px}
+        .logo-icon{width:40px;height:40px;background:linear-gradient(135deg,#11998e,#38ef7d);border-radius:10px;display:flex;align-items:center;justify-content:center;color:white;font-size:20px}
+        .logo h1{font-size:20px;color:#1a1a2e;font-weight:600}
+        .back-btn{padding:10px 20px;background:#f0f0f5;border:none;border-radius:8px;color:#666;cursor:pointer;font-size:14px;text-decoration:none}
+        .section{background:white;border-radius:16px;padding:24px;margin-bottom:24px;box-shadow:0 4px 20px rgba(0,0,0,0.08)}
+        .section-title{font-size:18px;font-weight:600;color:#1a1a2e;margin-bottom:20px;display:flex;align-items:center;gap:10px;padding-bottom:16px;border-bottom:2px solid #f0f0f5}
+        .section-title::before{content:'';width:4px;height:20px;background:linear-gradient(180deg,#11998e,#38ef7d);border-radius:2px}
+        .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+        .stat-card{background:white;border-radius:16px;padding:20px;box-shadow:0 4px 20px rgba(0,0,0,0.08);text-align:center}
+        .stat-value{font-size:32px;font-weight:700;color:#11998e}
+        .stat-title{font-size:14px;color:#666;margin-top:4px}
+        .btn{padding:10px 20px;border:none;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;transition:all 0.3s;font-family:inherit}
+        .btn-primary{background:linear-gradient(135deg,#11998e,#38ef7d);color:white}
+        .btn-primary:hover{transform:translateY(-2px)}
+        .btn-secondary{background:#f0f0f5;color:#666}
+        .btn-warning{background:linear-gradient(135deg,#f57c00,#e65100);color:white}
+        .pet-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px}
+        .pet-card{border:2px solid #e0e0e8;border-radius:16px;overflow:hidden;transition:all 0.3s}
+        .pet-card:hover{border-color:#11998e;box-shadow:0 8px 25px rgba(17,153,142,0.15)}
+        .pet-photo{height:180px;background:#f0f0f5;display:flex;align-items:center;justify-content:center;font-size:60px;position:relative}
+        .pet-badge{position:absolute;top:10px;right:10px;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:500}
+        .badge-ready{background:#e8f5e9;color:#388e3c}
+        .badge-pending{background:#fff3e0;color:#f57c00}
+        .badge-adopted{background:#e3f2fd;color:#1976d2}
+        .pet-info{padding:16px}
+        .pet-name{font-size:16px;font-weight:600;color:#1a1a2e;margin-bottom:8px}
+        .pet-desc{font-size:13px;color:#666;margin-bottom:12px;line-height:1.5}
+        .pet-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+        .tag{padding:4px 10px;background:#f0f0f5;border-radius:6px;font-size:11px;color:#666}
+        .pet-actions{display:flex;gap:8px}
+        .pet-actions .btn{padding:8px 14px;font-size:12px}
+        .tab-bar{display:flex;gap:12px;margin-bottom:24px}
+        .tab-item{padding:10px 20px;border:2px solid #e0e0e8;border-radius:10px;background:white;cursor:pointer;font-size:14px;transition:all 0.3s;font-family:inherit}
+        .tab-item.active{background:linear-gradient(135deg,#11998e,#38ef7d);color:white;border-color:transparent}
+        .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;z-index:1000}
+        .modal-overlay.active{display:flex}
+        .modal{background:white;border-radius:16px;padding:32px;max-width:700px;width:90%;max-height:80vh;overflow-y:auto}
+        .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+        .modal-title{font-size:20px;font-weight:600;color:#1a1a2e}
+        .modal-close{width:32px;height:32px;border:none;background:#f0f0f5;border-radius:8px;cursor:pointer;font-size:18px;color:#666}
+        .form-group{margin-bottom:20px}
+        .form-label{display:block;font-size:14px;font-weight:500;color:#333;margin-bottom:8px}
+        .form-input,.form-textarea,.form-select{width:100%;padding:12px 16px;border:2px solid #e0e0e8;border-radius:10px;font-size:14px;font-family:inherit}
+        .form-input:focus,.form-textarea:focus,.form-select:focus{outline:none;border-color:#11998e}
+        .form-textarea{min-height:100px;resize:vertical}
+        .upload-area{border:2px dashed #e0e0e8;border-radius:12px;padding:24px;text-align:center;cursor:pointer;transition:all 0.3s;color:#999}
+        .upload-area:hover{border-color:#11998e;color:#11998e}
+        @media(max-width:768px){.pet-grid{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">📝</div>
+                <h1>领养维护管理</h1>
+            </div>
+            <a href="homepage.html" class="back-btn">← 返回首页</a>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card"><div class="stat-value">4</div><div class="stat-title">待维护资料</div></div>
+            <div class="stat-card"><div class="stat-value">23</div><div class="stat-title">已上架领养</div></div>
+            <div class="stat-card"><div class="stat-value">15</div><div class="stat-title">已成功领养</div></div>
+            <div class="stat-card"><div class="stat-value">2</div><div class="stat-title">领养退回</div></div>
+        </div>
+
+        <div class="tab-bar">
+            <button class="tab-item active" onclick="switchTab(this,'pending')">待维护</button>
+            <button class="tab-item" onclick="switchTab(this,'online')">已上架</button>
+            <button class="tab-item" onclick="switchTab(this,'adopted')">已领养</button>
+        </div>
+
+        <div class="section" id="pendingTab">
+            <div class="section-title">待维护领养资料（诊疗完成超5天）</div>
+            <div class="pet-grid">
+                <div class="pet-card">
+                    <div class="pet-photo">🐱<span class="pet-badge badge-pending">待维护</span></div>
+                    <div class="pet-info">
+                        <div class="pet-name">小咪 (A008)</div>
+                        <div class="pet-desc">橘猫，2岁，已绝育疫苗驱虫，性格温顺亲人</div>
+                        <div class="pet-tags"><span class="tag">母</span><span class="tag">已绝育</span><span class="tag">已疫苗</span><span class="tag">有芯片</span></div>
+                        <div class="pet-actions">
+                            <button class="btn btn-primary" onclick="editPetProfile('A008')">编辑资料</button>
+                            <button class="btn btn-warning" onclick="uploadPhotos('A008')">上传照片</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="pet-card">
+                    <div class="pet-photo">🐶<span class="pet-badge badge-pending">待维护</span></div>
+                    <div class="pet-info">
+                        <div class="pet-name">豆豆 (A012)</div>
+                        <div class="pet-desc">泰迪犬，1岁，已疫苗驱虫，活泼聪明</div>
+                        <div class="pet-tags"><span class="tag">公</span><span class="tag">已疫苗</span><span class="tag">已驱虫</span></div>
+                        <div class="pet-actions">
+                            <button class="btn btn-primary" onclick="editPetProfile('A012')">编辑资料</button>
+                            <button class="btn btn-warning" onclick="uploadPhotos('A012')">上传照片</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="pet-card">
+                    <div class="pet-photo">🐱<span class="pet-badge badge-pending">待维护</span></div>
+                    <div class="pet-info">
+                        <div class="pet-name">雪球 (A015)</div>
+                        <div class="pet-desc">纯白长毛猫，1.5岁，颜值超高，安静乖巧</div>
+                        <div class="pet-tags"><span class="tag">母</span><span class="tag">已绝育</span><span class="tag">有芯片</span></div>
+                        <div class="pet-actions">
+                            <button class="btn btn-primary" onclick="editPetProfile('A015')">编辑资料</button>
+                            <button class="btn btn-warning" onclick="uploadPhotos('A015')">上传照片</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="pet-card">
+                    <div class="pet-photo">🐶<span class="pet-badge badge-pending">待维护</span></div>
+                    <div class="pet-info">
+                        <div class="pet-name">旺财 (A018)</div>
+                        <div class="pet-desc">中华田园犬，3岁，忠诚护主，身体健康</div>
+                        <div class="pet-tags"><span class="tag">公</span><span class="tag">已绝育</span><span class="tag">已疫苗</span></div>
+                        <div class="pet-actions">
+                            <button class="btn btn-primary" onclick="editPetProfile('A018')">编辑资料</button>
+                            <button class="btn btn-warning" onclick="uploadPhotos('A018')">上传照片</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="onlineTab" style="display:none">
+            <div class="section-title">已上架领养大厅</div>
+            <div class="pet-grid">
+                <div class="pet-card">
+                    <div class="pet-photo">🐱<span class="pet-badge badge-ready">已上架</span></div>
+                    <div class="pet-info">
+                        <div class="pet-name">花花 (A021)</div>
+                        <div class="pet-desc">三花猫，2岁，性格独立，会用猫砂</div>
+                        <div class="pet-tags"><span class="tag">母</span><span class="tag">已绝育</span><span class="tag">已驱虫</span></div>
+                        <div class="pet-actions">
+                            <button class="btn btn-secondary" onclick="viewProfile('A021')">查看</button>
+                            <button class="btn btn-primary" onclick="editPetProfile('A021')">编辑</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="pet-card">
+                    <div class="pet-photo">🐶<span class="pet-badge badge-ready">已上架</span></div>
+                    <div class="pet-info">
+                        <div class="pet-name">球球 (A025)</div>
+                        <div class="pet-desc">比熊犬，8月龄，毛发蓬松可爱</div>
+                        <div class="pet-tags"><span class="tag">公</span><span class="tag">已疫苗</span></div>
+                        <div class="pet-actions">
+                            <button class="btn btn-secondary" onclick="viewProfile('A025')">查看</button>
+                            <button class="btn btn-primary" onclick="editPetProfile('A025')">编辑</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="adoptedTab" style="display:none">
+            <div class="section-title">已成功领养</div>
+            <table style="width:100%;border-collapse:separate;border-spacing:0">
+                <thead><tr><th style="padding:14px 16px;text-align:left;background:#f8f9fc;border-bottom:2px solid #f0f0f5;font-size:14px;color:#666">宠物编号</th><th style="padding:14px 16px;text-align:left;background:#f8f9fc;border-bottom:2px solid #f0f0f5;font-size:14px;color:#666">宠物名称</th><th style="padding:14px 16px;text-align:left;background:#f8f9fc;border-bottom:2px solid #f0f0f5;font-size:14px;color:#666">领养人</th><th style="padding:14px 16px;text-align:left;background:#f8f9fc;border-bottom:2px solid #f0f0f5;font-size:14px;color:#666">领养日期</th><th style="padding:14px 16px;text-align:left;background:#f8f9fc;border-bottom:2px solid #f0f0f5;font-size:14px;color:#666">回访状态</th></tr></thead>
+                <tbody>
+                    <tr><td style="padding:14px 16px;border-bottom:1px solid #f0f0f5">A005</td><td style="padding:14px 16px;border-bottom:1px solid #f0f0f5">咪咪</td><td style="padding:14px 16px;border-bottom:1px solid #f0f0f5">张女士</td><td style="padding:14px 16px;border-bottom:1px solid #f0f0f5">2025-01-10</td><td style="padding:14px 16px;border-bottom:1px solid #f0f0f5"><span style="padding:4px 12px;background:#e8f5e9;color:#388e3c;border-radius:20px;font-size:12px">已打卡2次</span></td></tr>
+                    <tr><td style="padding:14px 16px;border-bottom:1px solid #f0f0f5">A009</td><td style="padding:14px 16px;border-bottom:1px solid #f0f0f5">大黄</td><td style="padding:14px 16px;border-bottom:1px solid #f0f0f5">李先生</td><td style="padding:14px 16px;border-bottom:1px solid #f0f0f5">2025-01-08</td><td style="padding:14px 16px;border-bottom:1px solid #f0f0f5"><span style="padding:4px 12px;background:#fff3e0;color:#f57c00;border-radius:20px;font-size:12px">待打卡</span></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="profileModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">编辑领养资料</div>
+                <button class="modal-close" onclick="document.getElementById('profileModal').classList.remove('active')">×</button>
+            </div>
+            <div class="form-group">
+                <label class="form-label">宠物昵称</label>
+                <input type="text" class="form-input" placeholder="给宠物起个可爱的名字" value="小咪">
+            </div>
+            <div class="form-group">
+                <label class="form-label">宠物简介（领养大厅展示）</label>
+                <textarea class="form-textarea" placeholder="描述宠物性格、特点、适合什么样的家庭...">温顺可爱的橘猫，已绝育疫苗，性格亲人，喜欢被摸头。适合安静的家庭环境。</textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label">领养要求</label>
+                <textarea class="form-textarea" placeholder="对领养人的要求...">1. 有固定住所\n2. 家中需封窗\n3. 承诺不弃养</textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label">上传照片（至少3张）</label>
+                <div class="upload-area" id="uploadArea" onclick="triggerUpload()">
+                    <input type="file" id="photoInput" accept="image/*" multiple style="display:none" onchange="handleUpload(this.files)">
+                    <div id="uploadContent">📷 点击上传宠物照片<br><span style="font-size:12px">建议上传正面、侧面、全身照</span></div>
+                </div>
+            </div>
+            <div style="display:flex;gap:12px;justify-content:flex-end">
+                <button class="btn btn-secondary" onclick="document.getElementById('profileModal').classList.remove('active')">取消</button>
+                <button class="btn btn-primary" onclick="saveAndPublish()">保存并上架</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(el,tab){
+            document.querySelectorAll('.tab-item').forEach(t=>t.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('pendingTab').style.display=tab==='pending'?'block':'none';
+            document.getElementById('onlineTab').style.display=tab==='online'?'block':'none';
+            document.getElementById('adoptedTab').style.display=tab==='adopted'?'block':'none';
+        }
+        function editPetProfile(id){document.getElementById('profileModal').classList.add('active')}
+        function uploadPhotos(id){alert('上传宠物照片\n\n宠物编号：'+id+'\n\n支持批量上传，建议上传：\n- 正面照\n- 侧面照\n- 全身照\n- 互动照')}
+        function viewProfile(id){alert('查看宠物详情\n\n宠物编号：'+id)}
+        function triggerUpload(){document.getElementById('photoInput').click()}
+        var uploadedCount=0;
+        function handleUpload(files){
+            if(files.length>0){
+                uploadedCount+=files.length;
+                document.getElementById('uploadContent').innerHTML='✅ 已选择 '+uploadedCount+' 张照片<br><span style="font-size:12px;color:#48bb78">点击可继续添加</span>';
+                document.getElementById('uploadArea').style.borderColor='#48bb78';
+            }
+        }
+        function saveAndPublish(){
+            if(uploadedCount<3){alert('请至少上传3张照片');return}
+            alert('✅ 资料已保存并上架至领养大厅\n\n领养人可在领养大厅查看该宠物');
+            document.getElementById('profileModal').classList.remove('active');
+            uploadedCount=0;
+        }
+    </script>
+</body>
+</html>

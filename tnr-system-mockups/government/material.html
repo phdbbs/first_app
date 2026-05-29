@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>物料监管 - 流浪动物 TNR 管理系统</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'PingFang SC','Microsoft YaHei',sans-serif;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);min-height:100vh;color:white;padding:20px}
+        .container{max-width:1400px;margin:0 auto}
+        .header{display:flex;justify-content:space-between;align-items:center;padding:20px 30px;background:rgba(255,255,255,0.05);backdrop-filter:blur(10px);border-radius:16px;margin-bottom:24px;border:1px solid rgba(255,255,255,0.1)}
+        .logo{display:flex;align-items:center;gap:12px}
+        .logo-icon{width:44px;height:44px;background:linear-gradient(135deg,#00d2ff,#3a7bd5);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px}
+        .logo h1{font-size:20px;font-weight:600}
+        .back-btn{padding:10px 20px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:8px;color:white;cursor:pointer;text-decoration:none;font-size:14px}
+        .section{background:rgba(255,255,255,0.05);backdrop-filter:blur(10px);border-radius:16px;padding:24px;margin-bottom:24px;border:1px solid rgba(255,255,255,0.1)}
+        .section-title{font-size:18px;font-weight:600;margin-bottom:20px;display:flex;align-items:center;gap:10px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,0.1)}
+        .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+        .stat-card{background:rgba(255,255,255,0.05);border-radius:12px;padding:20px;text-align:center;border:1px solid rgba(255,255,255,0.1)}
+        .stat-value{font-size:32px;font-weight:700}
+        .stat-value.blue{color:#00d2ff}
+        .stat-value.green{color:#00ff88}
+        .stat-value.orange{color:#ff9500}
+        .stat-value.red{color:#e53935}
+        .stat-label{font-size:14px;color:rgba(255,255,255,0.6);margin-top:4px}
+        .tab-bar{display:flex;gap:12px;margin-bottom:24px}
+        .tab-item{padding:10px 20px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;cursor:pointer;font-size:14px;transition:all 0.3s}
+        .tab-item.active{background:linear-gradient(135deg,#00d2ff,#3a7bd5);border-color:transparent}
+        .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px}
+        .search-box{display:flex;gap:8px}
+        .search-input{padding:10px 16px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:10px;color:white;font-size:14px;width:250px}
+        .search-input::placeholder{color:rgba(255,255,255,0.4)}
+        .search-input:focus{outline:none;border-color:#00d2ff}
+        .btn{padding:10px 20px;border:none;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;transition:all 0.3s;font-family:inherit}
+        .btn-primary{background:linear-gradient(135deg,#00d2ff,#3a7bd5);color:white}
+        .btn-secondary{background:rgba(255,255,255,0.1);color:white;border:1px solid rgba(255,255,255,0.2)}
+        table{width:100%;border-collapse:separate;border-spacing:0}
+        th{background:rgba(255,255,255,0.05);padding:14px 16px;text-align:left;font-size:14px;color:rgba(255,255,255,0.6);border-bottom:1px solid rgba(255,255,255,0.1)}
+        td{padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.05);font-size:14px}
+        tr:hover td{background:rgba(255,255,255,0.03)}
+        .status-badge{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:500}
+        .status-ok{background:rgba(0,255,136,0.2);color:#00ff88}
+        .status-low{background:rgba(255,149,0,0.2);color:#ff9500}
+        .status-out{background:rgba(229,57,53,0.2);color:#e53935}
+        .progress-bar{width:100%;height:8px;background:rgba(255,255,255,0.1);border-radius:4px;overflow:hidden}
+        .progress-fill{height:100%;border-radius:4px;transition:width 0.3s}
+        .progress-fill.green{background:#00ff88}
+        .progress-fill.orange{background:#ff9500}
+        .progress-fill.red{background:#e53935}
+        @media(max-width:768px){.stats-grid{grid-template-columns:repeat(2,1fr)}table{font-size:12px}th,td{padding:10px 8px}}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo"><div class="logo-icon">📦</div><h1>物料监管</h1></div>
+            <a href="dashboard.html" class="back-btn">← 返回大屏</a>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card"><div class="stat-value blue">8</div><div class="stat-label">物料种类</div></div>
+            <div class="stat-card"><div class="stat-value green">6</div><div class="stat-label">库存正常</div></div>
+            <div class="stat-card"><div class="stat-value orange">2</div><div class="stat-label">低库存预警</div></div>
+            <div class="stat-card"><div class="stat-value red">0</div><div class="stat-label">已耗尽</div></div>
+        </div>
+
+        <div class="tab-bar">
+            <button class="tab-item active" onclick="switchTab(this,'inventory')">库存总览</button>
+            <button class="tab-item" onclick="switchTab(this,'flow')">出入库流水</button>
+            <button class="tab-item" onclick="switchTab(this,'purchase')">采购审批</button>
+        </div>
+
+        <div class="section" id="inventoryTab">
+            <div class="section-title">📊 各机构物料库存</div>
+            <table>
+                <thead><tr><th>物料名称</th><th>规格</th><th>捕捉站库存</th><th>爱心医院</th><td>仁爱医院</td><th>安全库存</th><th>库存状态</th><th>操作</th></tr></thead>
+                <tbody>
+                    <tr>
+                        <td>狂犬疫苗</td><td>1ml/支</td><td>45</td><td>8</td><td>22</td><td>20</td>
+                        <td><div class="progress-bar"><div class="progress-fill orange" style="width:40%"></div></div><span class="status-badge status-low" style="margin-left:8px">⚠️ 低库存</span></td>
+                        <td><button class="btn btn-secondary" style="padding:6px 12px;font-size:12px" onclick="viewMaterialDetail('狂犬疫苗')">详情</button></td>
+                    </tr>
+                    <tr>
+                        <td>猫用芯片</td><td>134.2kHz</td><td>30</td><td>15</td><td>18</td><td>15</td>
+                        <td><div class="progress-bar"><div class="progress-fill green" style="width:70%"></div></div><span class="status-badge status-ok" style="margin-left:8px">✅ 正常</span></td>
+                        <td><button class="btn btn-secondary" style="padding:6px 12px;font-size:12px">详情</button></td>
+                    </tr>
+                    <tr>
+                        <td>犬用芯片</td><td>134.2kHz</td><td>20</td><td>12</td><td>10</td><td>15</td>
+                        <td><div class="progress-bar"><div class="progress-fill green" style="width:60%"></div></div><span class="status-badge status-ok" style="margin-left:8px">✅ 正常</span></td>
+                        <td><button class="btn btn-secondary" style="padding:6px 12px;font-size:12px">详情</button></td>
+                    </tr>
+                    <tr>
+                        <td>体内驱虫药</td><td>猫用/片</td><td>60</td><td>25</td><td>30</td><td>20</td>
+                        <td><div class="progress-bar"><div class="progress-fill green" style="width:90%"></div></div><span class="status-badge status-ok" style="margin-left:8px">✅ 正常</span></td>
+                        <td><button class="btn btn-secondary" style="padding:6px 12px;font-size:12px">详情</button></td>
+                    </tr>
+                    <tr>
+                        <td>体外驱虫药</td><td>猫用/支</td><td>35</td><td>10</td><td>15</td><td>20</td>
+                        <td><div class="progress-bar"><div class="progress-fill orange" style="width:50%"></div></div><span class="status-badge status-low" style="margin-left:8px">⚠️ 低库存</span></td>
+                        <td><button class="btn btn-secondary" style="padding:6px 12px;font-size:12px">详情</button></td>
+                    </tr>
+                    <tr>
+                        <td>绝育缝合包</td><td>标准</td><td>50</td><td>20</td><td>25</td><td>15</td>
+                        <td><div class="progress-bar"><div class="progress-fill green" style="width:85%"></div></div><span class="status-badge status-ok" style="margin-left:8px">✅ 正常</span></td>
+                        <td><button class="btn btn-secondary" style="padding:6px 12px;font-size:12px">详情</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section" id="flowTab" style="display:none">
+            <div class="toolbar">
+                <div class="search-box"><input type="text" class="search-input" placeholder="搜索物料名称..."><button class="btn btn-primary">搜索</button></div>
+                <button class="btn btn-secondary">导出Excel</button>
+            </div>
+            <table>
+                <thead><tr><th>时间</th><th>物料名称</th><th>类型</th><th>数量</th><th>来源/去向</th><th>操作人</th><th>备注</th></tr></thead>
+                <tbody>
+                    <tr><td>2025-01-15 14:30</td><td>狂犬疫苗</td><td style="color:#e53935">出库</td><td>-5支</td><td>→ 爱心医院</td><td>王站长</td><td>日常调拨</td></tr>
+                    <tr><td>2025-01-14 10:00</td><td>猫用芯片</td><td style="color:#00ff88">入库</td><td>+20个</td><td>← 供应商</td><td>王站长</td><td>采购入库</td></tr>
+                    <tr><td>2025-01-13 16:00</td><td>体外驱虫药</td><td style="color:#e53935">出库</td><td>-10支</td><td>→ 仁爱医院</td><td>王站长</td><td>日常调拨</td></tr>
+                    <tr><td>2025-01-12 09:00</td><td>绝育缝合包</td><td style="color:#e53935">出库</td><td>-3包</td><td>→ 爱心医院</td><td>王站长</td><td>手术使用</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section" id="purchaseTab" style="display:none">
+            <div class="toolbar"><div class="search-box"><input type="text" class="search-input" placeholder="搜索采购申请..."><button class="btn btn-primary">搜索</button></div></div>
+            <table>
+                <thead><tr><th>申请编号</th><th>申请机构</th><th>物料名称</th><th>数量</th><th>申请时间</th><th>审批状态</th><th>操作</th></tr></thead>
+                <tbody>
+                    <tr><td>PO20250115001</td><td>爱心医院</td><td>狂犬疫苗</td><td>50支</td><td>2025-01-15</td><td><span class="status-badge status-low">⏳ 待审批</span></td><td><button class="btn btn-primary" style="padding:6px 12px;font-size:12px" onclick="approvePurchase('PO20250115001')">审批</button></td></tr>
+                    <tr><td>PO20250114002</td><td>捕捉站</td><td>体外驱虫药</td><td>100支</td><td>2025-01-14</td><td><span class="status-badge status-ok">✅ 已通过</span></td><td><button class="btn btn-secondary" style="padding:6px 12px;font-size:12px">详情</button></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(el,tab){
+            document.querySelectorAll('.tab-item').forEach(t=>t.classList.remove('active'));
+            el.classList.add('active');
+            ['inventory','flow','purchase'].forEach(t=>{
+                document.getElementById(t+'Tab').style.display=t===tab?'block':'none';
+            });
+        }
+        function viewMaterialDetail(name){alert('物料库存详情\n\n物料名称：'+name+'\n\n捕捉站库存：45支\n爱心医院：8支\n仁爱医院：22支\n安全库存：20支\n\n状态：⚠️ 低库存\n建议：尽快补充采购')}
+        function approvePurchase(id){if(confirm('确认审批通过采购申请 '+id+'？')){alert('✅ 采购申请已审批通过\n\n物料将下发至申请机构')}}
+    </script>
+</body>
+</html>

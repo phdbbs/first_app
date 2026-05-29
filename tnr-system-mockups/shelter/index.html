@@ -1,0 +1,153 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>流浪动物 TNR 管理系统 - 总览</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); min-height: 100vh; color: white; }
+        .header { text-align: center; padding: 60px 20px 40px; }
+        .logo { width: 100px; height: 100px; background: linear-gradient(135deg, #f6ad55, #ed8936); border-radius: 24px; margin: 0 auto 24px; display: flex; align-items: center; justify-content: center; font-size: 50px; box-shadow: 0 10px 40px rgba(246,173,85,0.3); }
+        .header h1 { font-size: 36px; font-weight: 700; margin-bottom: 12px; background: linear-gradient(135deg, #f6ad55, #fc8181); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .header p { font-size: 16px; color: rgba(255,255,255,0.7); max-width: 600px; margin: 0 auto; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .section-title { font-size: 20px; font-weight: 600; margin-bottom: 24px; padding-left: 16px; border-left: 4px solid #f6ad55; color: rgba(255,255,255,0.9); }
+        .module-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; margin-bottom: 48px; }
+        .module-card { background: rgba(255,255,255,0.05); border-radius: 20px; padding: 28px; transition: all 0.3s ease; cursor: pointer; border: 2px solid transparent; text-decoration: none; color: inherit; display: block; }
+        .module-card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+        .module-card.orange { border-color: rgba(246,173,85,0.3); }
+        .module-card.orange:hover { border-color: #f6ad55; background: rgba(246,173,85,0.1); }
+        .module-card.green { border-color: rgba(104,211,145,0.3); }
+        .module-card.green:hover { border-color: #68d391; background: rgba(104,211,145,0.1); }
+        .module-card.cyan { border-color: rgba(34,211,238,0.3); }
+        .module-card.cyan:hover { border-color: #22d3ee; background: rgba(34,211,238,0.1); }
+        .module-card.pink { border-color: rgba(252,129,129,0.3); }
+        .module-card.pink:hover { border-color: #fc8181; background: rgba(252,129,129,0.1); }
+        .module-card.blue { border-color: rgba(66,153,225,0.3); }
+        .module-card.blue:hover { border-color: #4299e1; background: rgba(66,153,225,0.1); }
+        .module-card.purple { border-color: rgba(180,180,220,0.3); }
+        .module-card.purple:hover { border-color: #b4b4dc; background: rgba(180,180,220,0.1); }
+        .module-icon { width: 60px; height: 60px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 28px; margin-bottom: 20px; }
+        .module-card.orange .module-icon { background: linear-gradient(135deg, rgba(246,173,85,0.2), rgba(237,137,54,0.2)); }
+        .module-card.green .module-icon { background: linear-gradient(135deg, rgba(104,211,145,0.2), rgba(72,187,120,0.2)); }
+        .module-card.cyan .module-icon { background: linear-gradient(135deg, rgba(34,211,238,0.2), rgba(6,182,212,0.2)); }
+        .module-card.pink .module-icon { background: linear-gradient(135deg, rgba(252,129,129,0.2), rgba(245,101,101,0.2)); }
+        .module-card.blue .module-icon { background: linear-gradient(135deg, rgba(66,153,225,0.2), rgba(66,153,225,0.2)); }
+        .module-card.purple .module-icon { background: linear-gradient(135deg, rgba(180,180,220,0.2), rgba(180,180,220,0.2)); }
+        .module-name { font-size: 20px; font-weight: 600; margin-bottom: 8px; color: white; }
+        .module-desc { font-size: 14px; color: rgba(255,255,255,0.6); line-height: 1.6; }
+        .module-status { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; margin-top: 16px; }
+        .status-active { background: rgba(104,211,145,0.2); color: #68d391; }
+        .quick-links { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-top: 20px; }
+        .quick-link { display: flex; align-items: center; gap: 12px; padding: 16px; background: rgba(255,255,255,0.05); border-radius: 12px; transition: all 0.3s; text-decoration: none; color: rgba(255,255,255,0.8); }
+        .quick-link:hover { background: rgba(255,255,255,0.1); color: white; transform: translateX(4px); }
+        .quick-link-icon { font-size: 20px; }
+        .quick-link-text { font-size: 14px; font-weight: 500; }
+        .footer { text-align: center; padding: 40px 20px; color: rgba(255,255,255,0.4); font-size: 13px; }
+        .footer a { color: rgba(255,255,255,0.6); text-decoration: none; }
+        .footer a:hover { color: #f6ad55; }
+        @media (max-width: 768px) { .header h1 { font-size: 28px; } .module-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">🐾</div>
+        <h1>流浪动物 TNR 管理系统</h1>
+        <p>规范城市流浪动物管理，标准化落地 TNR（捕捉 - 绝育 - 放归）治理模式</p>
+    </div>
+    
+    <div class="container">
+        <h2 class="section-title">📋 核心功能模块</h2>
+        <div class="module-grid">
+            <a href="homepage.html" class="module-card orange">
+                <div class="module-icon">🏠</div>
+                <div class="module-name">首页看板</div>
+                <div class="module-desc">待办任务、数据概览、库存预警、快捷入口</div>
+                <span class="module-status status-active">已完成</span>
+            </a>
+            
+            <a href="add-shelter.html" class="module-card green">
+                <div class="module-icon">➕</div>
+                <div class="module-name">新增捕捉</div>
+                <div class="module-desc">物业信息录入、电子签名、宠物编号生成、捕捉台账</div>
+                <span class="module-status status-active">已完成</span>
+            </a>
+            
+            <a href="owner-return.html" class="module-card cyan">
+                <div class="module-icon">🏠</div>
+                <div class="module-name">主人领回</div>
+                <div class="module-desc">在途宠物查找、宠主信息录入、电子签字确认出库</div>
+                <span class="module-status status-active">已完成</span>
+            </a>
+            
+            <a href="material.html" class="module-card blue">
+                <div class="module-icon">📦</div>
+                <div class="module-name">物料管理</div>
+                <div class="module-desc">采购入库、下发出库、库存台账、流向追溯</div>
+                <span class="module-status status-active">已完成</span>
+            </a>
+            
+            <a href="transfer.html" class="module-card pink">
+                <div class="module-icon">🚚</div>
+                <div class="module-name">转运管理</div>
+                <div class="module-desc">拆分转运下发、医院签收/驳回、驳回重办、交接单据</div>
+                <span class="module-status status-active">已完成</span>
+            </a>
+            
+            <a href="release.html" class="module-card green">
+                <div class="module-icon">🌿</div>
+                <div class="module-name">放归管理</div>
+                <div class="module-desc">治愈动物回收、小区放归登记、物业确认、放归台账</div>
+                <span class="module-status status-active">已完成</span>
+            </a>
+            
+            <a href="adoption.html" class="module-card orange">
+                <div class="module-icon">👤</div>
+                <div class="module-name">领养管理</div>
+                <div class="module-desc">申请审核、承诺书登记、黑名单管理、月度回访打卡</div>
+                <span class="module-status status-active">已完成</span>
+            </a>
+            
+            <a href="report.html" class="module-card cyan">
+                <div class="module-icon">📊</div>
+                <div class="module-name">数据报表</div>
+                <div class="module-desc">捕捉/诊疗/物料/领养统计、多维导出打印</div>
+                <span class="module-status status-active">已完成</span>
+            </a>
+            
+            <a href="settings.html" class="module-card purple">
+                <div class="module-icon">⚙️</div>
+                <div class="module-name">系统设置</div>
+                <div class="module-desc">基本信息、账号管理、通知设置、操作日志</div>
+                <span class="module-status status-active">已完成</span>
+            </a>
+        </div>
+        
+        <h2 class="section-title">🚀 快速链接</h2>
+        <div class="quick-links">
+            <a href="homepage.html" class="quick-link">
+                <span class="quick-link-icon">🏠</span>
+                <span class="quick-link-text">返回首页</span>
+            </a>
+            <a href="add-shelter.html" class="quick-link">
+                <span class="quick-link-icon">📝</span>
+                <span class="quick-link-text">新增加密</span>
+            </a>
+            <a href="material.html" class="quick-link">
+                <span class="quick-link-icon">📦</span>
+                <span class="quick-link-text">物料库存</span>
+            </a>
+            <a href="report.html" class="quick-link">
+                <span class="quick-link-icon">📈</span>
+                <span class="quick-link-text">查看报表</span>
+            </a>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>TNR 流浪动物管理系统 · 捕捉站端 v1.0.0</p>
+        <p style="margin-top:8px;">全流程电子化留痕 · 拍照定位签字单据全程可追溯</p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>消息中心 - 流浪动物 TNR 管理系统</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'PingFang SC','Microsoft YaHei',sans-serif;background:linear-gradient(135deg,#ff9a9e 0%,#fecfef 100%);min-height:100vh;padding-bottom:70px}
+        .container{max-width:750px;margin:0 auto;padding:20px}
+        .header{background:rgba(255,255,255,0.95);backdrop-filter:blur(10px);border-radius:16px;padding:16px 20px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 4px 20px rgba(0,0,0,0.08)}
+        .logo{display:flex;align-items:center;gap:10px}
+        .logo-icon{width:36px;height:36px;background:linear-gradient(135deg,#ff9a9e,#fecfef);border-radius:10px;display:flex;align-items:center;justify-content:center;color:white;font-size:18px}
+        .logo h1{font-size:18px;color:#1a1a2e;font-weight:600}
+        .tab-bar-top{display:flex;gap:12px;margin-bottom:16px}
+        .tab-top{padding:10px 20px;background:white;border-radius:12px;font-size:14px;cursor:pointer;transition:all 0.3s;box-shadow:0 2px 10px rgba(0,0,0,0.05)}
+        .tab-top.active{background:linear-gradient(135deg,#ff9a9e,#fecfef);color:white}
+        .msg-card{background:white;border-radius:16px;padding:16px 20px;margin-bottom:12px;box-shadow:0 2px 10px rgba(0,0,0,0.05);cursor:pointer;transition:all 0.3s;display:flex;gap:14px}
+        .msg-card:hover{transform:translateY(-2px);box-shadow:0 4px 15px rgba(0,0,0,0.1)}
+        .msg-card.unread{border-left:4px solid #ff9a9e}
+        .msg-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+        .msg-icon.system{background:#e3f2fd}
+        .msg-icon.reminder{background:#fff3e0}
+        .msg-icon.checkin{background:#e8f5e9}
+        .msg-icon.adopt{background:#fce4ec}
+        .msg-content{flex:1;min-width:0}
+        .msg-title{font-size:15px;font-weight:500;color:#1a1a2e;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center}
+        .msg-time{font-size:12px;color:#999;font-weight:400}
+        .msg-desc{font-size:13px;color:#666;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+        .unread-dot{width:8px;height:8px;background:#ff9a9e;border-radius:50%;flex-shrink:0;margin-top:6px}
+        .tab-bar{position:fixed;bottom:0;left:0;right:0;background:white;padding:8px 0;display:flex;justify-content:space-around;box-shadow:0 -2px 10px rgba(0,0,0,0.05);z-index:100}
+        .tab-item{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 16px;cursor:pointer;transition:all 0.3s}
+        .tab-item.active{color:#ff9a9e}
+        .tab-icon{font-size:22px}
+        .tab-label{font-size:11px}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">🔔</div>
+                <h1>消息中心</h1>
+            </div>
+            <div style="font-size:13px;color:#ff9a9e;cursor:pointer" onclick="markAllRead()">全部已读</div>
+        </header>
+
+        <div class="tab-bar-top">
+            <div class="tab-top active" onclick="filterMsg(this,'all')">全部</div>
+            <div class="tab-top" onclick="filterMsg(this,'system')">系统通知</div>
+            <div class="tab-top" onclick="filterMsg(this,'reminder')">打卡提醒</div>
+            <div class="tab-top" onclick="filterMsg(this,'adopt')">领养消息</div>
+        </div>
+
+        <div class="msg-card unread" data-type="reminder">
+            <div class="msg-icon reminder">⏰</div>
+            <div class="msg-content">
+                <div class="msg-title">回访打卡提醒 <span class="msg-time">2小时前</span></div>
+                <div class="msg-desc">您领养的小咪（A008）2月回访打卡即将到期，请在本月底前完成打卡</div>
+            </div>
+            <div class="unread-dot"></div>
+        </div>
+
+        <div class="msg-card unread" data-type="system">
+            <div class="msg-icon system">📢</div>
+            <div class="msg-content">
+                <div class="msg-title">系统公告 <span class="msg-time">1天前</span></div>
+                <div class="msg-desc">TNR管理系统升级通知：新增宠物全生命周期档案查询功能，领养人可查看宠物从捕捉到领养的完整记录</div>
+            </div>
+            <div class="unread-dot"></div>
+        </div>
+
+        <div class="msg-card" data-type="adopt">
+            <div class="msg-icon adopt">❤️</div>
+            <div class="msg-content">
+                <div class="msg-title">领养成功通知 <span class="msg-time">2025-01-12</span></div>
+                <div class="msg-desc">恭喜您成功领养小咪（A008）！请每月按时完成回访打卡，关注宠物健康</div>
+            </div>
+        </div>
+
+        <div class="msg-card" data-type="checkin">
+            <div class="msg-icon checkin">✅</div>
+            <div class="msg-content">
+                <div class="msg-title">打卡成功 <span class="msg-time">2025-01-12</span></div>
+                <div class="msg-desc">小咪（A008）1月回访打卡已记录，下次打卡时间：2025年2月</div>
+            </div>
+        </div>
+
+        <div class="msg-card" data-type="system">
+            <div class="msg-icon system">📋</div>
+            <div class="msg-content">
+                <div class="msg-title">承诺书签署提醒 <span class="msg-time">2025-01-11</span></div>
+                <div class="msg-desc">请于领养当日签署《领养承诺书》，承诺不弃养、按时疫苗、定期回访</div>
+            </div>
+        </div>
+
+        <div class="msg-card" data-type="adopt">
+            <div class="msg-icon adopt">🎉</div>
+            <div class="msg-content">
+                <div class="msg-title">领养审核通过 <span class="msg-time">2025-01-11</span></div>
+                <div class="msg-desc">您提交的小咪（A008）领养申请已通过审核，请前往爱心宠物医院办理领养手续</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-bar">
+        <div class="tab-item" onclick="location.href='adoption-hall.html'"><div class="tab-icon">🏠</div><div class="tab-label">领养大厅</div></div>
+        <div class="tab-item" onclick="location.href='my-adoption.html'"><div class="tab-icon">🐾</div><div class="tab-label">我的领养</div></div>
+        <div class="tab-item" onclick="location.href='checkin.html'"><div class="tab-icon">📸</div><div class="tab-label">回访打卡</div></div>
+        <div class="tab-item active"><div class="tab-icon">🔔</div><div class="tab-label">消息中心</div></div>
+        <div class="tab-item" onclick="location.href='profile.html'"><div class="tab-icon">👤</div><div class="tab-label">个人中心</div></div>
+    </div>
+
+    <script>
+        function filterMsg(el,type){
+            document.querySelectorAll('.tab-top').forEach(t=>t.classList.remove('active'));
+            el.classList.add('active');
+            document.querySelectorAll('.msg-card').forEach(card=>{
+                if(type==='all'||card.dataset.type===type){card.style.display='flex'}
+                else{card.style.display='none'}
+            });
+        }
+        function markAllRead(){alert('✅ 已标记全部为已读')}
+    </script>
+</body>
+</html>

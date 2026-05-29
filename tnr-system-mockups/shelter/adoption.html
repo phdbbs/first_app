@@ -1,0 +1,421 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>领养管理 - 流浪动物 TNR 管理系统</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%); min-height: 100vh; display: flex; }
+        .sidebar { width: 260px; background: linear-gradient(180deg, #2d3748 0%, #1a202c 100%); color: white; padding: 24px; display: flex; flex-direction: column; min-height: 100vh; position: fixed; left: 0; top: 0; }
+        .sidebar-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-logo-icon { width: 44px; height: 44px; background: linear-gradient(135deg, #f6ad55, #ed8936); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+        .sidebar-logo h1 { font-size: 18px; font-weight: 600; color: white; }
+        .nav-menu { flex: 1; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 10px; margin-bottom: 8px; cursor: pointer; transition: all 0.3s ease; color: rgba(255,255,255,0.8); text-decoration: none; }
+        .nav-item:hover { background: rgba(255,255,255,0.1); color: white; }
+        .nav-item.active { background: linear-gradient(135deg, #f6ad55, #ed8936); color: white; }
+        .nav-icon { font-size: 20px; }
+        .nav-label { font-size: 15px; font-weight: 500; }
+        .nav-divider { height: 1px; background: rgba(255,255,255,0.1); margin: 20px 0; }
+        .user-section { padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); }
+        .user-info { display: flex; align-items: center; gap: 10px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 10px; }
+        .user-avatar { width: 36px; height: 36px; background: linear-gradient(135deg, #68d391, #48bb78); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        .user-details { flex: 1; }
+        .user-name { font-size: 14px; font-weight: 600; }
+        .user-role { font-size: 12px; color: rgba(255,255,255,0.6); }
+        .main-content { flex: 1; margin-left: 260px; padding: 24px; max-width: calc(100% - 260px); }
+        .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .page-title { font-size: 24px; font-weight: 600; color: #2d3748; }
+        .current-time { font-size: 14px; color: #718096; padding: 10px 20px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .section { background: white; border-radius: 16px; padding: 24px; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .section-title { font-size: 18px; font-weight: 600; color: #2d3748; display: flex; align-items: center; gap: 8px; }
+        .section-title::before { content: ''; width: 4px; height: 20px; background: linear-gradient(180deg, #f6ad55, #ed8936); border-radius: 2px; }
+        .btn { padding: 10px 20px; border: none; border-radius: 10px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.3s ease; font-family: inherit; }
+        .btn-primary { background: linear-gradient(135deg, #f6ad55, #ed8936); color: white; box-shadow: 0 4px 15px rgba(237,137,54,0.3); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(237,137,54,0.4); }
+        .btn-green { background: linear-gradient(135deg, #68d391, #48bb78); color: white; }
+        .btn-green:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(72,187,120,0.4); }
+        .btn-red { background: linear-gradient(135deg, #fc8181, #f56565); color: white; }
+        .btn-red:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(245,101,101,0.4); }
+        .btn-secondary { background: #f7fafc; color: #718096; border: 2px solid #e2e8f0; }
+        .btn-secondary:hover { background: #edf2f7; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .stat-card { display: flex; flex-direction: column; align-items: center; padding: 20px 16px; border-radius: 14px; transition: all 0.3s ease; border: 2px solid transparent; }
+        .stat-card:hover { transform: translateY(-3px); }
+        .stat-card.yellow { background: linear-gradient(135deg, #fffaf0, #feebc8); }
+        .stat-card.yellow:hover { box-shadow: 0 8px 20px rgba(246,173,85,0.3); border-color: #f6ad55; }
+        .stat-card.green { background: linear-gradient(135deg, #f0fff4, #c6f6d5); }
+        .stat-card.green:hover { box-shadow: 0 8px 20px rgba(104,211,145,0.3); border-color: #68d391; }
+        .stat-card.pink { background: linear-gradient(135deg, #fff5f5, #fed7d7); }
+        .stat-card.pink:hover { box-shadow: 0 8px 20px rgba(245,101,101,0.3); border-color: #fc8181; }
+        .stat-card.blue { background: linear-gradient(135deg, #ebf8ff, #90cdf4); }
+        .stat-card.blue:hover { box-shadow: 0 8px 20px rgba(66,153,225,0.3); border-color: #4299e1; }
+        .stat-icon { font-size: 28px; margin-bottom: 8px; }
+        .stat-value { font-size: 28px; font-weight: 700; color: #2d3748; margin-bottom: 4px; }
+        .stat-label { font-size: 13px; color: #718096; font-weight: 500; }
+        .filter-bar { display: flex; gap: 12px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
+        .form-select, .form-input { padding: 10px 16px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 14px; font-family: inherit; background: white; transition: all 0.3s; }
+        .form-select:focus, .form-input:focus { outline: none; border-color: #f6ad55; box-shadow: 0 0 0 3px rgba(246,173,85,0.1); }
+        table { width: 100%; border-collapse: collapse; }
+        thead th { background: #f7fafc; padding: 14px 16px; text-align: left; font-size: 14px; font-weight: 600; color: #4a5568; border-bottom: 2px solid #edf2f7; }
+        tbody td { padding: 14px 16px; border-bottom: 1px solid #edf2f7; font-size: 14px; color: #4a5568; }
+        tbody tr:hover { background: #f7fafc; }
+        .badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+        .badge-pending { background: #fefcbf; color: #975a16; }
+        .badge-approved { background: #c6f6d5; color: #276749; }
+        .badge-rejected { background: #fed7d7; color: #9b2c2c; }
+        .badge-adopted { background: #ebf8ff; color: #2b6cb0; }
+        .actions-cell { display: flex; gap: 8px; }
+        .btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 6px; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+        .modal-overlay.show { display: flex; }
+        .modal { background: white; border-radius: 16px; padding: 24px; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid #edf2f7; }
+        .modal-title { font-size: 18px; font-weight: 600; color: #2d3748; }
+        .modal-close { width: 32px; height: 32px; border: none; background: #f7fafc; border-radius: 8px; font-size: 20px; cursor: pointer; color: #718096; }
+        .modal-close:hover { background: #edf2f7; }
+        .form-group { margin-bottom: 16px; }
+        .form-label { display: block; font-size: 14px; font-weight: 500; color: #4a5568; margin-bottom: 8px; }
+        .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; padding-top: 16px; border-top: 2px solid #edf2f7; }
+        .animal-card { display: flex; align-items: center; gap: 16px; padding: 12px; border: 2px solid #e2e8f0; border-radius: 12px; margin-bottom: 12px; cursor: pointer; transition: all 0.3s; }
+        .animal-card:hover { border-color: #f6ad55; background: #fffaf0; }
+        .animal-card.selected { border-color: #f6ad55; background: #fffaf0; }
+        .animal-avatar { width: 50px; height: 50px; background: linear-gradient(135deg, #f6ad55, #ed8936); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        .animal-info { flex: 1; }
+        .animal-name { font-weight: 600; color: #2d3748; }
+        .animal-desc { font-size: 13px; color: #718096; }
+        .adoption-hall-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+        .adoption-card { background: white; border-radius: 12px; padding: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); text-align: center; transition: all 0.3s; }
+        .adoption-card:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+        .adoption-photo { width: 100%; height: 150px; background: linear-gradient(135deg, #e2e8f0, #cbd5e0); border-radius: 8px; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; font-size: 36px; }
+        .adoption-name { font-weight: 600; color: #2d3748; margin-bottom: 4px; }
+        .adoption-info { font-size: 12px; color: #718096; margin-bottom: 12px; }
+        .modal-body { max-height: 60vh; overflow-y: auto; }
+        .tab-bar { display: flex; gap: 8px; margin-bottom: 20px; background: white; padding: 8px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); }
+        .tab-item { padding: 10px 20px; border-radius: 8px; cursor: pointer; transition: all 0.3s; font-size: 14px; font-weight: 500; color: #718096; background: transparent; }
+        .tab-item:hover { background: #f7fafc; color: #2d3748; }
+        .tab-item.active { background: linear-gradient(135deg, #f6ad55, #ed8936); color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .blacklist-card { display: flex; align-items: center; gap: 16px; padding: 16px; border: 2px solid #fed7d7; border-radius: 12px; margin-bottom: 12px; background: #fff5f5; }
+        .blacklist-avatar { width: 50px; height: 50px; background: linear-gradient(135deg, #fc8181, #f56565); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; color: white; font-weight: bold; }
+        .blacklist-info { flex: 1; }
+        .blacklist-name { font-weight: 600; color: #9b2c2c; }
+        .blacklist-reason { font-size: 13px; color: #718096; margin-top: 4px; }
+        .checkin-item { display: flex; align-items: center; gap: 16px; padding: 16px; border: 2px solid #e2e8f0; border-radius: 12px; margin-bottom: 12px; }
+        .checkin-avatar { width: 50px; height: 50px; background: linear-gradient(135deg, #68d391, #48bb78); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        .checkin-info { flex: 1; }
+        .checkin-name { font-weight: 600; color: #2d3748; }
+        .checkin-status { font-size: 13px; color: #718096; margin-top: 4px; }
+        .checkin-photo { width: 60px; height: 60px; background: #f7fafc; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 30px; }
+        .commitment-card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); border-left: 4px solid #48bb78; }
+        .commitment-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .commitment-id { font-weight: 600; color: #2d3748; font-size: 16px; }
+        .commitment-date { font-size: 13px; color: #718096; }
+        .commitment-body { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .commitment-item { display: flex; flex-direction: column; gap: 4px; }
+        .commitment-label { font-size: 12px; color: #718096; }
+        .commitment-value { font-size: 14px; color: #2d3748; font-weight: 500; }
+        .info-box { background: linear-gradient(135deg, #ebf8ff, #bee3f8); border-left: 4px solid #4299e1; padding: 16px; border-radius: 0 10px 10px 0; margin-bottom: 16px; }
+        .info-box .info-title { font-size: 14px; font-weight: 600; color: #2c5282; margin-bottom: 4px; }
+        .info-box .info-desc { font-size: 13px; color: #4a5568; }
+        @media (max-width: 768px) { body { flex-direction: column; } .sidebar { width: 100%; position: relative; min-height: auto; } .nav-menu { display: none; } .main-content { margin-left: 0; max-width: 100%; padding: 16px; } .stats-grid { grid-template-columns: repeat(2, 1fr); } table { font-size: 12px; } }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-logo"><div class="sidebar-logo-icon">🐾</div><h1>TNR管理系统</h1></div>
+        <nav class="nav-menu">
+            <a href="homepage.html" class="nav-item"><span class="nav-icon">🏠</span><span class="nav-label">首页看板</span></a>
+            <a href="add-shelter.html" class="nav-item"><span class="nav-icon">➕</span><span class="nav-label">新增捕捉</span></a>
+            <a href="owner-return.html" class="nav-item"><span class="nav-icon">🏠</span><span class="nav-label">主人领回</span></a>
+            <div class="nav-divider"></div>
+            <a href="material.html" class="nav-item"><span class="nav-icon">📦</span><span class="nav-label">物料管理</span></a>
+            <a href="transfer.html" class="nav-item"><span class="nav-icon">🚚</span><span class="nav-label">转运管理</span></a>
+            <a href="release.html" class="nav-item"><span class="nav-icon">🌿</span><span class="nav-label">放归管理</span></a>
+            <a href="adoption.html" class="nav-item active"><span class="nav-icon">👤</span><span class="nav-label">领养管理</span></a>
+            <div class="nav-divider"></div>
+            <a href="report.html" class="nav-item"><span class="nav-icon">📊</span><span class="nav-label">数据报表</span></a>
+            <a href="settings.html" class="nav-item"><span class="nav-icon">⚙️</span><span class="nav-label">系统设置</span></a>
+        </nav>
+        <div class="user-section"><div class="user-info"><div class="user-avatar">管</div><div class="user-details"><div class="user-name">管理员</div><div class="user-role">系统管理员</div></div></div></div>
+    </aside>
+    <main class="main-content">
+        <div class="header-bar"><h2 class="page-title">领养管理</h2><div class="current-time" id="currentTime"></div></div>
+        <div class="stats-grid">
+            <div class="stat-card yellow"><span class="stat-icon">📋</span><span class="stat-value">6</span><span class="stat-label">待审核</span></div>
+            <div class="stat-card green"><span class="stat-icon">✅</span><span class="stat-value">28</span><span class="stat-label">已通过</span></div>
+            <div class="stat-card pink"><span class="stat-icon">❌</span><span class="stat-value">4</span><span class="stat-label">已拒绝</span></div>
+            <div class="stat-card blue"><span class="stat-icon">🏠</span><span class="stat-value">22</span><span class="stat-label">已领养</span></div>
+        </div>
+        <div class="tab-bar">
+            <div class="tab-item active" onclick="switchTab('applications')">领养申请</div>
+            <div class="tab-item" onclick="switchTab('commitment')">承诺书登记</div>
+            <div class="tab-item" onclick="switchTab('blacklist')">黑名单管理</div>
+            <div class="tab-item" onclick="switchTab('checkin')">回访打卡</div>
+        </div>
+        <div id="applicationsTab" class="tab-content active">
+            <div class="section-header">
+                <h3 class="section-title">领养申请列表</h3>
+                <button class="btn btn-primary" onclick="openAdoptionHallModal()">🐾 领养大厅</button>
+            </div>
+            <div class="filter-bar">
+                <select class="form-select" id="statusFilter" onchange="filterApplications()"><option value="">全部状态</option><option value="待审核">待审核</option><option value="已通过">已通过</option><option value="已拒绝">已拒绝</option><option value="已领养">已领养</option></select>
+                <input type="text" class="form-input" id="searchInput" placeholder="搜索申请人/动物名..." onkeyup="filterApplications()" style="min-width:200px;">
+            </div>
+            <table id="applicationTable">
+                <thead><tr><th>申请编号</th><th>申请人</th><th>联系电话</th><th>领养动物</th><th>申请日期</th><th>状态</th><th>操作</th></tr></thead>
+                <tbody>
+                    <tr><td>AD20250115001</td><td>张小明</td><td>138****5678</td><td>橘猫-小橘</td><td>2025-01-15</td><td><span class="badge badge-pending">待审核</span></td><td><div class="actions-cell"><button class="btn btn-sm btn-green" onclick="approveApplication('AD20250115001')">通过</button><button class="btn btn-sm btn-red" onclick="rejectApplication('AD20250115001')">拒绝</button><button class="btn btn-sm btn-secondary" onclick="viewApplicationDetail('AD20250115001')">详情</button></div></td></tr>
+                    <tr><td>AD20250114001</td><td>李小红</td><td>139****1234</td><td>白猫-雪球</td><td>2025-01-14</td><td><span class="badge badge-pending">待审核</span></td><td><div class="actions-cell"><button class="btn btn-sm btn-green" onclick="approveApplication('AD20250114001')">通过</button><button class="btn btn-sm btn-red" onclick="rejectApplication('AD20250114001')">拒绝</button><button class="btn btn-sm btn-secondary" onclick="viewApplicationDetail('AD20250114001')">详情</button></div></td></tr>
+                    <tr><td>AD20250113001</td><td>王大伟</td><td>137****9876</td><td>黑猫-小黑</td><td>2025-01-13</td><td><span class="badge badge-approved">已通过</span></td><td><div class="actions-cell"><button class="btn btn-sm btn-secondary" onclick="viewApplicationDetail('AD20250113001')">详情</button></div></td></tr>
+                    <tr><td>AD20250112001</td><td>赵美丽</td><td>136****5432</td><td>花猫-花花</td><td>2025-01-12</td><td><span class="badge badge-adopted">已领养</span></td><td><div class="actions-cell"><button class="btn btn-sm btn-secondary" onclick="viewApplicationDetail('AD20250112001')">详情</button></div></td></tr>
+                    <tr><td>AD20250111001</td><td>陈建国</td><td>135****8765</td><td>灰猫-小灰</td><td>2025-01-11</td><td><span class="badge badge-rejected">已拒绝</span></td><td><div class="actions-cell"><button class="btn btn-sm btn-secondary" onclick="viewApplicationDetail('AD20250111001')">详情</button></div></td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div id="commitmentTab" class="tab-content">
+            <div class="section-header">
+                <h3 class="section-title">承诺书登记</h3>
+                <button class="btn btn-green" onclick="openCommitmentModal()">📝 新增承诺书</button>
+            </div>
+            <div class="filter-bar">
+                <select class="form-select"><option>全部状态</option><option>已签署</option><option>待签署</option></select>
+                <input type="text" class="form-input" placeholder="搜索领养人/动物..." style="min-width:200px;">
+            </div>
+            <div id="commitmentList">
+                <div class="commitment-card">
+                    <div class="commitment-header">
+                        <span class="commitment-id">CT20250112001</span>
+                        <span class="commitment-date">签署日期：2025-01-12</span>
+                    </div>
+                    <div class="commitment-body">
+                        <div class="commitment-item"><span class="commitment-label">领养人</span><span class="commitment-value">王大伟</span></div>
+                        <div class="commitment-item"><span class="commitment-label">联系电话</span><span class="commitment-value">137****9876</span></div>
+                        <div class="commitment-item"><span class="commitment-label">领养动物</span><span class="commitment-value">黑猫-小黑</span></div>
+                        <div class="commitment-item"><span class="commitment-label">动物编号</span><span class="commitment-value">A003</span></div>
+                        <div class="commitment-item"><span class="commitment-label">签署方式</span><span class="commitment-value">线下签署</span></div>
+                        <div class="commitment-item"><span class="commitment-label">存档状态</span><span class="badge badge-approved">已存档</span></div>
+                    </div>
+                </div>
+                <div class="commitment-card">
+                    <div class="commitment-header">
+                        <span class="commitment-id">CT20250115001</span>
+                        <span class="commitment-date">签署日期：2025-01-15</span>
+                    </div>
+                    <div class="commitment-body">
+                        <div class="commitment-item"><span class="commitment-label">领养人</span><span class="commitment-value">赵美丽</span></div>
+                        <div class="commitment-item"><span class="commitment-label">联系电话</span><span class="commitment-value">136****5432</span></div>
+                        <div class="commitment-item"><span class="commitment-label">领养动物</span><span class="commitment-value">花猫-花花</span></div>
+                        <div class="commitment-item"><span class="commitment-label">动物编号</span><span class="commitment-value">A004</span></div>
+                        <div class="commitment-item"><span class="commitment-label">签署方式</span><span class="commitment-value">线下签署</span></div>
+                        <div class="commitment-item"><span class="commitment-label">存档状态</span><span class="badge badge-approved">已存档</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="blacklistTab" class="tab-content">
+            <div class="section-header">
+                <h3 class="section-title">黑名单管理</h3>
+                <button class="btn btn-red" onclick="openBlacklistModal()">🚫 加入黑名单</button>
+            </div>
+            <div class="info-box" style="background:linear-gradient(135deg,#fff5f5,#fed7d7);border-left-color:#fc8181;margin-bottom:20px;">
+                <div class="info-title">⚠️ 黑名单说明</div>
+                <div class="info-desc">违规领养人将被加入黑名单，永久拦截领养申请。黑名单人员身份信息录入自动弹窗拦截。</div>
+            </div>
+            <div class="blacklist-card">
+                <div class="blacklist-avatar">张</div>
+                <div class="blacklist-info">
+                    <div class="blacklist-name">张某某</div>
+                    <div class="blacklist-reason">违规原因：连续3个月未完成打卡回访，联系无响应</div>
+                </div>
+                <span class="badge badge-rejected">永久拉黑</span>
+                <button class="btn btn-sm btn-secondary" onclick="viewBlacklistDetail('张某某')">详情</button>
+            </div>
+            <div class="blacklist-card">
+                <div class="blacklist-avatar">王</div>
+                <div class="blacklist-info">
+                    <div class="blacklist-name">王某</div>
+                    <div class="blacklist-reason">违规原因：私自转赠动物，违反领养协议</div>
+                </div>
+                <span class="badge badge-rejected">永久拉黑</span>
+                <button class="btn btn-sm btn-secondary" onclick="viewBlacklistDetail('王某')">详情</button>
+            </div>
+            <div class="blacklist-card">
+                <div class="blacklist-avatar">李</div>
+                <div class="blacklist-info">
+                    <div class="blacklist-name">李某</div>
+                    <div class="blacklist-reason">违规原因：遗弃动物，被原物业举报</div>
+                </div>
+                <span class="badge badge-rejected">永久拉黑</span>
+                <button class="btn btn-sm btn-secondary" onclick="viewBlacklistDetail('李某')">详情</button>
+            </div>
+        </div>
+        <div id="checkinTab" class="tab-content">
+            <div class="section-header">
+                <h3 class="section-title">月度打卡审核</h3>
+                <select class="form-select" style="width:auto;"><option>2025年1月</option><option>2024年12月</option><option>2024年11月</option></select>
+            </div>
+            <div class="filter-bar">
+                <select class="form-select"><option>全部状态</option><option class="badge badge-approved">已通过</option><option class="badge badge-pending">待审核</option><option class="badge badge-rejected">不合格</option></select>
+                <input type="text" class="form-input" placeholder="搜索领养人/动物..." style="min-width:200px;">
+            </div>
+            <div class="checkin-item">
+                <div class="checkin-avatar">🐱</div>
+                <div class="checkin-info">
+                    <div class="checkin-name">王大伟 - 黑猫-小黑</div>
+                    <div class="checkin-status">打卡时间：2025-01-10 | 居住环境良好，猫咪健康</div>
+                </div>
+                <div class="checkin-photo">📷</div>
+                <span class="badge badge-approved">已通过</span>
+            </div>
+            <div class="checkin-item">
+                <div class="checkin-avatar">🐱</div>
+                <div class="checkin-info">
+                    <div class="checkin-name">赵美丽 - 花猫-花花</div>
+                    <div class="checkin-status">打卡时间：2025-01-08 | 猫咪生活愉快</div>
+                </div>
+                <div class="checkin-photo">📷</div>
+                <span class="badge badge-approved">已通过</span>
+            </div>
+            <div class="checkin-item">
+                <div class="checkin-avatar">🐱</div>
+                <div class="checkin-info">
+                    <div class="checkin-name">陈建国 - 灰猫-小灰</div>
+                    <div class="checkin-status">打卡时间：2025-01-05 | 照片模糊，无法辨认</div>
+                </div>
+                <div class="checkin-photo">📷</div>
+                <span class="badge badge-rejected">不合格</span>
+                <button class="btn btn-sm btn-red" onclick="recoverAnimal('陈建国')">收回动物</button>
+            </div>
+        </div>
+    </main>
+    <div class="modal-overlay" id="adoptionHallModal">
+        <div class="modal">
+            <div class="modal-header"><h3 class="modal-title">🐾 领养大厅</h3><button class="modal-close" onclick="closeModal('adoptionHallModal')">×</button></div>
+            <div class="modal-body">
+                <div class="adoption-hall-grid" id="adoptionHallGrid">
+                    <div class="adoption-card" onclick="selectAnimalForAdoption('橘猫-小橘')"><div class="adoption-photo">🐱</div><div class="adoption-name">小橘</div><div class="adoption-info">橘猫 · 公 · 2岁 · 已绝育</div><button class="btn btn-primary btn-sm" style="width:100%;">申请领养</button></div>
+                    <div class="adoption-card" onclick="selectAnimalForAdoption('雪球')"><div class="adoption-photo">🐱</div><div class="adoption-name">雪球</div><div class="adoption-info">白猫 · 母 · 1岁 · 已绝育</div><button class="btn btn-primary btn-sm" style="width:100%;">申请领养</button></div>
+                    <div class="adoption-card" onclick="selectAnimalForAdoption('小黑')"><div class="adoption-photo">🐱</div><div class="adoption-name">小黑</div><div class="adoption-info">黑猫 · 公 · 3岁 · 已绝育</div><button class="btn btn-primary btn-sm" style="width:100%;">申请领养</button></div>
+                    <div class="adoption-card" onclick="selectAnimalForAdoption('花花')"><div class="adoption-photo">🐱</div><div class="adoption-name">花花</div><div class="adoption-info">花猫 · 母 · 1岁半 · 已绝育</div><button class="btn btn-primary btn-sm" style="width:100%;">申请领养</button></div>
+                    <div class="adoption-card" onclick="selectAnimalForAdoption('团子')"><div class="adoption-photo">🐱</div><div class="adoption-name">团子</div><div class="adoption-info">英短 · 公 · 1岁 · 已绝育</div><button class="btn btn-primary btn-sm" style="width:100%;">申请领养</button></div>
+                    <div class="adoption-card" onclick="selectAnimalForAdoption('小白')"><div class="adoption-photo">🐱</div><div class="adoption-name">小白</div><div class="adoption-info">田园猫 · 母 · 4岁 · 已绝育</div><button class="btn btn-primary btn-sm" style="width:100%;">申请领养</button></div>
+                </div>
+            </div>
+            <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('adoptionHallModal')">关闭</button></div>
+        </div>
+    </div>
+    <div class="modal-overlay" id="adoptApplyModal">
+        <div class="modal">
+            <div class="modal-header"><h3 class="modal-title">申请领养</h3><button class="modal-close" onclick="closeModal('adoptApplyModal')">×</button></div>
+            <div class="form-group"><label class="form-label">申请动物</label><input type="text" class="form-input" id="applyAnimal" readonly></div>
+            <div class="form-group"><label class="form-label">申请人姓名</label><input type="text" class="form-input" id="applyName" placeholder="请输入姓名"></div>
+            <div class="form-group"><label class="form-label">联系电话</label><input type="tel" class="form-input" id="applyPhone" placeholder="请输入手机号"></div>
+            <div class="form-group"><label class="form-label">居住地址</label><input type="text" class="form-input" id="applyAddress" placeholder="请输入居住地址"></div>
+            <div class="form-group"><label class="form-label">是否有养猫经验</label><select class="form-select" id="applyExperience"><option>有</option><option>没有</option></select></div>
+            <div class="form-group"><label class="form-label">申请理由</label><textarea class="form-input" style="min-height:80px;" id="applyReason" placeholder="请说明领养原因和照顾计划"></textarea></div>
+            <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('adoptApplyModal')">取消</button><button class="btn btn-primary" onclick="submitAdoptApplication()">提交申请</button></div>
+        </div>
+    </div>
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal">
+            <div class="modal-header"><h3 class="modal-title">申请详情</h3><button class="modal-close" onclick="closeModal('detailModal')">×</button></div>
+            <div id="detailContent" style="white-space: pre-wrap; line-height: 1.8; color: #4a5568;"></div>
+            <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('detailModal')">关闭</button></div>
+        </div>
+    </div>
+    <script>
+        function updateTime(){const now=new Date();document.getElementById('currentTime').textContent=now.toLocaleString('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});}
+        setInterval(updateTime,1000);updateTime();
+        function openAdoptionHallModal(){
+            document.getElementById('adoptionHallModal').classList.add('show');
+        }
+        function closeModal(modalId){
+            document.getElementById(modalId).classList.remove('show');
+        }
+        function selectAnimalForAdoption(animalName){
+            document.getElementById('applyAnimal').value=animalName;
+            closeModal('adoptionHallModal');
+            document.getElementById('adoptApplyModal').classList.add('show');
+        }
+        function submitAdoptApplication(){
+            const animal=document.getElementById('applyAnimal').value;
+            const name=document.getElementById('applyName').value;
+            const phone=document.getElementById('applyPhone').value;
+            const address=document.getElementById('applyAddress').value;
+            const reason=document.getElementById('applyReason').value;
+            if(!name||!phone||!address||!reason){
+                alert('请填写完整信息');
+                return;
+            }
+            alert(`领养申请已提交！\n动物：${animal}\n申请人：${name}\n电话：${phone}\n地址：${address}\n\n我们会尽快审核您的申请，请保持电话畅通。`);
+            closeModal('adoptApplyModal');
+        }
+        function approveApplication(id){
+            if(confirm(`确认通过申请 ${id} 吗？`)){
+                alert(`申请 ${id} 已通过审核！\n请通知申请人前来办理领养手续。`);
+            }
+        }
+        function rejectApplication(id){
+            const reason=prompt('请输入拒绝理由：');
+            if(reason){
+                alert(`申请 ${id} 已拒绝！\n拒绝理由：${reason}`);
+            }
+        }
+        function viewApplicationDetail(id){
+            const details={
+                'AD20250115001':'申请编号：AD20250115001\n状态：待审核\n申请人：张小明\n联系电话：13855555678\n居住地址：杭州市西湖区文三路88号\n领养动物：橘猫-小橘\n是否有养猫经验：有\n申请理由：家里有院子，非常喜欢猫咪，之前养过一只橘猫，希望能给小橘一个温暖的家。\n申请日期：2025-01-15',
+                'AD20250114001':'申请编号：AD20250114001\n状态：待审核\n申请人：李小红\n联系电话：13988881234\n居住地址：杭州市拱墅区湖墅南路12号\n领养动物：白猫-雪球\n是否有养猫经验：有\n申请理由：一直想养一只白猫，家里条件合适，有固定工作。\n申请日期：2025-01-14',
+                'AD20250113001':'申请编号：AD20250113001\n状态：已通过\n申请人：王大伟\n联系电话：13766669876\n居住地址：杭州市江干区庆春东路56号\n领养动物：黑猫-小黑\n是否有养猫经验：有\n申请理由：家里小孩一直想要一只猫，我们全家都很喜欢动物。\n申请日期：2025-01-13\n审核通过：2025-01-14',
+                'AD20250112001':'申请编号：AD20250112001\n状态：已领养\n申请人：赵美丽\n联系电话：13677775432\n居住地址：杭州市滨江区江南大道100号\n领养动物：花猫-花花\n是否有养猫经验：有\n申请理由：独居，想找个伴。\n申请日期：2025-01-12\n审核通过：2025-01-13\n领养日期：2025-01-15',
+                'AD20250111001':'申请编号：AD20250111001\n状态：已拒绝\n申请人：陈建国\n联系电话：13599998765\n居住地址：杭州市下城区朝晖路32号\n领养动物：灰猫-小灰\n是否有养猫经验：没有\n申请理由：觉得猫咪可爱。\n申请日期：2025-01-11\n拒绝日期：2025-01-12\n拒绝理由：无养猫经验且居住环境不合适'
+            };
+            document.getElementById('detailContent').textContent=details[id]||'暂无详细信息';
+            document.getElementById('detailModal').classList.add('show');
+        }
+        function filterApplications(){
+            const status=document.getElementById('statusFilter').value;
+            const search=document.getElementById('searchInput').value.toLowerCase();
+            const rows=document.querySelectorAll('#applicationTable tbody tr');
+            rows.forEach(row=>{
+                const stat=row.querySelector('.badge')?.textContent||'';
+                const name=row.cells[1].textContent.toLowerCase();
+                const animal=row.cells[3].textContent.toLowerCase();
+                let show=true;
+                if(status&&stat!==status)show=false;
+                if(search&&!name.includes(search)&&!animal.includes(search))show=false;
+                row.style.display=show?'table-row':'none';
+            });
+        }
+        function switchTab(tabName){
+            document.querySelectorAll('.tab-item').forEach(t=>t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(tabName+'Tab').classList.add('active');
+        }
+        function openCommitmentModal(){
+            alert('新增承诺书登记功能\n\n请准备以下材料：\n1. 领养人身份证明\n2. 线下签署的承诺书扫描件\n3. 领养协议复印件\n\n点击确定开始登记。');
+        }
+        function openBlacklistModal(){
+            const name=prompt('请输入要加入黑名单的人员姓名：');
+            if(name){
+                const reason=prompt('请输入违规原因：');
+                if(reason){
+                    alert(`已将 ${name} 加入黑名单\n违规原因：${reason}`);
+                }
+            }
+        }
+        function viewBlacklistDetail(name){
+            alert(`黑名单详情\n\n姓名：${name}\n违规类型：严重违反领养协议\n处置结果：永久拉黑\n加入日期：2024-12-15\n可申诉：否`);
+        }
+        function recoverAnimal(name){
+            if(confirm(`确认收回 ${name} 领养的动物吗？\n\n此操作将：\n1. 标记动物为待回收状态\n2. 通知领养人\n3. 拉黑该领养人`)){
+                alert('动物收回流程已启动');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,132 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>机构管理 - 流浪动物 TNR 管理系统</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'PingFang SC','Microsoft YaHei',sans-serif;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);min-height:100vh;color:white;padding:20px}
+        .container{max-width:1400px;margin:0 auto}
+        .header{display:flex;justify-content:space-between;align-items:center;padding:20px 30px;background:rgba(255,255,255,0.05);backdrop-filter:blur(10px);border-radius:16px;margin-bottom:24px;border:1px solid rgba(255,255,255,0.1)}
+        .logo{display:flex;align-items:center;gap:12px}
+        .logo-icon{width:44px;height:44px;background:linear-gradient(135deg,#00d2ff,#3a7bd5);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px}
+        .logo h1{font-size:20px;font-weight:600}
+        .back-btn{padding:10px 20px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:8px;color:white;cursor:pointer;text-decoration:none;font-size:14px}
+        .section{background:rgba(255,255,255,0.05);backdrop-filter:blur(10px);border-radius:16px;padding:24px;margin-bottom:24px;border:1px solid rgba(255,255,255,0.1)}
+        .section-title{font-size:18px;font-weight:600;margin-bottom:20px;display:flex;align-items:center;gap:10px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,0.1)}
+        .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+        .stat-card{background:rgba(255,255,255,0.05);border-radius:12px;padding:20px;text-align:center;border:1px solid rgba(255,255,255,0.1)}
+        .stat-value{font-size:32px;font-weight:700;color:#00d2ff}
+        .stat-label{font-size:14px;color:rgba(255,255,255,0.6);margin-top:4px}
+        .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px}
+        .search-box{display:flex;gap:8px}
+        .search-input{padding:10px 16px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:10px;color:white;font-size:14px;width:250px}
+        .search-input::placeholder{color:rgba(255,255,255,0.4)}
+        .search-input:focus{outline:none;border-color:#00d2ff}
+        .btn{padding:10px 20px;border:none;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;transition:all 0.3s;font-family:inherit}
+        .btn-primary{background:linear-gradient(135deg,#00d2ff,#3a7bd5);color:white}
+        .btn-primary:hover{transform:translateY(-2px)}
+        .btn-secondary{background:rgba(255,255,255,0.1);color:white;border:1px solid rgba(255,255,255,0.2)}
+        .btn-danger{background:linear-gradient(135deg,#e53935,#c62828);color:white}
+        table{width:100%;border-collapse:separate;border-spacing:0}
+        th{background:rgba(255,255,255,0.05);padding:14px 16px;text-align:left;font-size:14px;color:rgba(255,255,255,0.6);border-bottom:1px solid rgba(255,255,255,0.1)}
+        td{padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.05);font-size:14px}
+        tr:hover td{background:rgba(255,255,255,0.03)}
+        .status-badge{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:500}
+        .status-active{background:rgba(0,210,255,0.2);color:#00d2ff}
+        .status-suspended{background:rgba(255,149,0,0.2);color:#ff9500}
+        .status-disabled{background:rgba(229,57,53,0.2);color:#e53935}
+        .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:1000}
+        .modal-overlay.active{display:flex}
+        .modal{background:#1a1a2e;border:1px solid rgba(255,255,255,0.2);border-radius:16px;padding:32px;max-width:600px;width:90%;max-height:80vh;overflow-y:auto;color:white}
+        .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+        .modal-title{font-size:20px;font-weight:600}
+        .modal-close{width:32px;height:32px;border:none;background:rgba(255,255,255,0.1);border-radius:8px;cursor:pointer;font-size:18px;color:white}
+        .form-group{margin-bottom:20px}
+        .form-label{display:block;font-size:14px;color:rgba(255,255,255,0.7);margin-bottom:8px}
+        .form-input,.form-select{width:100%;padding:12px 16px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:10px;color:white;font-size:14px;font-family:inherit}
+        .form-input:focus,.form-select:focus{outline:none;border-color:#00d2ff}
+        .form-select option{background:#1a1a2e;color:white}
+        .tab-bar{display:flex;gap:12px;margin-bottom:24px}
+        .tab-item{padding:10px 20px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;cursor:pointer;font-size:14px;transition:all 0.3s}
+        .tab-item.active{background:linear-gradient(135deg,#00d2ff,#3a7bd5);border-color:transparent}
+        @media(max-width:768px){.stats-grid{grid-template-columns:repeat(2,1fr)}table{font-size:12px}th,td{padding:10px 8px}}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo"><div class="logo-icon">🏛️</div><h1>机构管理</h1></div>
+            <a href="dashboard.html" class="back-btn">← 返回大屏</a>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card"><div class="stat-value">1</div><div class="stat-label">捕捉站</div></div>
+            <div class="stat-card"><div class="stat-value">5</div><div class="stat-label">合作医院</div></div>
+            <div class="stat-card"><div class="stat-value">5</div><div class="stat-label">正常运行</div></div>
+            <div class="stat-card"><div class="stat-value">0</div><div class="stat-label">已停用</div></div>
+        </div>
+
+        <div class="tab-bar">
+            <button class="tab-item active" onclick="switchTab(this,'shelter')">捕捉站</button>
+            <button class="tab-item" onclick="switchTab(this,'hospital')">合作医院</button>
+        </div>
+
+        <div class="section" id="shelterTab">
+            <div class="toolbar">
+                <div class="search-box"><input type="text" class="search-input" placeholder="搜索捕捉站..."><button class="btn btn-primary">搜索</button></div>
+                <button class="btn btn-primary" onclick="document.getElementById('addShelterModal').classList.add('active')">+ 新增捕捉站</button>
+            </div>
+            <table>
+                <thead><tr><th>机构名称</th><th>负责人</th><th>联系电话</th><th>地址</th><th>状态</th><th>操作</th></tr></thead>
+                <tbody>
+                    <tr><td>市流浪动物捕捉站</td><td>王站长</td><td>010-8888xxxx</td><td>朝阳区xxx路1号</td><td><span class="status-badge status-active">正常运行</span></td><td><button class="btn btn-secondary" style="padding:6px 12px;font-size:12px" onclick="viewShelterDetail('市流浪动物捕捉站')">详情</button></td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section" id="hospitalTab" style="display:none">
+            <div class="toolbar">
+                <div class="search-box"><input type="text" class="search-input" placeholder="搜索合作医院..."><button class="btn btn-primary">搜索</button></div>
+                <button class="btn btn-primary" onclick="document.getElementById('addHospitalModal').classList.add('active')">+ 新增合作医院</button>
+            </div>
+            <table>
+                <thead><tr><th>医院名称</th><th>负责人</th><th>联系电话</th><th>地址</th><th>合作状态</th><th>操作</th></tr></thead>
+                <tbody>
+                    <tr><td>爱心宠物医院</td><td>张院长</td><td>010-6666xxxx</td><td>朝阳区xxx路10号</td><td><span class="status-badge status-active">正常合作</span></td><td><button class="btn btn-secondary" style="padding:6px 12px;font-size:12px" onclick="viewHospitalDetail('爱心宠物医院')">详情</button> <button class="btn btn-danger" style="padding:6px 12px;font-size:12px" onclick="disableHospital('爱心宠物医院')">停用</button></td></tr>
+                    <tr><td>仁爱宠物医院</td><td>李院长</td><td>010-7777xxxx</td><td>海淀区xxx路20号</td><td><span class="status-badge status-active">正常合作</span></td><td><button class="btn btn-secondary" style="padding:6px 12px;font-size:12px" onclick="viewHospitalDetail('仁爱宠物医院')">详情</button> <button class="btn btn-danger" style="padding:6px 12px;font-size:12px" onclick="disableHospital('仁爱宠物医院')">停用</button></td></tr>
+                    <tr><td>博爱宠物医院</td><td>赵院长</td><td>010-8888xxxx</td><td>东城区xxx路30号</td><td><span class="status-badge status-active">正常合作</span></td><td><button class="btn btn-secondary" style="padding:6px 12px;font-size:12px" onclick="viewHospitalDetail('博爱宠物医院')">详情</button> <button class="btn btn-danger" style="padding:6px 12px;font-size:12px" onclick="disableHospital('博爱宠物医院')">停用</button></td></tr>
+                    <tr><td>和谐动物医院</td><td>孙院长</td><td>010-9999xxxx</td><td>西城区xxx路40号</td><td><span class="status-badge status-active">正常合作</span></td><td><button class="btn btn-secondary" style="padding:6px 12px;font-size:12px" onclick="viewHospitalDetail('和谐动物医院')">详情</button> <button class="btn btn-danger" style="padding:6px 12px;font-size:12px" onclick="disableHospital('和谐动物医院')">停用</button></td></tr>
+                    <tr><td>康瑞宠物诊所</td><td>周院长</td><td>010-1111xxxx</td><td>丰台区xxx路50号</td><td><span class="status-badge status-active">正常合作</span></td><td><button class="btn btn-secondary" style="padding:6px 12px;font-size:12px" onclick="viewHospitalDetail('康瑞宠物诊所')">详情</button> <button class="btn btn-danger" style="padding:6px 12px;font-size:12px" onclick="disableHospital('康瑞宠物诊所')">停用</button></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="addHospitalModal">
+        <div class="modal">
+            <div class="modal-header"><div class="modal-title">新增合作医院</div><button class="modal-close" onclick="document.getElementById('addHospitalModal').classList.remove('active')">×</button></div>
+            <div class="form-group"><label class="form-label">医院名称</label><input type="text" class="form-input" placeholder="请输入医院名称"></div>
+            <div class="form-group"><label class="form-label">负责人</label><input type="text" class="form-input" placeholder="请输入负责人姓名"></div>
+            <div class="form-group"><label class="form-label">联系电话</label><input type="text" class="form-input" placeholder="请输入联系电话"></div>
+            <div class="form-group"><label class="form-label">医院地址</label><input type="text" class="form-input" placeholder="请输入详细地址"></div>
+            <div class="form-group"><label class="form-label">合作区域</label><select class="form-select"><option>朝阳区</option><option>海淀区</option><option>东城区</option><option>西城区</option><option>丰台区</option></select></div>
+            <div style="display:flex;gap:12px;justify-content:flex-end"><button class="btn btn-secondary" onclick="document.getElementById('addHospitalModal').classList.remove('active')">取消</button><button class="btn btn-primary" onclick="addHospital()">确认添加</button></div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(el,tab){
+            document.querySelectorAll('.tab-item').forEach(t=>t.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('shelterTab').style.display=tab==='shelter'?'block':'none';
+            document.getElementById('hospitalTab').style.display=tab==='hospital'?'block':'none';
+        }
+        function viewShelterDetail(name){alert('捕捉站详情\n\n机构名称：'+name+'\n负责人：王站长\n联系电话：010-8888xxxx\n地址：朝阳区xxx路1号\n\n累计捕捉：1,842只\n累计转运：1,654只\n放归回归：892只\n成功领养：534只')}
+        function viewHospitalDetail(name){alert('合作医院详情\n\n医院名称：'+name+'\n负责人：张院长\n联系电话：010-6666xxxx\n地址：朝阳区xxx路10号\n合作状态：正常合作\n\n累计接收：328只\n累计诊疗：312只\n成功领养：89只')}
+        function disableHospital(name){if(confirm('确认停用 '+name+' 的合作资格？\n\n停用后该医院将无法接收新的转运动物。')){alert('✅ 已停用 '+name+' 的合作资格')}}
+        function addHospital(){var inputs=document.querySelectorAll('#addHospitalModal input');var name=inputs[0].value;if(!name){alert('请输入医院名称');return}alert('✅ 合作医院已添加\n\n医院名称：'+name+'\n状态：待审核\n审核通过后将正式生效');document.getElementById('addHospitalModal').classList.remove('active')}
+    </script>
+</body>
+</html>

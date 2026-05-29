@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>物料库存 - 流浪动物 TNR 管理系统</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'PingFang SC','Microsoft YaHei',sans-serif;background:linear-gradient(135deg,#11998e 0%,#38ef7d 100%);min-height:100vh;padding:20px}
+        .container{max-width:1200px;margin:0 auto}
+        .header{background:rgba(255,255,255,0.95);backdrop-filter:blur(10px);border-radius:16px;padding:20px 30px;margin-bottom:24px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 4px 20px rgba(0,0,0,0.1)}
+        .logo{display:flex;align-items:center;gap:12px}
+        .logo-icon{width:40px;height:40px;background:linear-gradient(135deg,#11998e,#38ef7d);border-radius:10px;display:flex;align-items:center;justify-content:center;color:white;font-size:20px}
+        .logo h1{font-size:20px;color:#1a1a2e;font-weight:600}
+        .back-btn{padding:10px 20px;background:#f0f0f5;border:none;border-radius:8px;color:#666;cursor:pointer;font-size:14px;text-decoration:none}
+        .section{background:white;border-radius:16px;padding:24px;margin-bottom:24px;box-shadow:0 4px 20px rgba(0,0,0,0.08)}
+        .section-title{font-size:18px;font-weight:600;color:#1a1a2e;margin-bottom:20px;display:flex;align-items:center;gap:10px;padding-bottom:16px;border-bottom:2px solid #f0f0f5}
+        .section-title::before{content:'';width:4px;height:20px;background:linear-gradient(180deg,#11998e,#38ef7d);border-radius:2px}
+        .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+        .stat-card{background:white;border-radius:16px;padding:20px;box-shadow:0 4px 20px rgba(0,0,0,0.08);text-align:center}
+        .stat-value{font-size:32px;font-weight:700}
+        .stat-value.green{color:#388e3c}
+        .stat-value.orange{color:#f57c00}
+        .stat-value.red{color:#d32f2f}
+        .stat-value.blue{color:#1976d2}
+        .stat-title{font-size:14px;color:#666;margin-top:4px}
+        .btn{padding:10px 20px;border:none;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;transition:all 0.3s;font-family:inherit}
+        .btn-primary{background:linear-gradient(135deg,#11998e,#38ef7d);color:white}
+        .btn-primary:hover{transform:translateY(-2px)}
+        .btn-secondary{background:#f0f0f5;color:#666}
+        .btn-warning{background:linear-gradient(135deg,#f57c00,#e65100);color:white}
+        .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px}
+        .search-box{display:flex;gap:8px}
+        .search-input{padding:10px 16px;border:2px solid #e0e0e8;border-radius:10px;font-size:14px;width:250px}
+        .search-input:focus{outline:none;border-color:#11998e}
+        table{width:100%;border-collapse:separate;border-spacing:0}
+        th{background:#f8f9fc;padding:14px 16px;text-align:left;font-size:14px;color:#666;font-weight:500;border-bottom:2px solid #f0f0f5}
+        td{padding:14px 16px;border-bottom:1px solid #f0f0f5;font-size:14px;color:#1a1a2e}
+        tr:hover td{background:#f8fffe}
+        .stock-badge{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:500}
+        .stock-ok{background:#e8f5e9;color:#388e3c}
+        .stock-low{background:#fff3e0;color:#f57c00}
+        .stock-empty{background:#ffebee;color:#d32f2f}
+        .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;z-index:1000}
+        .modal-overlay.active{display:flex}
+        .modal{background:white;border-radius:16px;padding:32px;max-width:600px;width:90%;max-height:80vh;overflow-y:auto}
+        .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+        .modal-title{font-size:20px;font-weight:600;color:#1a1a2e}
+        .modal-close{width:32px;height:32px;border:none;background:#f0f0f5;border-radius:8px;cursor:pointer;font-size:18px;color:#666}
+        .form-group{margin-bottom:20px}
+        .form-label{display:block;font-size:14px;font-weight:500;color:#333;margin-bottom:8px}
+        .form-input,.form-select{width:100%;padding:12px 16px;border:2px solid #e0e0e8;border-radius:10px;font-size:14px;font-family:inherit}
+        .form-input:focus,.form-select:focus{outline:none;border-color:#11998e}
+        .tab-bar{display:flex;gap:12px;margin-bottom:24px}
+        .tab-item{padding:10px 20px;border:2px solid #e0e0e8;border-radius:10px;background:white;cursor:pointer;font-size:14px;transition:all 0.3s;font-family:inherit}
+        .tab-item.active{background:linear-gradient(135deg,#11998e,#38ef7d);color:white;border-color:transparent}
+        @media(max-width:768px){.stats-grid{grid-template-columns:repeat(2,1fr)}table{font-size:12px}th,td{padding:10px 8px}}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">💉</div>
+                <h1>物料库存管理</h1>
+            </div>
+            <a href="homepage.html" class="back-btn">← 返回首页</a>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card"><div class="stat-value green">32</div><div class="stat-title">疫苗库存(支)</div></div>
+            <div class="stat-card"><div class="stat-value blue">15</div><div class="stat-title">芯片库存(个)</div></div>
+            <div class="stat-card"><div class="stat-value green">45</div><div class="stat-title">驱虫药库存(盒)</div></div>
+            <div class="stat-card"><div class="stat-value orange">2</div><div class="stat-title">低库存预警</div></div>
+        </div>
+
+        <div class="tab-bar">
+            <button class="tab-item active" onclick="switchTab(this,'stock')">库存台账</button>
+            <button class="tab-item" onclick="switchTab(this,'in')">入库记录</button>
+            <button class="tab-item" onclick="switchTab(this,'out')">消耗记录</button>
+        </div>
+
+        <div class="section" id="stockTab">
+            <div class="toolbar">
+                <div class="search-box">
+                    <input type="text" class="search-input" placeholder="搜索物料名称/批号...">
+                    <button class="btn btn-primary">搜索</button>
+                </div>
+                <button class="btn btn-warning" onclick="document.getElementById('applyModal').classList.add('active')">📥 申请补充</button>
+            </div>
+            <table>
+                <thead><tr><th>物料名称</th><th>规格</th><th>批号</th><th>当前库存</th><th>安全库存</th><th>状态</th><th>操作</th></tr></thead>
+                <tbody>
+                    <tr><td>狂犬疫苗</td><td>1ml/支</td><td>RB20250101</td><td>8</td><td>20</td><td><span class="stock-badge stock-low">⚠️ 低库存</span></td><td><button class="btn btn-primary" style="padding:6px 12px;font-size:12px" onclick="applyRestock('狂犬疫苗')">申请补充</button></td></tr>
+                    <tr><td>猫三联疫苗</td><td>1ml/支</td><td>M3-20250102</td><td>24</td><td>15</td><td><span class="stock-badge stock-ok">✅ 正常</span></td><td><button class="btn btn-secondary" style="padding:6px 12px;font-size:12px" onclick="viewMaterialDetail('猫三联疫苗')">查看</button></td></tr>
+                    <tr><td>犬多联疫苗</td><td>1ml/支</td><td>D5-20250103</td><td>18</td><td>15</td><td><span class="stock-badge stock-ok">✅ 正常</span></td><td><button class="btn btn-secondary" style="padding:6px 12px;font-size:12px" onclick="viewMaterialDetail('犬多联疫苗')">查看</button></td></tr>
+                    <tr><td>电子芯片</td><td>134.2kHz</td><td>IC-20250110</td><td>15</td><td>20</td><td><span class="stock-badge stock-low">⚠️ 低库存</span></td><td><button class="btn btn-primary" style="padding:6px 12px;font-size:12px" onclick="applyRestock('电子芯片')">申请补充</button></td></tr>
+                    <tr><td>体内驱虫药</td><td>10片/盒</td><td>DW-20250105</td><td>30</td><td>10</td><td><span class="stock-badge stock-ok">✅ 正常</span></td><td><button class="btn btn-secondary" style="padding:6px 12px;font-size:12px" onclick="viewMaterialDetail('体内驱虫药')">查看</button></td></tr>
+                    <tr><td>体外驱虫药</td><td>3支/盒</td><td>DW-20250106</td><td>15</td><td>10</td><td><span class="stock-badge stock-ok">✅ 正常</span></td><td><button class="btn btn-secondary" style="padding:6px 12px;font-size:12px" onclick="viewMaterialDetail('体外驱虫药')">查看</button></td></tr>
+                    <tr><td>麻醉剂</td><td>5ml/支</td><td>MA-20250107</td><td>0</td><td>5</td><td><span class="stock-badge stock-empty">❌ 缺货</span></td><td><button class="btn btn-primary" style="padding:6px 12px;font-size:12px" onclick="applyRestock('麻醉剂',true)">紧急申请</button></td></tr>
+                    <tr><td>缝合线</td><td>3-0号</td><td>ST-20250108</td><td>22</td><td>10</td><td><span class="stock-badge stock-ok">✅ 正常</span></td><td><button class="btn btn-secondary" style="padding:6px 12px;font-size:12px" onclick="viewMaterialDetail('缝合线')">查看</button></td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section" id="inTab" style="display:none">
+            <div class="section-title">入库记录</div>
+            <table>
+                <thead><tr><th>入库时间</th><th>物料名称</th><th>数量</th><th>来源</th><th>批次号</th><th>操作人</th></tr></thead>
+                <tbody>
+                    <tr><td>2025-01-14 09:30</td><td>狂犬疫苗</td><td>+50 支</td><td>捕捉站下发</td><td>WL20250114001</td><td>王医生</td></tr>
+                    <tr><td>2025-01-13 14:00</td><td>电子芯片</td><td>+30 个</td><td>捕捉站下发</td><td>WL20250113002</td><td>李医生</td></tr>
+                    <tr><td>2025-01-12 10:00</td><td>驱虫药</td><td>+20 盒</td><td>捕捉站下发</td><td>WL20250112003</td><td>王医生</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section" id="outTab" style="display:none">
+            <div class="section-title">消耗记录</div>
+            <table>
+                <thead><tr><th>消耗时间</th><th>物料名称</th><th>数量</th><th>关联宠物</th><th>用途</th><th>操作人</th></tr></thead>
+                <tbody>
+                    <tr><td>2025-01-15 11:00</td><td>狂犬疫苗</td><td>-1 支</td><td>A001</td><td>疫苗接种</td><td>王医生</td></tr>
+                    <tr><td>2025-01-15 10:30</td><td>电子芯片</td><td>-1 个</td><td>A001</td><td>芯片植入</td><td>王医生</td></tr>
+                    <tr><td>2025-01-14 16:00</td><td>体内驱虫药</td><td>-1 盒</td><td>A003</td><td>驱虫护理</td><td>李医生</td></tr>
+                    <tr><td>2025-01-14 15:00</td><td>麻醉剂</td><td>-1 支</td><td>A005</td><td>绝育手术</td><td>王医生</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="applyModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">📥 申请物料补充</div>
+                <button class="modal-close" onclick="document.getElementById('applyModal').classList.remove('active')">×</button>
+            </div>
+            <div class="form-group">
+                <label class="form-label">物料名称</label>
+                <select class="form-select"><option>狂犬疫苗</option><option>电子芯片</option><option>麻醉剂</option><option>驱虫药</option><option>缝合线</option></select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">申请数量</label>
+                <input type="number" class="form-input" placeholder="请输入申请数量" value="50">
+            </div>
+            <div class="form-group">
+                <label class="form-label">紧急程度</label>
+                <select class="form-select"><option>普通</option><option>紧急</option><option>特急</option></select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">申请说明</label>
+                <textarea class="form-input" style="min-height:80px;resize:vertical" placeholder="请说明申请原因..."></textarea>
+            </div>
+            <div style="display:flex;gap:12px;justify-content:flex-end">
+                <button class="btn btn-secondary" onclick="document.getElementById('applyModal').classList.remove('active')">取消</button>
+                <button class="btn btn-primary" onclick="submitApply()">提交申请</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(el,tab){
+            document.querySelectorAll('.tab-item').forEach(t=>t.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('stockTab').style.display=tab==='stock'?'block':'none';
+            document.getElementById('inTab').style.display=tab==='in'?'block':'none';
+            document.getElementById('outTab').style.display=tab==='out'?'block':'none';
+        }
+        function applyRestock(name,urgent){
+            if(urgent){alert('🚨 紧急补充申请已提交至捕捉站\n\n物料：'+name+'\n状态：缺货紧急\n捕捉站将优先处理')}else{alert('✅ 补充申请已提交至捕捉站\n\n物料：'+name+'\n捕捉站审核通过后将下发物料')}
+        }
+        function viewMaterialDetail(name){
+            var details={'猫三联疫苗':'物料：猫三联疫苗\n规格：1ml/支\n批号：M3-20250102\n当前库存：24支\n安全库存：15支\n状态：正常\n供应商：梅里亚动物保健','犬多联疫苗':'物料：犬多联疫苗\n规格：1ml/支\n批号：D5-20250103\n当前库存：18支\n安全库存：15支\n状态：正常\n供应商：英特威动物保健','体内驱虫药':'物料：体内驱虫药\n规格：10片/盒\n批号：DW-20250105\n当前库存：30盒\n安全库存：10盒\n状态：正常','体外驱虫药':'物料：体外驱虫药\n规格：3支/盒\n批号：DW-20250106\n当前库存：15盒\n安全库存：10盒\n状态：正常','缝合线':'物料：缝合线\n规格：3-0号\n批号：ST-20250108\n当前库存：22卷\n安全库存：10卷\n状态：正常'};
+            alert(details[name]||'暂无详细信息')
+        }
+        function submitApply(){
+            var type=document.querySelector('#applyModal select')?.value;
+            var qty=document.querySelector('#applyModal input[type="number"]')?.value;
+            if(!qty||parseInt(qty)<=0){alert('请填写申请数量');return}
+            alert('✅ 补充申请已提交至捕捉站\n\n物料类型：'+(type||'未选择')+'\n申请数量：'+qty+'\n捕捉站审核通过后将下发物料');
+            document.getElementById('applyModal').classList.remove('active')
+        }
+    </script>
+</body>
+</html>
