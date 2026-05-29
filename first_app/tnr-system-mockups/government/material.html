@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>物料监管 - 流浪动物 TNR 管理系统</title>
+    <link rel="stylesheet" href="../../assets/css/tnr-common.css">
+    <link rel="stylesheet" href="../../assets/css/tnr-government.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo"><div class="logo-icon">🏛️</div><h1>流浪动物 TNR 管理系统</h1></div>
+            <div class="header-info"><div class="current-time" id="currentTime"></div><div class="admin-badge">👤 市级管理员</div></div>
+        </header>
+        <nav class="gov-nav">
+            <a href="dashboard.html" class="gov-nav-item">📊 数据大屏</a>
+            <a href="institutions.html" class="gov-nav-item">🏛️ 机构管理</a>
+            <a href="supervision.html" class="gov-nav-item">🔍 全业务监管</a>
+            <a href="material.html" class="gov-nav-item active">📦 物料监管</a>
+            <a href="ledger.html" class="gov-nav-item">📑 台账中心</a>
+        </nav>
+        <div class="alert-banner">
+            <div class="alert-icon">⚠️</div>
+            <div class="alert-content">
+                <div class="alert-title">库存预警提醒</div>
+                <div class="alert-desc">仁爱宠物医院狂犬疫苗库存低于安全线，博爱宠物医院芯片库存不足</div>
+            </div>
+            <button class="alert-action" onclick="viewMaterialDetail('alert')">查看详情</button>
+        </div>
+        <div class="gov-section" style="padding:var(--space-5);">
+            <div class="section-header"><h3 class="section-title">物料全局监管</h3></div>
+            <div class="material-stats" style="margin-bottom:var(--space-5);">
+                <div class="material-stat"><div class="material-value value-blue">2,450</div><div class="material-label">疫苗总采购</div></div>
+                <div class="material-stat"><div class="material-value value-green">1,892</div><div class="material-label">疫苗已消耗</div></div>
+                <div class="material-stat"><div class="material-value value-orange">558</div><div class="material-label">当前库存</div></div>
+                <div class="material-stat"><div class="material-value value-pink">3</div><div class="material-label">预警机构</div></div>
+            </div>
+            <div class="material-stats" style="margin-bottom:var(--space-5);">
+                <div class="material-stat"><div class="material-value value-blue">5,000</div><div class="material-label">芯片总采购</div></div>
+                <div class="material-stat"><div class="material-value value-green">1,654</div><div class="material-label">芯片已使用</div></div>
+                <div class="material-stat"><div class="material-value value-orange">3,346</div><div class="material-label">当前库存</div></div>
+                <div class="material-stat"><div class="material-value value-purple">100%</div><div class="material-label">植入率</div></div>
+            </div>
+            <table>
+                <thead><tr><th>机构名称</th><th>疫苗库存</th><th>芯片库存</th><th>驱虫药库存</th><th>预警状态</th><th>操作</th></tr></thead>
+                <tbody>
+                    <tr><td><strong>爱心宠物医院</strong></td><td>8</td><td>45</td><td>15</td><td><span class="badge badge-low">库存偏低</span></td><td><button class="btn btn-sm" style="background:rgba(255,255,255,0.08);color:white;border-color:rgba(255,255,255,0.2);" onclick="viewMaterialDetail('HP001')">查看</button></td></tr>
+                    <tr><td><strong>瑞鹏宠物医院</strong></td><td>35</td><td>20</td><td>28</td><td><span class="badge badge-ok">正常</span></td><td><button class="btn btn-sm" style="background:rgba(255,255,255,0.08);color:white;border-color:rgba(255,255,255,0.2);" onclick="viewMaterialDetail('HP002')">查看</button></td></tr>
+                    <tr><td><strong>芭比堂动物医院</strong></td><td>42</td><td>5</td><td>22</td><td><span class="badge badge-low">库存偏低</span></td><td><button class="btn btn-sm" style="background:rgba(255,255,255,0.08);color:white;border-color:rgba(255,255,255,0.2);" onclick="viewMaterialDetail('HP003')">查看</button></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script src="../../assets/js/tnr-common.js"></script>
+    <script src="../../assets/js/tnr-government.js"></script>
+    <script>showCurrentDate();</script>
+</body>
+</html>

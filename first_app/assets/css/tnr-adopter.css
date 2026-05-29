@@ -1,0 +1,89 @@
+﻿/* ===== TNR Adopter - Modern Mobile Redesign ===== */
+body {
+  background: linear-gradient(135deg, #f43f5e 0%, #fb7185 50%, #fda4af 100%);
+  min-height: 100vh; padding-bottom: 80px;
+}
+.container { max-width: 750px; margin: 0 auto; padding: var(--space-4); }
+
+/* ====== Header ====== */
+.header {
+  background: rgba(255,255,255,0.95); backdrop-filter: blur(12px);
+  border-radius: var(--radius-xl); padding: var(--space-4) var(--space-5);
+  margin-bottom: var(--space-4); display: flex;
+  justify-content: space-between; align-items: center;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+.logo { display: flex; align-items: center; gap: var(--space-2); }
+.logo-icon {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, #f43f5e, #fb7185);
+  border-radius: var(--radius-sm); display: flex;
+  align-items: center; justify-content: center; color: white; font-size: 18px;
+}
+.logo h1 { font-size: 18px; color: #1a1a2e; font-weight: 600; }
+.nav-icon-btn { font-size: 24px; color: var(--gray-500); cursor: pointer; background: none; border: none; padding: var(--space-1); transition: var(--transition-fast); }
+.nav-icon-btn:hover { color: #f43f5e; }
+
+/* ====== Bottom Tab Bar ====== */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255,255,255,0.98);
+  backdrop-filter: blur(12px); display: flex; justify-content: space-around;
+  padding: var(--space-2) 0 calc(var(--space-2) + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--gray-100); z-index: 100;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.06);
+}
+.bottom-nav-item {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  cursor: pointer; color: var(--gray-400); text-decoration: none;
+  font-size: 10px; transition: var(--transition-fast); padding: var(--space-1) var(--space-3);
+}
+.bottom-nav-item.active { color: #f43f5e; }
+.bottom-nav-icon { font-size: 22px; }
+
+/* ====== Adoption Hall ====== */
+.adoption-hall-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-3); }
+.adoption-card { background: white; border-radius: var(--radius-lg); padding: var(--space-4); text-align: center; border: 1px solid var(--gray-100); transition: var(--transition-slow); }
+.adoption-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); border-color: #fda4af; }
+.adoption-photo { width: 80px; height: 80px; background: var(--gray-50); border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center; font-size: 36px; margin: 0 auto var(--space-3); }
+.adoption-name { font-size: 16px; font-weight: 600; color: var(--gray-800); margin-bottom: 4px; }
+.adoption-info { font-size: 12px; color: var(--gray-500); margin-bottom: var(--space-3); }
+
+/* ====== Messages ====== */
+.msg-list { display: flex; flex-direction: column; gap: var(--space-2); }
+.msg-item { display: flex; gap: var(--space-3); padding: var(--space-4); background: white; border-radius: var(--radius-lg); border: 1px solid var(--gray-100); transition: var(--transition-fast); }
+.msg-item:hover { border-color: #fda4af; box-shadow: var(--shadow-sm); }
+.msg-avatar { width: 44px; height: 44px; border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+.msg-avatar.system { background: #fce7f3; }
+.msg-avatar.user { background: #e0f2fe; }
+.msg-content { flex: 1; min-width: 0; }
+.msg-title { font-size: 14px; font-weight: 600; color: var(--gray-800); }
+.msg-preview { font-size: 13px; color: var(--gray-500); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.msg-time { font-size: 11px; color: var(--gray-400); white-space: nowrap; }
+
+/* ====== Check-in ====== */
+.checkin-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-3); }
+.checkin-card { background: white; border-radius: var(--radius-lg); padding: var(--space-4); border: 1px solid var(--gray-100); transition: var(--transition-fast); }
+.checkin-card:hover { border-color: #fda4af; }
+.checkin-header { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-3); }
+.checkin-avatar { width: 40px; height: 40px; border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center; font-size: 20px; }
+.checkin-name { font-size: 14px; font-weight: 600; color: var(--gray-800); }
+.checkin-photo { width: 100%; aspect-ratio: 1; background: var(--gray-50); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 32px; margin-bottom: var(--space-3); }
+
+/* ====== Profile ====== */
+.profile-header { text-align: center; padding: var(--space-8) var(--space-4); }
+.profile-avatar { width: 80px; height: 80px; border-radius: var(--radius-full); background: linear-gradient(135deg, #f43f5e, #fb7185); display: flex; align-items: center; justify-content: center; font-size: 36px; color: white; margin: 0 auto var(--space-4); box-shadow: 0 8px 24px rgba(244,63,94,0.3); }
+.profile-name { font-size: 20px; font-weight: 600; color: white; }
+.profile-phone { font-size: 14px; color: rgba(255,255,255,0.7); margin-top: var(--space-1); }
+.menu-list { background: white; border-radius: var(--radius-xl); overflow: hidden; }
+.menu-item { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-4) var(--space-5); border-bottom: 1px solid var(--gray-100); cursor: pointer; transition: var(--transition-fast); color: var(--gray-700); text-decoration: none; }
+.menu-item:last-child { border-bottom: none; }
+.menu-item:hover { background: #fdf2f8; }
+.menu-icon { font-size: 20px; width: 24px; text-align: center; }
+.menu-text { flex: 1; font-size: 15px; font-weight: 500; }
+.menu-arrow { color: var(--gray-400); font-size: 18px; }
+
+@media (max-width: 768px) {
+  .container { padding: var(--space-3); }
+  .adoption-hall-grid { grid-template-columns: repeat(2, 1fr); }
+  .checkin-grid { grid-template-columns: 1fr; }
+}

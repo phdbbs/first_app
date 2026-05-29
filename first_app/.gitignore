@@ -1,0 +1,52 @@
+﻿# TNR Management System - .gitignore
+# Web development
+*.min.js
+*.min.css
+*.map
+
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+
+# Environment variables
+.env
+.env.local
+.env.*
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+.venv/
+
+# OS
+.DS_Store
+Thumbs.db
+.git/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Coverage
+.coverage
+htmlcov/
+
+# Database
+*.db
+*.db-journal
+
+# Temporary
+*.tmp
+*.bak
+*~

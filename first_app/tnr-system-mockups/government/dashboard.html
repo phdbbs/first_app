@@ -1,0 +1,108 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>政府监管数据大屏 - 流浪动物 TNR 管理系统</title>
+    <link rel="stylesheet" href="../../assets/css/tnr-common.css">
+    <link rel="stylesheet" href="../../assets/css/tnr-government.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">🏛️</div>
+                <h1>流浪动物 TNR 管理系统</h1>
+            </div>
+            <div class="header-info">
+                <div class="current-time" id="currentTime">2025-01-15 14:30:00</div>
+                <div class="admin-badge">👤 市级管理员</div>
+            </div>
+        </header>
+        <nav class="gov-nav">
+            <a href="dashboard.html" class="gov-nav-item active">📊 数据大屏</a>
+            <a href="institutions.html" class="gov-nav-item">🏛️ 机构管理</a>
+            <a href="supervision.html" class="gov-nav-item">🔍 全业务监管</a>
+            <a href="material.html" class="gov-nav-item">📦 物料监管</a>
+            <a href="ledger.html" class="gov-nav-item">📑 台账中心</a>
+        </nav>
+        <div class="alert-banner">
+            <div class="alert-icon">⚠️</div>
+            <div class="alert-content">
+                <div class="alert-title">库存预警提醒</div>
+                <div class="alert-desc">仁爱宠物医院狂犬疫苗库存低于安全线，博爱宠物医院芯片库存不足，请及时处理</div>
+            </div>
+            <button class="alert-action" onclick="location.href='material.html'">查看详情</button>
+        </div>
+        <div class="stats-overview">
+            <div class="gov-stat-card"><div class="gov-stat-icon">📦</div><div class="gov-stat-value">1,842</div><div class="gov-stat-label">累计捕捉总量</div><div style="font-size:12px;color:#4ade80;margin-top:4px;">↑ 本月 +156</div></div>
+            <div class="gov-stat-card"><div class="gov-stat-icon">🩺</div><div class="gov-stat-value">1,654</div><div class="gov-stat-label">诊疗完成总量</div><div style="font-size:12px;color:#4ade80;margin-top:4px;">↑ 本月 +142</div></div>
+            <div class="gov-stat-card"><div class="gov-stat-icon">🏠</div><div class="gov-stat-value">892</div><div class="gov-stat-label">放归回归总量</div><div style="font-size:12px;color:#4ade80;margin-top:4px;">↑ 本月 +78</div></div>
+            <div class="gov-stat-card"><div class="gov-stat-icon">❤️</div><div class="gov-stat-value">534</div><div class="gov-stat-label">成功领养总量</div><div style="font-size:12px;color:#4ade80;margin-top:4px;">↑ 本月 +45</div></div>
+            <div class="gov-stat-card"><div class="gov-stat-icon">😢</div><div class="gov-stat-value">89</div><div class="gov-stat-label">安乐死处置总量</div><div style="font-size:12px;color:#f87171;margin-top:4px;">↓ 本月 -3</div></div>
+        </div>
+        <div class="main-content">
+            <div class="chart-section">
+                <div class="gov-section" style="padding:var(--space-5);">
+                    <div class="section-header"><h3 class="section-title"><span class="section-icon">📊</span> 各区县业务量统计（本月）</h3></div>
+                    <div class="chart-placeholder">
+                        <div class="bar-group"><div class="bar" style="height:180px;background:linear-gradient(180deg,#38bdf8,#3b82f6);"><span class="bar-value">156</span></div><span class="bar-label">朝阳区</span></div>
+                        <div class="bar-group"><div class="bar" style="height:140px;background:linear-gradient(180deg,#4ade80,#22c55e);"><span class="bar-value">128</span></div><span class="bar-label">海淀区</span></div>
+                        <div class="bar-group"><div class="bar" style="height:100px;background:linear-gradient(180deg,#fb923c,#f97316);"><span class="bar-value">92</span></div><span class="bar-label">东城区</span></div>
+                        <div class="bar-group"><div class="bar" style="height:120px;background:linear-gradient(180deg,#a78bfa,#8b5cf6);"><span class="bar-value">108</span></div><span class="bar-label">西城区</span></div>
+                        <div class="bar-group"><div class="bar" style="height:80px;background:linear-gradient(180deg,#f472b6,#ec4899);"><span class="bar-value">65</span></div><span class="bar-label">丰台区</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="ranking-section">
+                <div class="gov-section" style="padding:var(--space-5);">
+                    <div class="section-header"><h3 class="section-title"><span class="section-icon">🏆</span> 机构综合评分排行</h3></div>
+                    <div class="ranking-list">
+                        <div class="ranking-item"><div class="rank-number rank-1">1</div><div class="rank-info"><div class="rank-name">爱心宠物医院</div><div class="rank-stats">捕捉 235 只 | 诊疗 210 只 | 领养 52 只</div></div><div class="rank-score">96.8</div></div>
+                        <div class="ranking-item"><div class="rank-number rank-2">2</div><div class="rank-info"><div class="rank-name">瑞鹏宠物医院</div><div class="rank-stats">捕捉 198 只 | 诊疗 185 只 | 领养 45 只</div></div><div class="rank-score">94.2</div></div>
+                        <div class="ranking-item"><div class="rank-number rank-3">3</div><div class="rank-info"><div class="rank-name">芭比堂动物医院</div><div class="rank-stats">捕捉 175 只 | 诊疗 160 只 | 领养 40 只</div></div><div class="rank-score">92.1</div></div>
+                        <div class="ranking-item"><div class="rank-number rank-other">4</div><div class="rank-info"><div class="rank-name">宠颐生动物医院</div><div class="rank-stats">捕捉 160 只 | 诊疗 152 只 | 领养 35 只</div></div><div class="rank-score">90.3</div></div>
+                        <div class="ranking-item"><div class="rank-number rank-other">5</div><div class="rank-info"><div class="rank-name">康瑞宠物诊所</div><div class="rank-stats">捕捉 156 只 | 诊疗 148 只 | 领养 38 只</div></div><div class="rank-score">89.5</div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="main-content">
+            <div class="chart-section">
+                <div class="gov-section" style="padding:var(--space-5);">
+                    <div class="section-header"><h3 class="section-title"><span class="section-icon">🥧</span> 动物状态分布</h3></div>
+                    <div class="pie-chart">
+                        <div class="pie-center"><div><div class="pie-total">1,842</div><div class="pie-label">总计</div></div></div>
+                        <div class="legend">
+                            <div class="legend-item"><div class="legend-dot" style="background:#38bdf8;"></div><span>已放归 <strong style="color:white;">(40%)</strong></span></div>
+                            <div class="legend-item"><div class="legend-dot" style="background:#4ade80;"></div><span>已领养 <strong style="color:white;">(29%)</strong></span></div>
+                            <div class="legend-item"><div class="legend-dot" style="background:#fb923c;"></div><span>诊疗中 <strong style="color:white;">(18%)</strong></span></div>
+                            <div class="legend-item"><div class="legend-dot" style="background:#f472b6;"></div><span>待诊疗 <strong style="color:white;">(13%)</strong></span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="material-section">
+                <div class="gov-section" style="padding:var(--space-5);">
+                    <div class="section-header"><h3 class="section-title"><span class="section-icon">💉</span> 物料全局监管</h3></div>
+                    <div class="material-stats">
+                        <div class="material-stat"><div class="material-value value-blue">2,450</div><div class="material-label">疫苗总采购</div></div>
+                        <div class="material-stat"><div class="material-value value-green">1,892</div><div class="material-label">疫苗已消耗</div></div>
+                        <div class="material-stat"><div class="material-value value-orange">558</div><div class="material-label">当前库存</div></div>
+                        <div class="material-stat"><div class="material-value value-pink">3</div><div class="material-label">预警机构</div></div>
+                    </div>
+                    <div class="material-stats" style="margin-top:var(--space-4);">
+                        <div class="material-stat"><div class="material-value value-blue">5,000</div><div class="material-label">芯片总采购</div></div>
+                        <div class="material-stat"><div class="material-value value-green">1,654</div><div class="material-label">芯片已使用</div></div>
+                        <div class="material-stat"><div class="material-value value-orange">3,346</div><div class="material-label">当前库存</div></div>
+                        <div class="material-stat"><div class="material-value value-purple">100%</div><div class="material-label">植入率</div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="../../assets/js/tnr-common.js"></script>
+    <script src="../../assets/js/tnr-government.js"></script>
+    <script>showCurrentDate();</script>
+</body>
+</html>

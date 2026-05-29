@@ -1,0 +1,100 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>捕捉站端首页看板 - 流浪动物 TNR 管理系统</title>
+    <link rel="stylesheet" href="../../assets/css/tnr-common.css">
+    <link rel="stylesheet" href="../../assets/css/tnr-shelter.css">
+</head>
+<body>
+    <script src="../../assets/js/tnr-common.js"></script>
+    <script src="../../assets/js/tnr-shelter.js"></script>
+    <script>injectSidebar("homepage");</script>
+
+    <main class="main-content">
+        <div class="header-bar">
+            <h2 class="page-title">欢迎回来，管理员</h2>
+            <div class="current-time" id="currentTime"></div>
+        </div>
+
+        <section class="section quick-actions">
+            <div class="section-header"><h3 class="section-title">快捷操作</h3></div>
+            <div class="action-grid">
+                <a href="add-shelter.html" class="action-card"><span class="action-icon">➕</span><span class="action-label">新增捕捉</span></a>
+                <a href="owner-return.html" class="action-card green"><span class="action-icon">🏠</span><span class="action-label">主人领回</span></a>
+                <a href="material.html" class="action-card blue"><span class="action-icon">📦</span><span class="action-label">物料采购</span></a>
+                <a href="transfer.html" class="action-card pink"><span class="action-icon">🚚</span><span class="action-label">转运交接</span></a>
+                <a href="release.html" class="action-card cyan"><span class="action-icon">🌿</span><span class="action-label">放归管理</span></a>
+                <a href="adoption.html" class="action-card purple"><span class="action-icon">👤</span><span class="action-label">领养管理</span></a>
+            </div>
+        </section>
+
+        <section class="section task-section">
+            <div class="section-header">
+                <h3 class="section-title">待办任务</h3>
+                <a href="#" class="view-all">查看全部 →</a>
+            </div>
+            <div class="task-list">
+                <div class="task-item">
+                    <div class="task-priority priority-high"></div>
+                    <div class="task-content">
+                        <div class="task-name">阳光小区流浪猫捕捉登记</div>
+                        <div class="task-desc">物业联系人：张经理 138****5678，待现场拍照录入</div>
+                    </div>
+                    <div class="task-time">30分钟前</div>
+                    <span class="task-badge badge-urgent">紧急</span>
+                </div>
+                <div class="task-item">
+                    <div class="task-priority priority-high"></div>
+                    <div class="task-content">
+                        <div class="task-name">爱心宠物医院 - 转运交接待确认</div>
+                        <div class="task-desc">批次号：TR20250115001，共5只动物待接收</div>
+                    </div>
+                    <div class="task-time">1小时前</div>
+                    <span class="task-badge badge-urgent">紧急</span>
+                </div>
+                <div class="task-item">
+                    <div class="task-priority priority-medium"></div>
+                    <div class="task-content">
+                        <div class="task-name">花园社区放归确认</div>
+                        <div class="task-desc">待物业签字确认放归，共8只已绝育动物</div>
+                    </div>
+                    <div class="task-time">2小时前</div>
+                    <span class="task-badge badge-normal">普通</span>
+                </div>
+                <div class="task-item">
+                    <div class="task-priority priority-medium"></div>
+                    <div class="task-content">
+                        <div class="task-name">领养资质审核 - 李女士</div>
+                        <div class="task-desc">申请领养编号：A003，待线下审核材料</div>
+                    </div>
+                    <div class="task-time">3小时前</div>
+                    <span class="task-badge badge-normal">普通</span>
+                </div>
+                <div class="task-item">
+                    <div class="task-priority priority-low"></div>
+                    <div class="task-content">
+                        <div class="task-name">疫苗库存补充采购</div>
+                        <div class="task-desc">狂犬疫苗剩余量低于安全库存，需采购</div>
+                    </div>
+                    <div class="task-time">5小时前</div>
+                    <span class="task-badge badge-normal">普通</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="section stats-section">
+            <div class="section-header"><h3 class="section-title">数据概览</h3></div>
+            <div class="stats-grid">
+                <div class="stat-card yellow"><span class="stat-icon">📋</span><span class="stat-value">12</span><span class="stat-label">待捕捉登记</span></div>
+                <div class="stat-card orange"><span class="stat-icon">🚚</span><span class="stat-value">8</span><span class="stat-label">待转运交接</span></div>
+                <div class="stat-card green"><span class="stat-icon">🌿</span><span class="stat-value">24</span><span class="stat-label">待回收放归</span></div>
+                <div class="stat-card blue"><span class="stat-icon">👤</span><span class="stat-value">6</span><span class="stat-label">待领养审核</span></div>
+                <div class="stat-card red"><span class="stat-icon">⚠️</span><span class="stat-value">3</span><span class="stat-label">物料库存预警</span></div>
+            </div>
+        </section>
+    </main>
+    <script>showCurrentDate();</script>
+</body>
+</html>

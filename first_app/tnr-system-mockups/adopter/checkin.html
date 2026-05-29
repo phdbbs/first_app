@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>回访打卡 - 流浪动物 TNR 管理系统</title>
+    <link rel="stylesheet" href="../../assets/css/tnr-common.css">
+    <link rel="stylesheet" href="../../assets/css/tnr-adopter.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo"><div class="logo-icon">📸</div><h1>回访打卡</h1></div>
+            <button class="nav-icon-btn">🔔</button>
+        </div>
+        <div class="section" style="background:transparent;box-shadow:none;border:none;">
+            <div class="section-header"><h3 class="section-title" style="color:white;">本月打卡任务</h3></div>
+            <div class="checkin-grid">
+                <div class="checkin-card"><div class="checkin-header"><div class="checkin-avatar" style="background:#fce7f3;">🐱</div><div class="checkin-name">小橘</div></div><div class="checkin-photo" style="background:#fff7ed;">🐱</div><span class="badge badge-approved" style="display:block;text-align:center;margin-bottom:var(--space-3);">已打卡</span><button class="btn btn-secondary btn-sm" style="width:100%;" onclick="viewDetail('小橘')">查看详情</button></div>
+                <div class="checkin-card"><div class="checkin-header"><div class="checkin-avatar" style="background:#e0f2fe;">🐱</div><div class="checkin-name">雪球</div></div><div class="checkin-photo" style="background:#f0fdf4;">🐱</div><span class="badge badge-pending" style="display:block;text-align:center;margin-bottom:var(--space-3);">待打卡</span><button class="btn btn-primary btn-sm" style="width:100%;" onclick="submitCheckin()">立即打卡</button></div>
+            </div>
+        </div>
+        <nav class="bottom-nav">
+            <a href="adoption-hall.html" class="bottom-nav-item"><span class="bottom-nav-icon">🏠</span><span>大厅</span></a>
+            <a href="my-adoption.html" class="bottom-nav-item"><span class="bottom-nav-icon">❤️</span><span>我的领养</span></a>
+            <a href="checkin.html" class="bottom-nav-item active"><span class="bottom-nav-icon">📸</span><span>回访打卡</span></a>
+            <a href="messages.html" class="bottom-nav-item"><span class="bottom-nav-icon">💬</span><span>消息</span></a>
+            <a href="profile.html" class="bottom-nav-item"><span class="bottom-nav-icon">👤</span><span>我的</span></a>
+        </nav>
+    </div>
+    <script src="../../assets/js/tnr-common.js"></script>
+    <script src="../../assets/js/tnr-adopter.js"></script>
+    <script>showCurrentDate();</script>
+</body>
+</html>

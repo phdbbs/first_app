@@ -1,0 +1,34 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系统设置 - 流浪动物 TNR 管理系统</title>
+    <link rel="stylesheet" href="../../assets/css/tnr-common.css">
+    <link rel="stylesheet" href="../../assets/css/tnr-shelter.css">
+</head>
+<body>
+    <script src="../../assets/js/tnr-common.js"></script>
+    <script src="../../assets/js/tnr-shelter.js"></script>
+    <script>injectSidebar("settings");</script>
+    <main class="main-content">
+        <div class="header-bar"><h2 class="page-title">系统设置</h2><div class="current-time" id="currentTime"></div></div>
+        <div class="section">
+            <div class="section-header"><div class="section-icon">👤</div><h3 class="section-title">个人账号</h3></div>
+            <div class="form-row">
+                <div class="form-group"><label class="form-label">用户名</label><input type="text" class="form-input" value="admin" readonly style="background:var(--gray-50);"></div>
+                <div class="form-group"><label class="form-label">姓名</label><input type="text" class="form-input" value="管理员"></div>
+            </div>
+            <div class="form-group"><label class="form-label">联系电话</label><input type="tel" class="form-input" value="138****0000"></div>
+        </div>
+        <div class="section">
+            <div class="section-header"><div class="section-icon">🔔</div><h3 class="section-title">通知设置</h3></div>
+            <div class="form-group" style="display:flex;align-items:center;gap:var(--space-3);"><input type="checkbox" checked style="width:18px;height:18px;"><label class="form-label" style="margin:0;">库存预警通知</label></div>
+            <div class="form-group" style="display:flex;align-items:center;gap:var(--space-3);"><input type="checkbox" checked style="width:18px;height:18px;"><label class="form-label" style="margin:0;">转运提醒通知</label></div>
+            <div class="form-group" style="display:flex;align-items:center;gap:var(--space-3);"><input type="checkbox" checked style="width:18px;height:18px;"><label class="form-label" style="margin:0;">领养审核通知</label></div>
+        </div>
+        <div class="form-actions"><button class="btn btn-secondary">重置</button><button class="btn btn-primary">保存设置</button></div>
+    </main>
+    <script>showCurrentDate();</script>
+</body>
+</html>

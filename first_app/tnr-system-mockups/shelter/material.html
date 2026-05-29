@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>物料供应链管理 - 流浪动物 TNR 管理系统</title>
+    <link rel="stylesheet" href="../../assets/css/tnr-common.css">
+    <link rel="stylesheet" href="../../assets/css/tnr-shelter.css">
+</head>
+<body>
+    <script src="../../assets/js/tnr-common.js"></script>
+    <script src="../../assets/js/tnr-shelter.js"></script>
+    <script>injectSidebar("material");</script>
+    <main class="main-content">
+        <div class="header-bar"><h2 class="page-title">物料供应链管理</h2><div class="current-time" id="currentTime"></div></div>
+        <div class="stats-grid">
+            <div class="stat-card green"><span class="stat-icon">📦</span><span class="stat-value">156</span><span class="stat-label">物料种类</span></div>
+            <div class="stat-card yellow"><span class="stat-icon">📋</span><span class="stat-value">8</span><span class="stat-label">待采购单</span></div>
+            <div class="stat-card red"><span class="stat-icon">⚠️</span><span class="stat-value">3</span><span class="stat-label">库存预警</span></div>
+            <div class="stat-card blue"><span class="stat-icon">💰</span><span class="stat-value">¥2.4w</span><span class="stat-label">本月采购额</span></div>
+        </div>
+        <div class="tab-bar">
+            <div class="tab-item active" onclick="switchTab('stock')">库存台账</div>
+            <div class="tab-item" onclick="switchTab('purchase')">采购入库</div>
+            <div class="tab-item" onclick="switchTab('outbound')">下发出库</div>
+            <div class="tab-item" onclick="switchTab('trace')">流向查询</div>
+        </div>
+        <div id="stockTab" class="tab-content active">
+            <div class="section">
+                <div class="section-header"><h3 class="section-title">捕捉站库存台账</h3><div style="display:flex;gap:var(--space-3);"><button class="btn btn-primary" onclick="openPurchaseModal()">📥 采购入库</button><button class="btn btn-warning" onclick="openOutboundModal()">📤 下发出库</button></div></div>
+                <div class="filter-bar">
+                    <select class="form-select"><option>全部分类</option><option>疫苗药品</option><option>芯片</option><option>驱虫药</option><option>笼具耗材</option><option>清洁消毒</option></select>
+                    <select class="form-select"><option>全部状态</option><option>库存充足</option><option>库存偏低</option><option>库存耗尽</option></select>
+                    <input type="text" class="form-input" placeholder="搜索物料名称..." style="min-width:200px;">
+                </div>
+                <div class="table-wrapper"><table>
+                    <thead><tr><th>物料编号</th><th>物料名称</th><th>分类</th><th>库存数量</th><th>安全库存</th><th>状态</th><th>最近采购</th><th>操作</th></tr></thead>
+                    <tbody>
+                        <tr><td>M001</td><td><strong>狂犬疫苗</strong></td><td>疫苗药品</td><td>45</td><td>50</td><td><span class="badge badge-low">偏低</span></td><td>2025-01-10</td><td><div class="actions-cell"><button class="btn btn-sm btn-warning" onclick="quickRestock('M001','狂犬疫苗')">补货</button><button class="btn btn-sm btn-secondary" onclick="viewMaterialDetail('M001')">详情</button></div></td></tr>
+                        <tr><td>M002</td><td><strong>猫粮（成猫）</strong></td><td>饲料猫粮</td><td>200</td><td>100</td><td><span class="badge badge-ok">充足</span></td><td>2025-01-08</td><td><div class="actions-cell"><button class="btn btn-sm btn-secondary" onclick="viewMaterialDetail('M002')">详情</button></div></td></tr>
+                        <tr><td>M003</td><td><strong>消毒液</strong></td><td>清洁消毒</td><td>12</td><td>30</td><td><span class="badge badge-low">偏低</span></td><td>2025-01-05</td><td><div class="actions-cell"><button class="btn btn-sm btn-warning" onclick="quickRestock('M003','消毒液')">补货</button><button class="btn btn-sm btn-secondary" onclick="viewMaterialDetail('M003')">详情</button></div></td></tr>
+                        <tr><td>M004</td><td><strong>转运笼</strong></td><td>笼具耗材</td><td>0</td><td>10</td><td><span class="badge badge-out">耗尽</span></td><td>2024-12-20</td><td><div class="actions-cell"><button class="btn btn-sm btn-warning" onclick="quickRestock('M004','转运笼')">补货</button><button class="btn btn-sm btn-secondary" onclick="viewMaterialDetail('M004')">详情</button></div></td></tr>
+                        <tr><td>M005</td><td><strong>猫三联疫苗</strong></td><td>疫苗药品</td><td>60</td><td>40</td><td><span class="badge badge-ok">充足</span></td><td>2025-01-12</td><td><div class="actions-cell"><button class="btn btn-sm btn-secondary" onclick="viewMaterialDetail('M005')">详情</button></div></td></tr>
+                        <tr><td>M006</td><td><strong>驱虫药</strong></td><td>驱虫药</td><td>30</td><td>20</td><td><span class="badge badge-ok">充足</span></td><td>2025-01-10</td><td><div class="actions-cell"><button class="btn btn-sm btn-secondary" onclick="viewMaterialDetail('M006')">详情</button></div></td></tr>
+                    </tbody>
+                </table></div>
+            </div>
+        </div>
+    </main>
+    <div class="modal-overlay" id="purchaseModal"><div class="modal-content">
+        <div class="modal-header"><h3 class="modal-title">📥 采购入库</h3><button class="modal-close" onclick="closeModal('purchaseModal')">×</button></div>
+        <div class="form-group"><label class="form-label">物料类型</label><select class="form-select"><option>疫苗药品</option><option>芯片</option><option>驱虫药</option><option>笼具耗材</option><option>清洁消毒</option></select></div>
+        <div class="form-group"><label class="form-label">物料名称</label><input type="text" class="form-input" placeholder="请输入物料名称"></div>
+        <div class="form-group"><label class="form-label">采购数量</label><input type="number" class="form-input" placeholder="请输入采购数量" min="1"></div>
+        <div class="form-group"><label class="form-label">供应商</label><input type="text" class="form-input" placeholder="请输入供应商名称"></div>
+        <div class="form-group"><label class="form-label">备注说明</label><textarea class="form-input" style="min-height:80px;" placeholder="请输入备注说明"></textarea></div>
+        <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('purchaseModal')">取消</button><button class="btn btn-primary" onclick="submitPurchase()">提交入库</button></div>
+    </div></div>
+    <script>showCurrentDate();</script>
+</body>
+</html>

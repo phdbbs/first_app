@@ -1,0 +1,11 @@
+﻿# Auto-detect text files and enforce UTF-8 encoding
+* text=auto working-tree-encoding=UTF-8
+
+# Mark specific file types as binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary

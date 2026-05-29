@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>诊疗业务 - 流浪动物 TNR 管理系统</title>
+    <link rel="stylesheet" href="../../assets/css/tnr-common.css">
+    <link rel="stylesheet" href="../../assets/css/tnr-hospital.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo"><div class="logo-icon">🏥</div><h1>爱心宠物医院 · 工作站</h1></div>
+            <button class="back-btn" onclick="location.href='homepage.html'">← 返回首页</button>
+        </div>
+        <nav class="nav-bar">
+            <a href="homepage.html" class="nav-item">🏠 首页</a>
+            <a href="receive.html" class="nav-item">📥 动物接收</a>
+            <a href="treatment.html" class="nav-item active">🩺 诊疗业务</a>
+            <a href="material.html" class="nav-item">📦 物料库存</a>
+            <a href="adoption.html" class="nav-item">🐾 领养维护</a>
+        </nav>
+        <div class="stats-grid">
+            <div class="stat-card yellow"><span class="stat-icon">🩺</span><span class="stat-value">12</span><span class="stat-label">治疗中</span></div>
+            <div class="stat-card green"><span class="stat-icon">✅</span><span class="stat-value">68</span><span class="stat-label">已完成</span></div>
+            <div class="stat-card blue"><span class="stat-icon">📋</span><span class="stat-value">86%</span><span class="stat-label">完成率</span></div>
+        </div>
+        <div class="tab-bar">
+            <div class="tab-item active" onclick="switchTab('waiting')">待处理</div>
+            <div class="tab-item" onclick="switchTab('inprogress')">治疗中</div>
+            <div class="tab-item" onclick="switchTab('complete')">已完成</div>
+        </div>
+        <div id="waitingTab" class="tab-content active">
+            <div class="section">
+                <div class="section-header"><h3 class="section-title">待处理诊疗</h3><button class="btn btn-primary" onclick="openTreatmentModal()">➕ 新建诊疗</button></div>
+                <div class="table-wrapper"><table>
+                    <thead><tr><th>动物编号</th><th>名称</th><th>种类</th><th>需处理项</th><th>到达日期</th><th>操作</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>A012</strong></td><td>橘猫</td><td>公·2岁</td><td>绝育+疫苗+芯片</td><td>2025-01-15</td><td><button class="btn btn-sm btn-green" onclick="openTreatmentModal()">开始诊疗</button></td></tr>
+                        <tr><td><strong>A015</strong></td><td>狸花猫</td><td>母·1岁</td><td>疫苗第二针+驱虫</td><td>2025-01-14</td><td><button class="btn btn-sm btn-green" onclick="openTreatmentModal()">开始诊疗</button></td></tr>
+                        <tr><td><strong>A018</strong></td><td>奶牛猫</td><td>公·8月</td><td>芯片植入</td><td>2025-01-14</td><td><button class="btn btn-sm btn-green" onclick="openTreatmentModal()">开始诊疗</button></td></tr>
+                    </tbody>
+                </table></div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-overlay" id="treatmentModal"><div class="modal-content" style="max-width:600px;">
+        <div class="modal-header"><h3 class="modal-title">🩺 新建诊疗记录</h3><button class="modal-close" onclick="closeModal('treatmentModal')">×</button></div>
+        <div class="modal-body">
+            <div class="form-group"><label class="form-label required">动物编号</label><input type="text" class="form-input" placeholder="请输入动物编号"></div>
+            <div class="form-group"><label class="form-label required">诊疗项目</label><select class="form-select"><option>绝育手术</option><option>疫苗接种</option><option>芯片植入</option><option>驱虫</option><option>其他</option></select></div>
+            <div class="form-group"><label class="form-label">诊疗医生</label><input type="text" class="form-input" placeholder="请输入医生姓名"></div>
+            <div class="form-group"><label class="form-label">备注说明</label><textarea class="form-input" style="min-height:80px;" placeholder="请输入诊疗备注"></textarea></div>
+        </div>
+        <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('treatmentModal')">取消</button><button class="btn btn-primary" onclick="submitTreatment()">确认开始诊疗</button></div>
+    </div></div>
+    <script src="../../assets/js/tnr-common.js"></script>
+    <script src="../../assets/js/tnr-hospital.js"></script>
+    <script>showCurrentDate();</script>
+</body>
+</html>

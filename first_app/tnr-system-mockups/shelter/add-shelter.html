@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新增捕捉登记 - 流浪动物 TNR 管理系统</title>
+    <link rel="stylesheet" href="../../assets/css/tnr-common.css">
+    <link rel="stylesheet" href="../../assets/css/tnr-shelter.css">
+</head>
+<body>
+    <script src="../../assets/js/tnr-common.js"></script>
+    <script src="../../assets/js/tnr-shelter.js"></script>
+    <script>injectSidebar("add-shelter");</script>
+    <main class="main-content">
+        <div class="header-bar"><h2 class="page-title">新增捕捉登记</h2><div class="current-time" id="currentTime"></div></div>
+        <div class="section">
+            <div class="section-header"><div class="section-icon">🏢</div><h3 class="section-title">小区物业信息</h3></div>
+            <div class="form-row">
+                <div class="form-group"><label class="form-label required">物业名称</label><input type="text" class="form-input" placeholder="请输入物业公司名称"></div>
+                <div class="form-group"><label class="form-label required">所在小区</label><div class="location-input-wrapper"><input type="text" class="form-input" value="阳光花园小区" placeholder="自动定位或手动输入"><button class="location-btn" onclick="getLocation()">📍 定位</button></div></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label class="form-label required">详细门牌号</label><input type="text" class="form-input" placeholder="请输入详细地址"></div>
+                <div class="form-group"><label class="form-label required">物业交接人姓名</label><input type="text" class="form-input" placeholder="请输入交接人姓名"></div>
+            </div>
+            <div class="form-group"><label class="form-label required">联系电话</label><input type="tel" class="form-input" placeholder="请输入联系电话"></div>
+        </div>
+        <div class="section">
+            <div class="section-header"><div class="section-icon">🐱</div><h3 class="section-title">捕捉动物信息</h3></div>
+            <div class="info-box">💡 系统将根据您输入的捕捉数量，自动批量生成宠物唯一编号（格式：001、002、003...）</div>
+            <div class="form-group"><label class="form-label required">捕捉总数量</label><input type="number" class="form-input" value="3" min="1" max="50"></div>
+            <div class="form-group"><label class="form-label">自动生成宠物编号</label><div class="pet-id-list"><span class="pet-id-tag">宠物编号 <span class="id-number">001</span></span><span class="pet-id-tag">宠物编号 <span class="id-number">002</span></span><span class="pet-id-tag">宠物编号 <span class="id-number">003</span></span></div></div>
+            <div class="form-group"><label class="form-label required">整体合影上传</label><div class="upload-grid"><div class="upload-item" onclick="uploadPhoto(this)"><div class="upload-icon">📷</div><div class="upload-text">点击上传<br>批次合影</div></div></div></div>
+            <div class="form-group"><label class="form-label required">单只编号单独拍照</label><div class="upload-grid" id="singlePhotoGrid"><div class="upload-item" onclick="uploadPhoto(this)"><div class="upload-icon">📷</div><div class="upload-text">编号 001<br>单独照片</div></div><div class="upload-item" onclick="uploadPhoto(this)"><div class="upload-icon">📷</div><div class="upload-text">编号 002<br>单独照片</div></div><div class="upload-item" onclick="uploadPhoto(this)"><div class="upload-icon">📷</div><div class="upload-text">编号 003<br>单独照片</div></div></div></div>
+        </div>
+        <div class="section">
+            <div class="section-header"><div class="section-icon">✍️</div><h3 class="section-title">物业电子签名确认</h3></div>
+            <div class="form-group"><label class="form-label required">请物业交接人在下方签字区域手写签名</label><div class="signature-pad"><canvas class="signature-canvas" id="signatureCanvas"></canvas></div><div class="signature-actions"><button class="btn btn-secondary btn-sm" onclick="clearSignature()">🗑️ 清除重签</button></div></div>
+            <div class="form-actions"><button class="btn btn-secondary" onclick="alert('💾 草稿已暂存')">💾 暂存草稿</button><button class="btn btn-primary btn-lg" onclick="submitForm()">✅ 提交保存并生成捕捉单据</button></div>
+        </div>
+    </main>
+    <script>showCurrentDate();</script>
+</body>
+</html>

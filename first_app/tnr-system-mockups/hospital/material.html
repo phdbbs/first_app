@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>物料库存 - 流浪动物 TNR 管理系统</title>
+    <link rel="stylesheet" href="../../assets/css/tnr-common.css">
+    <link rel="stylesheet" href="../../assets/css/tnr-hospital.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo"><div class="logo-icon">🏥</div><h1>爱心宠物医院 · 工作站</h1></div>
+            <button class="back-btn" onclick="location.href='homepage.html'">← 返回首页</button>
+        </div>
+        <nav class="nav-bar">
+            <a href="homepage.html" class="nav-item">🏠 首页</a>
+            <a href="receive.html" class="nav-item">📥 动物接收</a>
+            <a href="treatment.html" class="nav-item">🩺 诊疗业务</a>
+            <a href="material.html" class="nav-item active">📦 物料库存</a>
+            <a href="adoption.html" class="nav-item">🐾 领养维护</a>
+        </nav>
+        <div class="stats-grid">
+            <div class="stat-card green"><span class="stat-icon">📦</span><span class="stat-value">45</span><span class="stat-label">物料种类</span></div>
+            <div class="stat-card yellow"><span class="stat-icon">📋</span><span class="stat-value">3</span><span class="stat-label">待入库</span></div>
+            <div class="stat-card red"><span class="stat-icon">⚠️</span><span class="stat-value">2</span><span class="stat-label">库存预警</span></div>
+        </div>
+        <div class="section">
+            <div class="section-header"><h3 class="section-title">本院物料库存</h3><div style="display:flex;gap:var(--space-3);"><button class="btn btn-primary" onclick="alert('📥 领用入库（演示模式）')">📥 领用入库</button><button class="btn btn-green" onclick="alert('📤 消耗出库（演示模式）')">📤 消耗出库</button></div></div>
+            <div class="table-wrapper"><table>
+                <thead><tr><th>物料名称</th><th>分类</th><th>当前库存</th><th>安全库存</th><th>状态</th><th>上次更新</th><th>操作</th></tr></thead>
+                <tbody>
+                    <tr><td><strong>狂犬疫苗</strong></td><td>疫苗药品</td><td>8</td><td>20</td><td><span class="badge badge-low">偏低</span></td><td>2025-01-14</td><td><button class="btn btn-sm btn-warning" onclick="alert('⚠️ 申领狂犬疫苗（演示模式）')">申领</button></td></tr>
+                    <tr><td><strong>猫三联疫苗</strong></td><td>疫苗药品</td><td>15</td><td>15</td><td><span class="badge badge-ok">正常</span></td><td>2025-01-14</td><td><button class="btn btn-sm btn-secondary" onclick="viewMaterialDetail('猫三联疫苗')">记录</button></td></tr>
+                    <tr><td><strong>芯片</strong></td><td>芯片</td><td>45</td><td>30</td><td><span class="badge badge-ok">正常</span></td><td>2025-01-13</td><td><button class="btn btn-sm btn-secondary" onclick="viewMaterialDetail('芯片')">记录</button></td></tr>
+                    <tr><td><strong>驱虫药</strong></td><td>驱虫药品</td><td>15</td><td>10</td><td><span class="badge badge-ok">正常</span></td><td>2025-01-12</td><td><button class="btn btn-sm btn-secondary" onclick="viewMaterialDetail('驱虫药')">记录</button></td></tr>
+                </tbody>
+            </table></div>
+        </div>
+    </div>
+    <script src="../../assets/js/tnr-common.js"></script>
+    <script src="../../assets/js/tnr-hospital.js"></script>
+    <script>showCurrentDate();</script>
+</body>
+</html>

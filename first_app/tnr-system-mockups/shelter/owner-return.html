@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>主人领回管理 - 流浪动物 TNR 管理系统</title>
+    <link rel="stylesheet" href="../../assets/css/tnr-common.css">
+    <link rel="stylesheet" href="../../assets/css/tnr-shelter.css">
+</head>
+<body>
+    <script src="../../assets/js/tnr-common.js"></script>
+    <script src="../../assets/js/tnr-shelter.js"></script>
+    <script>injectSidebar("owner-return");</script>
+    <main class="main-content">
+        <div class="header-bar"><h2 class="page-title">主人领回管理</h2><div class="current-time" id="currentTime"></div></div>
+        <div class="stats-grid">
+            <div class="stat-card yellow"><span class="stat-icon">📋</span><span class="stat-value">3</span><span class="stat-label">待处理</span></div>
+            <div class="stat-card green"><span class="stat-icon">✅</span><span class="stat-value">18</span><span class="stat-label">已领回</span></div>
+            <div class="stat-card red"><span class="stat-icon">❌</span><span class="stat-value">2</span><span class="stat-label">已拒绝</span></div>
+        </div>
+        <div class="section">
+            <div class="section-header"><h3 class="section-title">主人领回申请</h3><button class="btn btn-primary" onclick="openOwnerReturnModal()">➕ 新建领回登记</button></div>
+            <div class="filter-bar">
+                <select class="form-select"><option>全部状态</option><option>待审核</option><option>已领回</option><option>已拒绝</option></select>
+                <input type="text" class="form-input" placeholder="搜索业主姓名或动物编号..." style="min-width:200px;">
+            </div>
+            <div class="table-wrapper"><table>
+                <thead><tr><th>申请编号</th><th>业主姓名</th><th>联系电话</th><th>动物编号</th><th>所在小区</th><th>申请时间</th><th>状态</th><th>操作</th></tr></thead>
+                <tbody>
+                    <tr><td><strong>RT20250115001</strong></td><td>刘先生</td><td>136****9876</td><td>A025</td><td>阳光花园小区</td><td>2025-01-15</td><td><span class="badge badge-pending">待审核</span></td><td><div class="actions-cell"><button class="btn btn-sm btn-green" onclick="approveOwnerReturn('RT20250115001')">通过</button><button class="btn btn-sm btn-red" onclick="rejectOwnerReturn('RT20250115001')">拒绝</button><button class="btn btn-sm btn-secondary" onclick="viewOwnerReturnDetail('RT20250115001')">详情</button></div></td></tr>
+                    <tr><td><strong>RT20250112001</strong></td><td>王女士</td><td>138****1234</td><td>A018</td><td>幸福家园</td><td>2025-01-12</td><td><span class="badge badge-ok">已领回</span></td><td><button class="btn btn-sm btn-secondary" onclick="viewOwnerReturnDetail('RT20250112001')">详情</button></td></tr>
+                    <tr><td><strong>RT20250110001</strong></td><td>赵先生</td><td>139****5678</td><td>A015</td><td>绿色新城</td><td>2025-01-10</td><td><span class="badge badge-rejected">已拒绝</span></td><td><button class="btn btn-sm btn-secondary" onclick="viewOwnerReturnDetail('RT20250110001')">详情</button></td></tr>
+                </tbody>
+            </table></div>
+        </div>
+    </main>
+    <script>showCurrentDate();</script>
+</body>
+</html>

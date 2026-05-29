@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>全业务监管 - 流浪动物 TNR 管理系统</title>
+    <link rel="stylesheet" href="../../assets/css/tnr-common.css">
+    <link rel="stylesheet" href="../../assets/css/tnr-government.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo"><div class="logo-icon">🏛️</div><h1>流浪动物 TNR 管理系统</h1></div>
+            <div class="header-info"><div class="current-time" id="currentTime"></div><div class="admin-badge">👤 市级管理员</div></div>
+        </header>
+        <nav class="gov-nav">
+            <a href="dashboard.html" class="gov-nav-item">📊 数据大屏</a>
+            <a href="institutions.html" class="gov-nav-item">🏛️ 机构管理</a>
+            <a href="supervision.html" class="gov-nav-item active">🔍 全业务监管</a>
+            <a href="material.html" class="gov-nav-item">📦 物料监管</a>
+            <a href="ledger.html" class="gov-nav-item">📑 台账中心</a>
+        </nav>
+        <div class="gov-section" style="padding:var(--space-5);">
+            <div class="section-header"><h3 class="section-title">实时业务监管看板</h3><div style="display:flex;gap:var(--space-3);"><select class="form-select" style="background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.15);color:white;"><option>今日</option><option>本周</option><option>本月</option></select></div></div>
+            <div class="material-stats" style="margin-bottom:var(--space-5);">
+                <div class="material-stat"><div class="material-value value-blue">12</div><div class="material-label">今日捕捉</div></div>
+                <div class="material-stat"><div class="material-value value-green">8</div><div class="material-label">今日诊疗</div></div>
+                <div class="material-stat"><div class="material-value value-orange">5</div><div class="material-label">今日放归</div></div>
+                <div class="material-stat"><div class="material-value value-pink">3</div><div class="material-label">今日领养</div></div>
+            </div>
+            <table>
+                <thead><tr><th>时间</th><th>业务类型</th><th>内容描述</th><th>机构</th><th>操作人</th><th>状态</th></tr></thead>
+                <tbody>
+                    <tr><td>09:30</td><td>捕捉登记</td><td>阳光小区捕捉流浪猫3只</td><td>阳光捕捉站</td><td>王站长</td><td><span class="badge badge-ok">已完成</span></td></tr>
+                    <tr><td>10:00</td><td>转运交接</td><td>TR20250115001批次发车</td><td>阳光捕捉站</td><td>李师傅</td><td><span class="badge badge-transit">转运中</span></td></tr>
+                    <tr><td>10:30</td><td>绝育手术</td><td>橘猫#A012绝育完成</td><td>爱心宠物医院</td><td>张医生</td><td><span class="badge badge-ok">已完成</span></td></tr>
+                    <tr><td>11:00</td><td>物料出库</td><td>下发狂犬疫苗20支</td><td>阳光捕捉站</td><td>仓管员</td><td><span class="badge badge-ok">已完成</span></td></tr>
+                    <tr><td>14:00</td><td>领养审核</td><td>申请人张小明通过初审</td><td>阳光捕捉站</td><td>审核员</td><td><span class="badge badge-pending">待线下确认</span></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script src="../../assets/js/tnr-common.js"></script>
+    <script src="../../assets/js/tnr-government.js"></script>
+    <script>showCurrentDate();</script>
+</body>
+</html>

@@ -1,0 +1,60 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>宠物档案查询 - 流浪动物 TNR 管理系统</title>
+    <link rel="stylesheet" href="../../assets/css/tnr-common.css">
+    <link rel="stylesheet" href="../../assets/css/tnr-shelter.css">
+</head>
+<body>
+    <script src="../../assets/js/tnr-common.js"></script>
+    <script src="../../assets/js/tnr-shelter.js"></script>
+    <script>injectSidebar("pet-archive");</script>
+    <main class="main-content">
+        <div class="header-bar"><h2 class="page-title">宠物档案查询</h2><div class="current-time" id="currentTime"></div></div>
+        <div class="section">
+            <div class="section-header"><h3 class="section-title">全生命周期档案</h3></div>
+            <div class="filter-bar">
+                <select class="form-select"><option>全部状态</option><option>捕捉中</option><option>诊疗中</option><option>已放归</option><option>已领养</option><option>已领回</option></select>
+                <select class="form-select"><option>全部小区</option><option>阳光花园小区</option><option>幸福家园</option></select>
+                <input type="text" class="form-input" placeholder="搜索动物编号/芯片号..." style="min-width:200px;">
+            </div>
+            <div class="table-wrapper"><table>
+                <thead><tr><th>动物编号</th><th>名称</th><th>种类</th><th>芯片号</th><th>绝育状态</th><th>疫苗状态</th><th>当前状态</th><th>操作</th></tr></thead>
+                <tbody>
+                    <tr><td><strong>A001</strong></td><td>大橘</td><td>橘猫·公·2岁</td><td>Chip001</td><td>已绝育</td><td>已完成</td><td><span class="badge badge-received">已放归</span></td><td><button class="btn btn-sm btn-secondary" onclick="viewPetArchive('A001')">查看档案</button></td></tr>
+                    <tr><td><strong>A002</strong></td><td>花花</td><td>狸花猫·母·1岁</td><td>Chip002</td><td>已绝育</td><td>已完成</td><td><span class="badge badge-received">已放归</span></td><td><button class="btn btn-sm btn-secondary" onclick="viewPetArchive('A002')">查看档案</button></td></tr>
+                    <tr><td><strong>A005</strong></td><td>小橘</td><td>橘猫·公·2岁</td><td>Chip005</td><td>已绝育</td><td>已完成</td><td><span class="badge badge-adopted">已领养</span></td><td><button class="btn btn-sm btn-secondary" onclick="viewPetArchive('A005')">查看档案</button></td></tr>
+                    <tr><td><strong>A008</strong></td><td>雪球</td><td>白猫·母·1岁</td><td>Chip008</td><td>已绝育</td><td>已完成</td><td><span class="badge badge-adopted">已领养</span></td><td><button class="btn btn-sm btn-secondary" onclick="viewPetArchive('A008')">查看档案</button></td></tr>
+                </tbody>
+            </table></div>
+        </div>
+    </main>
+    <div class="modal-overlay" id="archiveModal"><div class="modal-content" style="max-width:700px;">
+        <div class="modal-header"><h3 class="modal-title" id="archiveModalTitle">宠物全生命周期档案</h3><button class="modal-close" onclick="closeModal('archiveModal')">×</button></div>
+        <div id="archiveModalBody">
+            <div class="stats-grid" style="margin-bottom:var(--space-4);">
+                <div class="stat-card yellow"><span class="stat-icon">📋</span><span class="stat-value" id="archAnimalId">A001</span><span class="stat-label">动物编号</span></div>
+                <div class="stat-card green"><span class="stat-icon">🐱</span><span class="stat-value" id="archAnimalName">大橘</span><span class="stat-label">名称</span></div>
+                <div class="stat-card blue"><span class="stat-icon">🔬</span><span class="stat-value" id="archChipNo">Chip001</span><span class="stat-label">芯片号</span></div>
+                <div class="stat-card cyan"><span class="stat-icon">✅</span><span class="stat-value" id="archStatus">已放归</span><span class="stat-label">当前状态</span></div>
+            </div>
+            <div style="margin-bottom:var(--space-4);">
+                <h4 style="font-size:15px;font-weight:600;color:var(--gray-800);margin-bottom:var(--space-3);">📅 全生命周期轨迹</h4>
+                <div class="task-list" id="archTimeline">
+                    <div class="task-item"><div class="task-priority priority-high"></div><div class="task-content"><div class="task-name">捕捉登记</div><div class="task-desc">阳光花园小区 · 物业交接人：张经理</div></div><div class="task-time">2025-01-05</div><span class="badge badge-ok">已完成</span></div>
+                    <div class="task-item"><div class="task-priority priority-medium"></div><div class="task-content"><div class="task-name">转运交接</div><div class="task-desc">批次号 TR20250105001 → 爱心宠物医院</div></div><div class="task-time">2025-01-05</div><span class="badge badge-ok">已完成</span></div>
+                    <div class="task-item"><div class="task-priority priority-medium"></div><div class="task-content"><div class="task-name">绝育手术</div><div class="task-desc">公猫绝育 · 术后恢复良好</div></div><div class="task-time">2025-01-06</div><span class="badge badge-ok">已完成</span></div>
+                    <div class="task-item"><div class="task-priority priority-low"></div><div class="task-content"><div class="task-name">疫苗接种</div><div class="task-desc">狂犬疫苗 + 猫三联（已完成）</div></div><div class="task-time">2025-01-07</div><span class="badge badge-ok">已完成</span></div>
+                    <div class="task-item"><div class="task-priority priority-low"></div><div class="task-content"><div class="task-name">芯片植入</div><div class="task-desc">芯片号 Chip001</div></div><div class="task-time">2025-01-07</div><span class="badge badge-ok">已完成</span></div>
+                    <div class="task-item"><div class="task-priority priority-low"></div><div class="task-content"><div class="task-name">治愈回收</div><div class="task-desc">从爱心宠物医院回收至捕捉站</div></div><div class="task-time">2025-01-10</div><span class="badge badge-ok">已完成</span></div>
+                    <div class="task-item"><div class="task-priority priority-low"></div><div class="task-content"><div class="task-name">放归确认</div><div class="task-desc">阳光花园小区 · 物业已签字确认</div></div><div class="task-time">2025-01-12</div><span class="badge badge-ok">已完成</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('archiveModal')">关闭</button><button class="btn btn-primary" onclick="alert('🖨️ 打印档案（演示模式）')">🖨️ 打印档案</button></div>
+    </div></div>
+    <script>showCurrentDate();</script>
+</body>
+</html>

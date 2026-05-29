@@ -1,0 +1,27 @@
+﻿{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: TNR Server",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "uvicorn",
+            "args": ["server:app", "--reload", "--port", "8889"],
+            "cwd": "/first_app",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Launch Chrome (direct)",
+            "request": "launch",
+            "type": "chrome",
+            "file": "/first_app/index.html"
+        },
+        {
+            "name": "Launch Edge (via server)",
+            "request": "launch",
+            "type": "msedge",
+            "url": "http://localhost:8889",
+            "webRoot": "/first_app"
+        }
+    ]
+}
