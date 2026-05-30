@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>一宠一码监管 - 流浪动物 TNR 管理系统</title>
+    <link rel="stylesheet" href="../../assets/css/tnr-common.css">
+    <link rel="stylesheet" href="../../assets/css/tnr-government.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo"><div class="logo-icon">🏛️</div><h1>流浪动物 TNR 管理系统</h1></div>
+            <div class="header-info"><div class="current-time" id="currentTime"></div><div class="admin-badge">👤 市级管理员</div></div>
+        </header>
+        <nav class="gov-nav">
+            <a href="dashboard.html" class="gov-nav-item">📊 数据大屏</a>
+            <a href="institutions.html" class="gov-nav-item">🏛️ 机构管理</a>
+            <a href="supervision.html" class="gov-nav-item">🔍 全业务监管</a>
+            <a href="material.html" class="gov-nav-item">📦 物料监管</a>
+            <a href="ledger.html" class="gov-nav-item">📑 台账中心</a>
+            <a href="pet-code.html" class="gov-nav-item active">📱 一宠一码</a>
+        </nav>
+        <div class="gov-section" style="padding:var(--space-5);">
+            <div class="section-header"><h3 class="section-title">全局一宠一码监管</h3><div style="display:flex;gap:var(--space-3);">
+                <button class="btn btn-cyan" onclick="alert('📊 导出二维码统计报表（演示模式）')">📊 统计报表</button>
+                <select class="form-select" style="background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.15);color:white;"><option>全部捕捉站</option><option>阳光捕捉站</option><option>幸福捕捉站</option><option>翠湖捕捉站</option></select>
+            </div></div>
+            <div class="stats-grid" style="margin-bottom:var(--space-5);">
+                <div class="stat-card green"><span class="stat-icon">📱</span><span class="stat-value">1,654</span><span class="stat-label">已生成二维码</span></div>
+                <div class="stat-card yellow"><span class="stat-icon">📋</span><span class="stat-value">188</span><span class="stat-label">未生成二维码</span></div>
+                <div class="stat-card blue"><span class="stat-icon">📊</span><span class="stat-value">89.8%</span><span class="stat-label">二维码覆盖率</span></div>
+                <div class="stat-card cyan"><span class="stat-icon">🔍</span><span class="stat-value">3,245</span><span class="stat-label">累计扫码次数</span></div>
+            </div>
+            <div class="filter-bar" style="margin-bottom:var(--space-4);">
+                <select class="form-select" style="background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.15);color:white;"><option>全部状态</option><option>已生成</option><option>未生成</option></select>
+                <input type="text" class="form-input" placeholder="搜索动物编号/芯片号/二维码..." style="min-width:200px;background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.15);color:white;">
+                <button class="btn btn-cyan" onclick="alert('🔍 查询完成（演示模式）')">🔍 查询</button>
+            </div>
+            <div class="table-wrapper"><table>
+                <thead><tr><th>动物编号</th><th>名称</th><th>芯片号</th><th>所属捕捉站</th><th>二维码状态</th><th>生成时间</th><th>扫码次数</th><th>操作</th></tr></thead>
+                <tbody>
+                    <tr><td><strong>A001</strong></td><td>大橘</td><td>Chip001</td><td>阳光捕捉站</td><td><span class="badge badge-ok">已生成</span></td><td>2025-01-12 10:30</td><td>45次</td><td><div class="actions-cell"><button class="btn btn-sm btn-cyan" onclick="viewGovPetCode('A001')">查看</button><button class="btn btn-sm btn-secondary" onclick="alert('🖨️ 打印二维码（演示模式）')">打印</button></div></td></tr>
+                    <tr><td><strong>A002</strong></td><td>花花</td><td>Chip002</td><td>阳光捕捉站</td><td><span class="badge badge-ok">已生成</span></td><td>2025-01-11 14:20</td><td>32次</td><td><div class="actions-cell"><button class="btn btn-sm btn-cyan" onclick="viewGovPetCode('A002')">查看</button><button class="btn btn-sm btn-secondary" onclick="alert('🖨️ 打印二维码（演示模式）')">打印</button></div></td></tr>
+                    <tr><td><strong>A005</strong></td><td>小橘</td><td>Chip005</td><td>幸福捕捉站</td><td><span class="badge badge-ok">已生成</span></td><td>2024-12-30 09:15</td><td>28次</td><td><div class="actions-cell"><button class="btn btn-sm btn-cyan" onclick="viewGovPetCode('A005')">查看</button><button class="btn btn-sm btn-secondary" onclick="alert('🖨️ 打印二维码（演示模式）')">打印</button></div></td></tr>
+                    <tr><td><strong>A008</strong></td><td>雪球</td><td>Chip008</td><td>翠湖捕捉站</td><td><span class="badge badge-ok">已生成</span></td><td>2024-12-27 16:45</td><td>19次</td><td><div class="actions-cell"><button class="btn btn-sm btn-cyan" onclick="viewGovPetCode('A008')">查看</button><button class="btn btn-sm btn-secondary" onclick="alert('🖨️ 打印二维码（演示模式）')">打印</button></div></td></tr>
+                    <tr><td><strong>A012</strong></td><td>橘猫</td><td>Chip012</td><td>阳光捕捉站</td><td><span class="badge badge-pending">未生成</span></td><td>-</td><td>0次</td><td><div class="actions-cell"><button class="btn btn-sm btn-cyan" onclick="alert('📱 生成二维码（演示模式）')">生成</button></div></td></tr>
+                    <tr><td><strong>A015</strong></td><td>狸花猫</td><td>Chip015</td><td>幸福捕捉站</td><td><span class="badge badge-pending">未生成</span></td><td>-</td><td>0次</td><td><div class="actions-cell"><button class="btn btn-sm btn-cyan" onclick="alert('📱 生成二维码（演示模式）')">生成</button></div></td></tr>
+                </tbody>
+            </table></div>
+        </div>
+    </div>
+    <div class="modal-overlay" id="govCodeModal"><div class="modal-content" style="max-width:600px;">
+        <div class="modal-header"><h3 class="modal-title" id="govCodeModalTitle">查看二维码</h3><button class="modal-close" onclick="closeModal('govCodeModal')">×</button></div>
+        <div class="modal-body">
+            <div class="stats-grid" style="margin-bottom:var(--space-4);">
+                <div class="stat-card green"><span class="stat-icon">📋</span><span class="stat-value" id="govCodeAnimalId">A001</span><span class="stat-label">动物编号</span></div>
+                <div class="stat-card blue"><span class="stat-icon">🔬</span><span class="stat-value" id="govCodeChipNo">Chip001</span><span class="stat-label">芯片号</span></div>
+            </div>
+            <div style="text-align:center;padding:var(--space-4);background:var(--gray-50);border-radius:var(--radius-md);">
+                <div style="width:180px;height:180px;background:white;margin:0 auto var(--space-3);border:2px solid var(--gray-200);border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;font-size:48px;">📱</div>
+                <p style="font-size:14px;color:var(--gray-600);margin:0;">二维码预览</p>
+                <p style="font-size:12px;color:var(--gray-500);margin:var(--space-2) 0 0;" id="govCodePreviewInfo"></p>
+            </div>
+            <div style="margin-top:var(--space-4);">
+                <h4 style="font-size:14px;font-weight:600;color:var(--gray-700);margin-bottom:var(--space-3);">📊 扫码统计</h4>
+                <div class="stats-grid">
+                    <div class="stat-card yellow"><span class="stat-icon">🔍</span><span class="stat-value" id="govScanCount">45</span><span class="stat-label">累计扫码</span></div>
+                    <div class="stat-card cyan"><span class="stat-icon">📅</span><span class="stat-value" id="govLastScan">2025-01-15</span><span class="stat-label">最近扫码</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('govCodeModal')">关闭</button><button class="btn btn-cyan" onclick="alert('🖨️ 打印二维码（演示模式）')">🖨️ 打印二维码</button></div>
+    </div></div>
+    <script src="../../assets/js/tnr-common.js"></script>
+    <script src="../../assets/js/tnr-government.js"></script>
+    <script>
+        showCurrentDate();
+        function viewGovPetCode(id) {
+            var data = {
+                'A001': { chip: 'Chip001', scans: 45, lastScan: '2025-01-15' },
+                'A002': { chip: 'Chip002', scans: 32, lastScan: '2025-01-14' },
+                'A005': { chip: 'Chip005', scans: 28, lastScan: '2025-01-13' },
+                'A008': { chip: 'Chip008', scans: 19, lastScan: '2025-01-12' }
+            };
+            var d = data[id] || { chip: '未知', scans: 0, lastScan: '-' };
+            document.getElementById('govCodeModalTitle').textContent = '查看二维码 - ' + id;
+            document.getElementById('govCodeAnimalId').textContent = id;
+            document.getElementById('govCodeChipNo').textContent = d.chip;
+            document.getElementById('govScanCount').textContent = d.scans;
+            document.getElementById('govLastScan').textContent = d.lastScan;
+            document.getElementById('govCodePreviewInfo').textContent = id + ' · ' + d.chip;
+            openModal('govCodeModal');
+        }
+    </script>
+</body>
+</html>
