@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>一宠一码 - 流浪动物 TNR 管理系统</title>
+    <link rel="stylesheet" href="../../assets/css/tnr-common.css">
+    <link rel="stylesheet" href="../../assets/css/tnr-shelter.css">
+</head>
+<body>
+    <script src="../../assets/js/tnr-common.js"></script>
+    <script src="../../assets/js/tnr-shelter.js"></script>
+    <script>injectSidebar("pet-code");</script>
+    <main class="main-content">
+        <div class="header-bar"><h2 class="page-title">一宠一码管理</h2><div class="current-time" id="currentTime"></div></div>
+        <div class="section">
+            <div class="section-header"><h3 class="section-title">二维码生成与查询</h3><button class="btn btn-primary" onclick="openCodeModal()">➕ 生成二维码</button></div>
+            <div class="filter-bar">
+                <select class="form-select"><option>全部状态</option><option>已生成</option><option>未生成</option></select>
+                <input type="text" class="form-input" placeholder="搜索动物编号/芯片号/二维码..." style="min-width:200px;">
+            </div>
+            <div class="table-wrapper"><table>
+                <thead><tr><th>动物编号</th><th>名称</th><th>芯片号</th><th>二维码状态</th><th>生成时间</th><th>操作</th></tr></thead>
+                <tbody>
+                    <tr><td><strong>A001</strong></td><td>大橘</td><td>Chip001</td><td><span class="badge badge-ok">已生成</span></td><td>2025-01-12 10:30</td><td><div class="actions-cell"><button class="btn btn-sm btn-blue" onclick="viewPetCode('A001')">查看</button><button class="btn btn-sm btn-secondary" onclick="printPetCode('A001')">打印</button></div></td></tr>
+                    <tr><td><strong>A002</strong></td><td>花花</td><td>Chip002</td><td><span class="badge badge-ok">已生成</span></td><td>2025-01-11 14:20</td><td><div class="actions-cell"><button class="btn btn-sm btn-blue" onclick="viewPetCode('A002')">查看</button><button class="btn btn-sm btn-secondary" onclick="printPetCode('A002')">打印</button></div></td></tr>
+                    <tr><td><strong>A005</strong></td><td>小橘</td><td>Chip005</td><td><span class="badge badge-ok">已生成</span></td><td>2024-12-30 09:15</td><td><div class="actions-cell"><button class="btn btn-sm btn-blue" onclick="viewPetCode('A005')">查看</button><button class="btn btn-sm btn-secondary" onclick="printPetCode('A005')">打印</button></div></td></tr>
+                    <tr><td><strong>A008</strong></td><td>雪球</td><td>Chip008</td><td><span class="badge badge-ok">已生成</span></td><td>2024-12-27 16:45</td><td><div class="actions-cell"><button class="btn btn-sm btn-blue" onclick="viewPetCode('A008')">查看</button><button class="btn btn-sm btn-secondary" onclick="printPetCode('A008')">打印</button></div></td></tr>
+                    <tr><td><strong>A012</strong></td><td>橘猫</td><td>Chip012</td><td><span class="badge badge-pending">未生成</span></td><td>-</td><td><div class="actions-cell"><button class="btn btn-sm btn-green" onclick="generatePetCode('A012')">生成</button></div></td></tr>
+                    <tr><td><strong>A015</strong></td><td>狸花猫</td><td>Chip015</td><td><span class="badge badge-pending">未生成</span></td><td>-</td><td><div class="actions-cell"><button class="btn btn-sm btn-green" onclick="generatePetCode('A015')">生成</button></div></td></tr>
+                </tbody>
+            </table></div>
+        </div>
+        <div class="section">
+            <div class="section-header"><h3 class="section-title">二维码使用说明</h3></div>
+            <div style="padding:var(--space-4);background:var(--gray-50);border-radius:var(--radius-md);">
+                <p style="color:var(--gray-700);line-height:1.8;">
+                    📱 <strong>一宠一码</strong> 为每只流浪动物生成唯一的二维码标签，包含以下信息：<br>
+                    • 动物基本信息（编号、名称、种类、年龄、性别）<br>
+                    • 芯片编号（用于身份识别）<br>
+                    • TNR处理状态（绝育、疫苗、放归等）<br>
+                    • 全生命周期轨迹记录<br>
+                    • 扫码后可查看动物档案，方便物业、志愿者和公众识别管理<br>
+                    • 建议打印后贴在动物笼舍或放归区域
+                </p>
+            </div>
+        </div>
+    </main>
+    <div class="modal-overlay" id="codeModal"><div class="modal-content" style="max-width:500px;">
+        <div class="modal-header"><h3 class="modal-title" id="codeModalTitle">生成二维码</h3><button class="modal-close" onclick="closeModal('codeModal')">×</button></div>
+        <div id="codeModalBody">
+            <div class="form-group"><label class="form-label required">动物编号</label><input type="text" class="form-input" id="codeAnimalId" placeholder="请输入动物编号"></div>
+            <div class="form-group"><label class="form-label">芯片号</label><input type="text" class="form-input" id="codeChipNo" placeholder="自动关联芯片号" readonly></div>
+        </div>
+        <div id="codePreview" style="display:none;text-align:center;padding:var(--space-5);background:var(--gray-50);border-radius:var(--radius-md);margin-bottom:var(--space-4);">
+            <div style="width:200px;height:200px;background:white;margin:0 auto var(--space-3);border:2px solid var(--gray-200);border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;font-size:48px;">📱</div>
+            <p style="font-size:14px;color:var(--gray-600);margin:0;">二维码预览</p>
+            <p style="font-size:12px;color:var(--gray-500);margin:var(--space-2) 0 0;" id="codePreviewInfo"></p>
+        </div>
+        <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('codeModal')">关闭</button><button class="btn btn-primary" id="codeActionBtn" onclick="confirmGenerate()">确认生成</button></div>
+    </div></div>
+    <script>showCurrentDate();</script>
+</body>
+</html>

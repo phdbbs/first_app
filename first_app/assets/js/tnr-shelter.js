@@ -1,4 +1,4 @@
-﻿/* ===== TNR Shelter (捕捉站) JavaScript ===== */
+/* ===== TNR Shelter (捕捉站) JavaScript ===== */
 
 // Inject sidebar navigation
 function injectSidebar(activePage) {
@@ -14,6 +14,7 @@ function injectSidebar(activePage) {
         { icon: '👤', label: '领养管理', page: 'adoption', href: 'adoption.html' },
         { icon: '📦', label: '物料管理', page: 'material', href: 'material.html' },
         { icon: '📋', label: '宠物档案', page: 'pet-archive', href: 'pet-archive.html' },
+        { icon: '📱', label: '一宠一码', page: 'pet-code', href: 'pet-code.html' },
         { icon: '📈', label: '数据报表', page: 'report', href: 'report.html' },
     ];
     
@@ -52,4 +53,57 @@ function injectSidebar(activePage) {
     ;
     
     document.body.insertBefore(sidebar, document.body.firstChild);
+}
+
+function openCodeModal() {
+    document.getElementById('codeModalTitle').textContent = '生成二维码';
+    document.getElementById('codeAnimalId').value = '';
+    document.getElementById('codeChipNo').value = '';
+    document.getElementById('codePreview').style.display = 'none';
+    document.getElementById('codeActionBtn').textContent = '确认生成';
+    openModal('codeModal');
+}
+
+function viewPetCode(id) {
+    var data = {
+        'A001': { chip: 'Chip001', name: '大橘' },
+        'A002': { chip: 'Chip002', name: '花花' },
+        'A005': { chip: 'Chip005', name: '小橘' },
+        'A008': { chip: 'Chip008', name: '雪球' }
+    };
+    var d = data[id] || { chip: '未知', name: '未知' };
+    document.getElementById('codeModalTitle').textContent = '查看二维码 - ' + id;
+    document.getElementById('codeAnimalId').value = id;
+    document.getElementById('codeChipNo').value = d.chip;
+    document.getElementById('codePreview').style.display = 'block';
+    document.getElementById('codePreviewInfo').textContent = id + ' · ' + d.name + ' · ' + d.chip;
+    document.getElementById('codeActionBtn').textContent = '重新生成';
+    openModal('codeModal');
+}
+
+function printPetCode(id) {
+    alert('🖨️ 打印 ' + id + ' 的二维码标签（演示模式）');
+}
+
+function generatePetCode(id) {
+    var data = {
+        'A012': { chip: 'Chip012', name: '橘猫' },
+        'A015': { chip: 'Chip015', name: '狸花猫' }
+    };
+    var d = data[id] || { chip: '未知', name: '未知' };
+    document.getElementById('codeModalTitle').textContent = '生成二维码 - ' + id;
+    document.getElementById('codeAnimalId').value = id;
+    document.getElementById('codeChipNo').value = d.chip;
+    document.getElementById('codePreview').style.display = 'none';
+    document.getElementById('codeActionBtn').textContent = '确认生成';
+    openModal('codeModal');
+}
+
+function confirmGenerate() {
+    var id = document.getElementById('codeAnimalId').value;
+    if (!id) { alert('请输入动物编号'); return; }
+    document.getElementById('codePreview').style.display = 'block';
+    document.getElementById('codePreviewInfo').textContent = id + ' · 二维码已生成';
+    document.getElementById('codeActionBtn').textContent = '打印二维码';
+    alert('✅ ' + id + ' 的二维码已生成成功！');
 }

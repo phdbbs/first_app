@@ -4,6 +4,19 @@
 function exportLedger() { alert('导出台账数据'); }
 function exportReport() { alert('导出报表'); }
 
+function switchLedgerTab(tabName) {
+    var tabItems = document.querySelectorAll('.tab-item');
+    var tabContents = document.querySelectorAll('.tab-content');
+    tabItems.forEach(function(item) { item.classList.remove('active'); });
+    tabContents.forEach(function(content) { content.classList.remove('active'); });
+    tabItems.forEach(function(item) {
+        if (item.getAttribute('onclick') && item.getAttribute('onclick').includes(tabName)) {
+            item.classList.add('active');
+        }
+    });
+    var targetContent = document.getElementById(tabName + 'Tab');
+    if (targetContent) { targetContent.classList.add('active'); }
+}
 
 function addHospital() { alert("🏥 新增医院（演示模式）"); }
 function disableHospital(name) { alert("医院 " + name + " 已停用（演示模式）"); }
