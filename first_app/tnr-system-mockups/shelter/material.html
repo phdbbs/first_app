@@ -20,10 +20,10 @@
             <div class="stat-card blue"><span class="stat-icon">💰</span><span class="stat-value">¥2.4w</span><span class="stat-label">本月采购额</span></div>
         </div>
         <div class="tab-bar">
-            <div class="tab-item active" onclick="switchTab('stock')">库存台账</div>
-            <div class="tab-item" onclick="switchTab('purchase')">采购入库</div>
-            <div class="tab-item" onclick="switchTab('outbound')">下发出库</div>
-            <div class="tab-item" onclick="switchTab('trace')">流向查询</div>
+            <div class="tab-item active" onclick="switchMaterialTab('stock')">库存台账</div>
+            <div class="tab-item" onclick="switchMaterialTab('purchase')">采购入库</div>
+            <div class="tab-item" onclick="switchMaterialTab('outbound')">下发出库</div>
+            <div class="tab-item" onclick="switchMaterialTab('trace')">流向查询</div>
         </div>
         <div id="stockTab" class="tab-content active">
             <div class="section">
@@ -46,6 +46,50 @@
                 </table></div>
             </div>
         </div>
+        <div id="purchaseTab" class="tab-content">
+            <div class="section">
+                <div class="section-header"><h3 class="section-title">采购入库记录</h3><button class="btn btn-primary" onclick="openPurchaseModal()">📥 新建采购</button></div>
+                <div class="table-wrapper"><table>
+                    <thead><tr><th>采购单号</th><th>物料名称</th><th>采购数量</th><th>供应商</th><th>采购日期</th><th>状态</th><th>操作</th></tr></thead>
+                    <tbody>
+                        <tr><td>PO20250115001</td><td>狂犬疫苗</td><td>100支</td><td>康华生物</td><td>2025-01-15</td><td><span class="badge badge-ok">已入库</span></td><td><button class="btn btn-sm btn-secondary" onclick="viewMaterialDetail('PO20250115001')">详情</button></td></tr>
+                        <tr><td>PO20250112001</td><td>猫粮（成猫）</td><td>200kg</td><td>皇家宠物食品</td><td>2025-01-12</td><td><span class="badge badge-ok">已入库</span></td><td><button class="btn btn-sm btn-secondary" onclick="viewMaterialDetail('PO20250112001')">详情</button></td></tr>
+                        <tr><td>PO20250110001</td><td>消毒液</td><td>50瓶</td><td>卫康消毒用品</td><td>2025-01-10</td><td><span class="badge badge-pending">待入库</span></td><td><button class="btn btn-sm btn-green" onclick="confirmReceive('PO20250110001')">确认入库</button><button class="btn btn-sm btn-secondary" onclick="viewMaterialDetail('PO20250110001')">详情</button></td></tr>
+                    </tbody>
+                </table></div>
+            </div>
+        </div>
+        <div id="outboundTab" class="tab-content">
+            <div class="section">
+                <div class="section-header"><h3 class="section-title">下发出库记录</h3><button class="btn btn-warning" onclick="openOutboundModal()">📤 新建出库</button></div>
+                <div class="table-wrapper"><table>
+                    <thead><tr><th>出库单号</th><th>物料名称</th><th>出库数量</th><th>接收方</th><th>出库日期</th><th>状态</th><th>操作</th></tr></thead>
+                    <tbody>
+                        <tr><td>OB20250114001</td><td>狂犬疫苗</td><td>20支</td><td>爱心宠物医院</td><td>2025-01-14</td><td><span class="badge badge-ok">已出库</span></td><td><button class="btn btn-sm btn-secondary" onclick="viewMaterialDetail('OB20250114001')">详情</button></td></tr>
+                        <tr><td>OB20250113001</td><td>猫三联疫苗</td><td>15支</td><td>瑞鹏宠物医院</td><td>2025-01-13</td><td><span class="badge badge-ok">已出库</span></td><td><button class="btn btn-sm btn-secondary" onclick="viewMaterialDetail('OB20250113001')">详情</button></td></tr>
+                        <tr><td>OB20250112001</td><td>猫粮（成猫）</td><td>50kg</td><td>阳光捕捉站</td><td>2025-01-12</td><td><span class="badge badge-pending">待出库</span></td><td><button class="btn btn-sm btn-green" onclick="confirmReceive('OB20250112001')">确认出库</button><button class="btn btn-sm btn-secondary" onclick="viewMaterialDetail('OB20250112001')">详情</button></td></tr>
+                    </tbody>
+                </table></div>
+            </div>
+        </div>
+        <div id="traceTab" class="tab-content">
+            <div class="section">
+                <div class="section-header"><h3 class="section-title">物料流向查询</h3></div>
+                <div class="filter-bar">
+                    <input type="text" class="form-input" placeholder="输入物料编号或采购单号查询..." style="min-width:300px;">
+                    <button class="btn btn-primary" onclick="alert('🔍 查询物料流向（演示模式）')">🔍 查询</button>
+                </div>
+                <div class="table-wrapper"><table>
+                    <thead><tr><th>时间</th><th>物料名称</th><th>流向类型</th><th>数量</th><th>来源/去向</th><th>操作人</th></tr></thead>
+                    <tbody>
+                        <tr><td>2025-01-15 10:30</td><td>狂犬疫苗</td><td><span class="badge badge-ok">采购入库</span></td><td>+100支</td><td>康华生物 → 阳光捕捉站</td><td>管理员</td></tr>
+                        <tr><td>2025-01-14 14:20</td><td>狂犬疫苗</td><td><span class="badge badge-blue">下发出库</span></td><td>-20支</td><td>阳光捕捉站 → 爱心宠物医院</td><td>管理员</td></tr>
+                        <tr><td>2025-01-13 09:15</td><td>猫三联疫苗</td><td><span class="badge badge-blue">下发出库</span></td><td>-15支</td><td>阳光捕捉站 → 瑞鹏宠物医院</td><td>管理员</td></tr>
+                        <tr><td>2025-01-12 16:45</td><td>猫粮（成猫）</td><td><span class="badge badge-ok">采购入库</span></td><td>+200kg</td><td>皇家宠物食品 → 阳光捕捉站</td><td>管理员</td></tr>
+                    </tbody>
+                </table></div>
+            </div>
+        </div>
     </main>
     <div class="modal-overlay" id="purchaseModal"><div class="modal-content">
         <div class="modal-header"><h3 class="modal-title">📥 采购入库</h3><button class="modal-close" onclick="closeModal('purchaseModal')">×</button></div>
@@ -55,6 +99,14 @@
         <div class="form-group"><label class="form-label">供应商</label><input type="text" class="form-input" placeholder="请输入供应商名称"></div>
         <div class="form-group"><label class="form-label">备注说明</label><textarea class="form-input" style="min-height:80px;" placeholder="请输入备注说明"></textarea></div>
         <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('purchaseModal')">取消</button><button class="btn btn-primary" onclick="submitPurchase()">提交入库</button></div>
+    </div></div>
+    <div class="modal-overlay" id="outboundModal"><div class="modal-content">
+        <div class="modal-header"><h3 class="modal-title">📤 下发出库</h3><button class="modal-close" onclick="closeModal('outboundModal')">×</button></div>
+        <div class="form-group"><label class="form-label">物料名称</label><select class="form-select"><option>狂犬疫苗</option><option>猫三联疫苗</option><option>猫粮（成猫）</option><option>消毒液</option><option>驱虫药</option></select></div>
+        <div class="form-group"><label class="form-label">出库数量</label><input type="number" class="form-input" placeholder="请输入出库数量" min="1"></div>
+        <div class="form-group"><label class="form-label">接收方</label><input type="text" class="form-input" placeholder="请输入接收方名称"></div>
+        <div class="form-group"><label class="form-label">备注说明</label><textarea class="form-input" style="min-height:80px;" placeholder="请输入出库备注"></textarea></div>
+        <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('outboundModal')">取消</button><button class="btn btn-warning" onclick="submitOutbound()">确认出库</button></div>
     </div></div>
     <script>showCurrentDate();</script>
 </body>

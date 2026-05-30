@@ -34,6 +34,15 @@
             </table></div>
         </div>
     </main>
+    <div class="modal-overlay" id="ownerReturnModal"><div class="modal-content">
+        <div class="modal-header"><h3 class="modal-title">🏠 新建领回登记</h3><button class="modal-close" onclick="closeModal('ownerReturnModal')">×</button></div>
+        <div class="form-group"><label class="form-label required">业主姓名</label><input type="text" class="form-input" placeholder="请输入业主姓名"></div>
+        <div class="form-group"><label class="form-label required">联系电话</label><input type="tel" class="form-input" placeholder="请输入联系电话"></div>
+        <div class="form-group"><label class="form-label required">动物编号</label><input type="text" class="form-input" placeholder="请输入动物编号"></div>
+        <div class="form-group"><label class="form-label required">所在小区</label><input type="text" class="form-input" placeholder="请输入所在小区"></div>
+        <div class="form-group"><label class="form-label">领回原因</label><textarea class="form-input" style="min-height:80px;" placeholder="请说明领回原因"></textarea></div>
+        <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('ownerReturnModal')">取消</button><button class="btn btn-primary" onclick="submitOwnerReturn()">提交领回申请</button></div>
+    </div></div>
     <script>showCurrentDate();</script>
 </body>
 </html>

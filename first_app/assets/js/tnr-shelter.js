@@ -107,3 +107,54 @@ function confirmGenerate() {
     document.getElementById('codeActionBtn').textContent = '打印二维码';
     alert('✅ ' + id + ' 的二维码已生成成功！');
 }
+
+function switchMaterialTab(tabName) {
+    var tabItems = document.querySelectorAll('.tab-item');
+    var tabContents = document.querySelectorAll('.tab-content');
+    tabItems.forEach(function(item) { item.classList.remove('active'); });
+    tabContents.forEach(function(content) { content.classList.remove('active'); });
+    tabItems.forEach(function(item) {
+        if (item.getAttribute('onclick') && item.getAttribute('onclick').includes(tabName)) {
+            item.classList.add('active');
+        }
+    });
+    var targetContent = document.getElementById(tabName + 'Tab');
+    if (targetContent) { targetContent.classList.add('active'); }
+}
+
+function switchTransferTab(tabName) {
+    var tabItems = document.querySelectorAll('.tab-item');
+    var tabContents = document.querySelectorAll('.tab-content');
+    tabItems.forEach(function(item) { item.classList.remove('active'); });
+    tabContents.forEach(function(content) { content.classList.remove('active'); });
+    tabItems.forEach(function(item) {
+        if (item.getAttribute('onclick') && item.getAttribute('onclick').includes(tabName)) {
+            item.classList.add('active');
+        }
+    });
+    var targetContent = document.getElementById(tabName + 'Tab');
+    if (targetContent) { targetContent.classList.add('active'); }
+}
+
+function openPurchaseModal() { openModal('purchaseModal'); }
+function submitPurchase() { alert('✅ 采购入库申请已提交'); closeModal('purchaseModal'); }
+function openOutboundModal() { openModal('outboundModal'); }
+function submitOutbound() { alert('✅ 下发出库申请已提交'); closeModal('outboundModal'); }
+function confirmReceive(id) { alert('✅ 已确认接收：' + id); }
+function submitOwnerReturn() { alert('✅ 领回申请已提交'); closeModal('ownerReturnModal'); }
+
+function openTransferModal() { openModal('transferModal'); }
+function submitTransfer() { alert('✅ 转运单已创建成功'); closeModal('transferModal'); }
+function confirmDeparture(id) { alert('🚚 转运批次 ' + id + ' 已发车'); }
+function confirmArrival(id) { alert('✅ 转运批次 ' + id + ' 已到达医院'); }
+function viewTransferDetail(id) { alert('📋 查看转运详情：' + id); }
+function printTransferDoc(id) { alert('🖨️ 打印转运单据：' + id); }
+function openReissueModal(id) {
+    document.getElementById('reissueBatchNo').value = id;
+    openModal('reissueModal');
+}
+function submitReissue() {
+    var id = document.getElementById('reissueBatchNo').value;
+    alert('✅ 转运批次 ' + id + ' 已重新发起');
+    closeModal('reissueModal');
+}
