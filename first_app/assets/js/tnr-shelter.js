@@ -19,20 +19,21 @@ function injectSidebar(activePage) {
     ];
     
     let navHtml = navItems.map(item => 
-        <a href="" class="nav-item ">
-            <span class="nav-icon"></span>
-            <span class="nav-label"></span>
-        </a>
+        `<a href="${item.href}" class="nav-item ${item.page === activePage ? 'active' : ''}">
+            <span class="nav-icon">${item.icon}</span>
+            <span class="nav-label">${item.label}</span>
+        </a>`
     ).join('');
     
     sidebar.innerHTML = 
-        <div class="sidebar-header">
+        `<div class="sidebar-header">
             <div class="sidebar-logo">
                 <div class="sidebar-logo-icon">🏠</div>
                 <div><h1>捕捉站端</h1><div class="sidebar-subtitle">TNR 管理系统</div></div>
             </div>
         </div>
         <nav class="nav-menu">
+            ${navHtml}
             <div class="nav-divider"></div>
             <a href="settings.html" class="nav-item ">
                 <span class="nav-icon">⚙️</span>
@@ -49,8 +50,7 @@ function injectSidebar(activePage) {
                     </div>
                 </div>
             </div>
-        </div>
-    ;
+        </div>`;
     
     document.body.insertBefore(sidebar, document.body.firstChild);
 }
