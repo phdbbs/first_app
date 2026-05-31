@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>宠物医院端首页 - 流浪动物 TNR 管理系统</title>
+    <link rel="stylesheet" href="../../assets/css/tnr-common.css">
+    <link rel="stylesheet" href="../../assets/css/tnr-hospital.css">
+    <style>
+        .welcome-section { text-align: center; padding: 40px 20px; background: rgba(255,255,255,0.95); border-radius: var(--radius-xl); margin-bottom: var(--space-6); box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
+        .welcome-section .hospital-avatar { width: 80px; height: 80px; background: linear-gradient(135deg, #0d9488, #14b8a6); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36px; margin: 0 auto 16px; box-shadow: 0 8px 24px rgba(13,148,136,0.3); }
+        .welcome-section h2 { font-size: 24px; color: #1a1a2e; margin-bottom: 4px; }
+        .welcome-section p { color: #718096; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <div class="logo-icon">🏥</div>
+                <h1>爱心宠物医院 · 工作站</h1>
+            </div>
+            <button class="back-btn" onclick="location.href='../../index.html'">← 返回总览</button>
+        </div>
+        <nav class="nav-bar">
+            <a href="homepage.html" class="nav-item active">🏠 首页</a>
+            <a href="receive.html" class="nav-item">📥 动物接收</a>
+            <a href="treatment.html" class="nav-item">🩺 诊疗业务</a>
+            <a href="material.html" class="nav-item">📦 物料库存</a>
+            <a href="adoption.html" class="nav-item">🐾 领养维护</a>
+        </nav>
+        <div class="welcome-section">
+            <div class="hospital-avatar">🏥</div>
+            <h2>爱心宠物医院</h2>
+            <p>今日待办：接收动物 3 批 · 诊疗任务 8 项 · 物料待入库 2 项</p>
+        </div>
+        <div class="stats-grid">
+            <div class="stat-card green"><span class="stat-icon">📥</span><span class="stat-value">5</span><span class="stat-label">待接收</span></div>
+            <div class="stat-card yellow"><span class="stat-icon">🩺</span><span class="stat-value">12</span><span class="stat-label">治疗中</span></div>
+            <div class="stat-card blue"><span class="stat-icon">✅</span><span class="stat-value">68</span><span class="stat-label">已完成</span></div>
+            <div class="stat-card purple"><span class="stat-icon">🐱</span><span class="stat-value">8</span><span class="stat-label">待领养</span></div>
+            <div class="stat-card red"><span class="stat-icon">⚠️</span><span class="stat-value">2</span><span class="stat-label">库存预警</span></div>
+        </div>
+        <div class="section">
+            <div class="section-header"><h3 class="section-title">今日诊疗任务</h3></div>
+            <div class="task-list">
+                <div class="task-item"><div class="task-priority priority-high"></div><div class="task-content"><div class="task-name">绝育手术 - 橘猫 #A012</div><div class="task-desc">公猫 · 2岁 · 待麻醉评估</div></div><div class="task-time">09:30</div><span class="task-badge badge-urgent">待手术</span></div>
+                <div class="task-item"><div class="task-priority priority-high"></div><div class="task-content"><div class="task-name">疫苗接种 - 狸花猫 #A015</div><div class="task-desc">母猫 · 1岁 · 猫三联第二针</div></div><div class="task-time">10:00</div><span class="task-badge badge-urgent">待接种</span></div>
+                <div class="task-item"><div class="task-priority priority-medium"></div><div class="task-content"><div class="task-name">芯片植入 - 奶牛猫 #A018</div><div class="task-desc">公猫 · 8月龄 · 已绝育</div></div><div class="task-time">11:00</div><span class="task-badge badge-normal">待处理</span></div>
+                <div class="task-item"><div class="task-priority priority-medium"></div><div class="task-content"><div class="task-name">驱虫护理 - 三花猫 #A020</div><div class="task-desc">母猫 · 1岁半 · 体外驱虫</div></div><div class="task-time">14:00</div><span class="task-badge badge-normal">待处理</span></div>
+            </div>
+        </div>
+    </div>
+    <script src="../../assets/js/tnr-common.js"></script>
+    <script src="../../assets/js/tnr-hospital.js"></script>
+    <script>showCurrentDate();</script>
+</body>
+</html>

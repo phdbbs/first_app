@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>转运交接管理 - 流浪动物 TNR 管理系统</title>
+    <link rel="stylesheet" href="../../assets/css/tnr-common.css">
+    <link rel="stylesheet" href="../../assets/css/tnr-shelter.css">
+</head>
+<body>
+    <script src="../../assets/js/tnr-common.js"></script>
+    <script src="../../assets/js/tnr-shelter.js"></script>
+    <script>injectSidebar("transfer");</script>
+    <main class="main-content">
+        <div class="header-bar"><h2 class="page-title">转运交接管理</h2><div class="current-time" id="currentTime"></div></div>
+        <div class="stats-grid">
+            <div class="stat-card pink"><span class="stat-icon">🚚</span><span class="stat-value">8</span><span class="stat-label">待转运</span></div>
+            <div class="stat-card yellow"><span class="stat-icon">⏳</span><span class="stat-value">5</span><span class="stat-label">转运中</span></div>
+            <div class="stat-card green"><span class="stat-icon">✅</span><span class="stat-value">42</span><span class="stat-label">已完成</span></div>
+            <div class="stat-card red"><span class="stat-icon">❌</span><span class="stat-value">2</span><span class="stat-label">已驳回</span></div>
+        </div>
+        <div class="tab-bar">
+            <div class="tab-item active" onclick="switchTransferTab('transfer')">转运记录</div>
+            <div class="tab-item" onclick="switchTransferTab('rejected')">驳回重办</div>
+            <div class="tab-item" onclick="switchTransferTab('record')">交接单据</div>
+        </div>
+        <div id="transferTab" class="tab-content active">
+            <div class="section">
+                <div class="section-header"><h3 class="section-title">转运记录</h3><button class="btn btn-primary" onclick="openTransferModal()">➕ 新建转运单</button></div>
+                <div class="filter-bar">
+                    <select class="form-select"><option>全部状态</option><option>待转运</option><option>转运中</option><option>已完成</option><option>已驳回</option></select>
+                    <select class="form-select"><option>全部医院</option><option>爱心宠物医院</option><option>瑞鹏宠物医院</option><option>芭比堂动物医院</option></select>
+                    <input type="text" class="form-input" placeholder="搜索批次号..." style="min-width:200px;">
+                </div>
+                <div class="table-wrapper"><table>
+                    <thead><tr><th>批次号</th><th>动物数量</th><th>来源小区</th><th>目标医院</th><th>转运状态</th><th>创建时间</th><th>操作</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>TR20250115001</strong></td><td>5只</td><td>阳光花园小区</td><td>爱心宠物医院</td><td><span class="badge badge-pending">待转运</span></td><td>2025-01-15 09:30</td><td><div class="actions-cell"><button class="btn btn-sm btn-green" onclick="confirmDeparture('TR20250115001')">发车</button><button class="btn btn-sm btn-secondary" onclick="viewTransferDetail('TR20250115001')">详情</button></div></td></tr>
+                        <tr><td><strong>TR20250114002</strong></td><td>3只</td><td>幸福家园</td><td>瑞鹏宠物医院</td><td><span class="badge badge-transit">转运中</span></td><td>2025-01-14 14:00</td><td><div class="actions-cell"><button class="btn btn-sm btn-green" onclick="confirmArrival('TR20250114002')">到达</button><button class="btn btn-sm btn-secondary" onclick="viewTransferDetail('TR20250114002')">详情</button></div></td></tr>
+                        <tr><td><strong>TR20250113001</strong></td><td>8只</td><td>绿色新城</td><td>芭比堂动物医院</td><td><span class="badge badge-received">已完成</span></td><td>2025-01-13 10:00</td><td><div class="actions-cell"><button class="btn btn-sm btn-secondary" onclick="viewTransferDetail('TR20250113001')">详情</button><button class="btn btn-sm btn-secondary" onclick="printTransferDoc('TR20250113001')">打印</button></div></td></tr>
+                        <tr><td><strong>TR20250112001</strong></td><td>4只</td><td>翠湖花园</td><td>爱心宠物医院</td><td><span class="badge badge-received">已完成</span></td><td>2025-01-12 08:30</td><td><div class="actions-cell"><button class="btn btn-sm btn-secondary" onclick="viewTransferDetail('TR20250112001')">详情</button><button class="btn btn-sm btn-secondary" onclick="printTransferDoc('TR20250112001')">打印</button></div></td></tr>
+                        <tr><td><strong>TR20250110001</strong></td><td>6只</td><td>阳光花园小区</td><td>芭比堂动物医院</td><td><span class="badge badge-rejected">已驳回</span></td><td>2025-01-10 15:20</td><td><div class="actions-cell"><button class="btn btn-sm btn-warning" onclick="openReissueModal('TR20250110001')">重发</button><button class="btn btn-sm btn-secondary" onclick="viewTransferDetail('TR20250110001')">详情</button></div></td></tr>
+                    </tbody>
+                </table></div>
+            </div>
+        </div>
+        <div id="rejectedTab" class="tab-content">
+            <div class="section">
+                <div class="section-header"><h3 class="section-title">驳回重办记录</h3></div>
+                <div class="table-wrapper"><table>
+                    <thead><tr><th>批次号</th><th>动物数量</th><th>来源小区</th><th>目标医院</th><th>驳回原因</th><th>驳回时间</th><th>操作</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>TR20250110001</strong></td><td>6只</td><td>阳光花园小区</td><td>芭比堂动物医院</td><td>医院拒收，动物数量超出接收能力</td><td>2025-01-10 16:00</td><td><div class="actions-cell"><button class="btn btn-sm btn-warning" onclick="openReissueModal('TR20250110001')">重新发起</button><button class="btn btn-sm btn-secondary" onclick="viewTransferDetail('TR20250110001')">详情</button></div></td></tr>
+                        <tr><td><strong>TR20250108001</strong></td><td>3只</td><td>翠湖花园</td><td>瑞鹏宠物医院</td><td>转运单信息不完整，缺少动物照片</td><td>2025-01-08 11:30</td><td><div class="actions-cell"><button class="btn btn-sm btn-warning" onclick="openReissueModal('TR20250108001')">重新发起</button><button class="btn btn-sm btn-secondary" onclick="viewTransferDetail('TR20250108001')">详情</button></div></td></tr>
+                    </tbody>
+                </table></div>
+            </div>
+        </div>
+        <div id="recordTab" class="tab-content">
+            <div class="section">
+                <div class="section-header"><h3 class="section-title">交接单据</h3></div>
+                <div class="table-wrapper"><table>
+                    <thead><tr><th>单据编号</th><th>批次号</th><th>来源</th><th>目标</th><th>交接人</th><th>交接时间</th><th>操作</th></tr></thead>
+                    <tbody>
+                        <tr><td>DOC20250113001</td><td>TR20250113001</td><td>绿色新城</td><td>芭比堂动物医院</td><td>张经理 / 李医生</td><td>2025-01-13 11:30</td><td><div class="actions-cell"><button class="btn btn-sm btn-blue" onclick="viewTransferDetail('TR20250113001')">查看</button><button class="btn btn-sm btn-secondary" onclick="printTransferDoc('TR20250113001')">打印</button></div></td></tr>
+                        <tr><td>DOC20250112001</td><td>TR20250112001</td><td>翠湖花园</td><td>爱心宠物医院</td><td>王主任 / 赵医生</td><td>2025-01-12 09:45</td><td><div class="actions-cell"><button class="btn btn-sm btn-blue" onclick="viewTransferDetail('TR20250112001')">查看</button><button class="btn btn-sm btn-secondary" onclick="printTransferDoc('TR20250112001')">打印</button></div></td></tr>
+                    </tbody>
+                </table></div>
+            </div>
+        </div>
+    </main>
+    <div class="modal-overlay" id="transferModal"><div class="modal-content">
+        <div class="modal-header"><h3 class="modal-title">新建转运单</h3><button class="modal-close" onclick="closeModal('transferModal')">×</button></div>
+        <div class="form-group"><label class="form-label">来源小区</label><input type="text" class="form-input" placeholder="请输入来源小区名称"></div>
+        <div class="form-group"><label class="form-label">目标医院</label><select class="form-select"><option>爱心宠物医院</option><option>瑞鹏宠物医院</option><option>芭比堂动物医院</option></select></div>
+        <div class="form-group"><label class="form-label">预计出发时间</label><input type="datetime-local" class="form-input"></div>
+        <div class="form-group"><label class="form-label">备注说明</label><textarea class="form-input" style="min-height:80px;" placeholder="请输入备注说明"></textarea></div>
+        <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('transferModal')">取消</button><button class="btn btn-primary" onclick="submitTransfer()">创建转运单</button></div>
+    </div></div>
+    <div class="modal-overlay" id="reissueModal"><div class="modal-content">
+        <div class="modal-header"><h3 class="modal-title">重新发起转运</h3><button class="modal-close" onclick="closeModal('reissueModal')">×</button></div>
+        <div class="form-group"><label class="form-label">批次号</label><input type="text" class="form-input" id="reissueBatchNo" readonly></div>
+        <div class="form-group"><label class="form-label">目标医院</label><select class="form-select"><option>爱心宠物医院</option><option>瑞鹏宠物医院</option><option>芭比堂动物医院</option><option>宠颐生动物医院</option></select></div>
+        <div class="form-group"><label class="form-label">预计出发时间</label><input type="datetime-local" class="form-input"></div>
+        <div class="form-group"><label class="form-label">备注说明</label><textarea class="form-input" style="min-height:80px;" placeholder="请说明重新发起原因"></textarea></div>
+        <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('reissueModal')">取消</button><button class="btn btn-warning" onclick="submitReissue()">重新发起转运</button></div>
+    </div></div>
+    <script>showCurrentDate();</script>
+</body>
+</html>

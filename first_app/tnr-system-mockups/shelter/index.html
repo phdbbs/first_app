@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>捕捉站端入口 - 流浪动物 TNR 管理系统</title>
+    <link rel="stylesheet" href="../../assets/css/tnr-common.css">
+    <link rel="stylesheet" href="../../assets/css/tnr-shelter.css">
+    <style>
+        .welcome { display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1e293b,#334155); }
+        .welcome-card { background:white;border-radius:var(--radius-xl);padding:40px;text-align:center;box-shadow:var(--shadow-xl);max-width:420px;width:90%; }
+        .welcome-icon { width:72px;height:72px;background:linear-gradient(135deg,var(--primary-400),var(--primary-500));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 20px;box-shadow:0 8px 24px rgba(237,137,54,0.3); }
+        .welcome-card h1 { font-size:22px;font-weight:700;color:var(--gray-800);margin-bottom:8px; }
+        .welcome-card p { font-size:14px;color:var(--gray-500);margin-bottom:24px; }
+    </style>
+</head>
+<body>
+    <div class="welcome">
+        <div class="welcome-card">
+            <div class="welcome-icon">🏠</div>
+            <h1>捕捉站端</h1>
+            <p>物业信息录入、捕捉登记、转运交接、放归管理、领养审核、数据报表</p>
+            <a href="homepage.html" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;">进入系统 →</a>
+            <div style="margin-top:16px;font-size:13px;color:var(--gray-400);">请使用已授权的账号登录</div>
+        </div>
+    </div>
+    <script src="../../assets/js/tnr-common.js"></script>
+    <script src="../../assets/js/tnr-shelter.js"></script>
+    <script>showCurrentDate();</script>
+</body>
+</html>

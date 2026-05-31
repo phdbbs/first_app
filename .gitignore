@@ -1,89 +1,50 @@
-# Web development (keep source files, ignore build artifacts)
-# *.min.js
-# *.min.css
-# *.map
+# Examples
+## Source code examples
+*.pyc
+*.class
+*.o
+*.obj
+*.out
+*.dll
+*.so
+*.a
+*.exe
 
-# Dependencies
+## Dependencies
 node_modules/
-
-# Build outputs
+venv/
+.venv/
+__pycache__/
 dist/
 build/
-public/
+target/
+.gradle/
+.mypy_cache/
+.pytest_cache/
 
-# Logs
-*.log
-
-# Environment variables
+## Environment
 .env
 .env.local
-.env.*
+*.env.*
 
-# IDE files
+## Editors
 .vscode/
 .idea/
 *.swp
 *.swo
-*~
 
-# OS generated files
+## System
 .DS_Store
 Thumbs.db
 
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-env/
-venv/
-.venv/
-pip-log.txt
-pip-delete-this-directory.txt
-.tox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
+## Logs and coverage
 *.log
-.git/
+*.tmp
+coverage/
+htmlcov/
+.coverage
 
-# Java
-*.class
-*.jar
-*.war
-*.ear
-*.tar.gz
-target/
-.gradle/
-build/
-
-# C/C++
-*.o
-*.a
-*.so
-*.dll
-*.exe
-*.out
-
-# Ruby
-*.gem
-*.rbc
-.bundle/
-config.ru
-Gemfile.lock
-
-# Go
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
-
-# Compression
+## Compressed files
 *.zip
 *.gz
 *.tar
@@ -106,160 +67,3 @@ Gemfile.lock
 *.tar.bz2
 *.tar.xz
 *.tar.zst
-
-# Coverage reports
-coverage/
-htmlcov/
-*.coverage
-
-# Testing
-.mypy_cache/
-.pytest_cache/
-.nyc_output/
-coverage/
-
-# Temporary files
-*.tmp
-*.temp
-*.bak
-*~.nib
-local.properties
-.settings/
-.loadpath
-.recommenders
-
-# Database
-*.db
-*.db-journal
-
-# Sensitive files
-.secret
-.secrets
-.credentials
-.aws/credentials
-
-# Docker
-.dockerenv
-Dockerfile.build
-docker-compose.build.yml
-
-# CI/CD
-.circleci/
-.github/
-.travis.yml
-.jenkins.yml
-.gitlab-ci.yml
-
-# Browsers
-hs_err_pid*
-*.stackdump
-
-# Vim
-*.un~
-Session.vim
-
-# Emacs
-*~
-\#*\#
-/.emacs.desktop
-/.emacs.desktop.lock
-*.elc
-auto-save-list
-tramp
-.\#*
-
-# Eclipse
-.metadata
-bin/
-tmp/
-*.tmp
-*.bak
-*.swp
-*~.nib
-local.properties
-.settings/
-.loadpath
-.recommenders
-
-# IntelliJ IDEA
-.idea/
-*.iml
-*.ipr
-*.iws
-out/
-
-# NetBeans
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-.nb-gradle/
-
-# Visual Studio
-*.user
-*.userosscache
-*.suo
-*.tlog
-*.vsp
-*.vspx
-*.vcxproj.filters
-[ip|]_*.tmp
-*.VC.db
-*.VC.VC.opendb
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opend......

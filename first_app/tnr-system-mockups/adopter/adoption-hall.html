@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>领养大厅 - 流浪动物 TNR 管理系统</title>
+    <link rel="stylesheet" href="../../assets/css/tnr-common.css">
+    <link rel="stylesheet" href="../../assets/css/tnr-adopter.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <div class="logo-icon">🐾</div>
+                <h1>领养大厅</h1>
+            </div>
+            <button class="nav-icon-btn">🔔</button>
+        </div>
+        <div class="filter-bar">
+            <select class="form-select" style="flex:1;"><option>全部种类</option><option>猫咪</option><option>狗狗</option></select>
+            <select class="form-select" style="flex:1;"><option>全部性别</option><option>男生</option><option>女生</option></select>
+            <select class="form-select" style="flex:1;"><option>全部年龄</option><option>幼年</option><option>成年</option></select>
+        </div>
+        <div class="adoption-hall-grid">
+            <div class="adoption-card"><div class="adoption-photo">🐱</div><div class="adoption-name">小橘</div><div class="adoption-info">橘猫 · 公 · 2岁 · 已绝育</div><button class="btn btn-primary btn-sm" style="width:100%;" onclick="submitAdoptApplication()">申请领养</button></div>
+            <div class="adoption-card"><div class="adoption-photo">🐱</div><div class="adoption-name">雪球</div><div class="adoption-info">白猫 · 母 · 1岁 · 已绝育</div><button class="btn btn-primary btn-sm" style="width:100%;" onclick="submitAdoptApplication()">申请领养</button></div>
+            <div class="adoption-card"><div class="adoption-photo">🐱</div><div class="adoption-name">小黑</div><div class="adoption-info">黑猫 · 公 · 3岁 · 已绝育</div><button class="btn btn-primary btn-sm" style="width:100%;" onclick="submitAdoptApplication()">申请领养</button></div>
+            <div class="adoption-card"><div class="adoption-photo">🐱</div><div class="adoption-name">花花</div><div class="adoption-info">花猫 · 母 · 1岁半 · 已绝育</div><button class="btn btn-primary btn-sm" style="width:100%;" onclick="submitAdoptApplication()">申请领养</button></div>
+            <div class="adoption-card"><div class="adoption-photo">🐱</div><div class="adoption-name">团子</div><div class="adoption-info">英短 · 公 · 1岁 · 已绝育</div><button class="btn btn-primary btn-sm" style="width:100%;" onclick="submitAdoptApplication()">申请领养</button></div>
+            <div class="adoption-card"><div class="adoption-photo">🐱</div><div class="adoption-name">小白</div><div class="adoption-info">田园猫 · 母 · 4岁 · 已绝育</div><button class="btn btn-primary btn-sm" style="width:100%;" onclick="submitAdoptApplication()">申请领养</button></div>
+        </div>
+        <nav class="bottom-nav">
+            <a href="adoption-hall.html" class="bottom-nav-item active"><span class="bottom-nav-icon">🏠</span><span>大厅</span></a>
+            <a href="my-adoption.html" class="bottom-nav-item"><span class="bottom-nav-icon">❤️</span><span>我的领养</span></a>
+            <a href="checkin.html" class="bottom-nav-item"><span class="bottom-nav-icon">📸</span><span>回访打卡</span></a>
+            <a href="messages.html" class="bottom-nav-item"><span class="bottom-nav-icon">💬</span><span>消息</span></a>
+            <a href="profile.html" class="bottom-nav-item"><span class="bottom-nav-icon">👤</span><span>我的</span></a>
+        </nav>
+    </div>
+    <script src="../../assets/js/tnr-common.js"></script>
+    <script src="../../assets/js/tnr-adopter.js"></script>
+    <script>showCurrentDate();</script>
+</body>
+</html>

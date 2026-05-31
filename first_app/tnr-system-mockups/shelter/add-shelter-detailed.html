@@ -1,0 +1,188 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新增捕捉登记 - 流浪动物 TNR 管理系统</title>
+
+    <link rel="stylesheet" href="../../assets/css/tnr-common.css">
+    <link rel="stylesheet" href="../../assets/css/tnr-shelter.css">
+</head>
+<body>
+    <script src="../../assets/js/tnr-common.js"></script>
+    <script src="../../assets/js/tnr-shelter.js"></script>
+    <script>injectSidebar("add-shelter");</script>
+
+    <div class="container">
+        <!-- 头部 -->
+        <div class="header">
+            <h1>🐾 新增捕捉登记</h1>
+            <div class="header-info">
+                <span id="currentDate"></span> | 
+                <span id="operatorName">操作员：张管理员</span>
+            </div>
+        </div>
+
+        <!-- 表单容器 -->
+        <div class="form-container">
+            <form id="shelterForm">
+                <!-- 小区物业信息区 -->
+                <div class="section">
+                    <div class="section-header">
+                        <div class="section-icon">🏢</div>
+                        <div class="section-title">小区物业信息</div>
+                    </div>
+                    <div class="section-body">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <span class="required">*</span> 物业名称
+                                </label>
+                                <input type="text" class="form-input" placeholder="请输入物业公司名称" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <span class="required">*</span> 所在小区
+                                </label>
+                                <div class="number-input-wrapper">
+                                    <input type="text" class="form-input" id="community" placeholder="点击定位自动填充" required>
+                                    <button type="button" class="location-btn" onclick="getLocation()">
+                                        📍 定位
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group full-width">
+                                <label class="form-label">
+                                    <span class="required">*</span> 详细门牌号
+                                </label>
+                                <input type="text" class="form-input" placeholder="请输入详细地址，如：XX 栋 XX 单元 XX 号" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <span class="required">*</span> 物业交接人姓名
+                                </label>
+                                <input type="text" class="form-input" placeholder="请输入交接人姓名" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <span class="required">*</span> 联系电话
+                                </label>
+                                <input type="tel" class="form-input" placeholder="请输入手机号码" pattern="[0-9]{11}" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 捕捉动物信息区 -->
+                <div class="section">
+                    <div class="section-header">
+                        <div class="section-icon">🐕</div>
+                        <div class="section-title">捕捉动物信息</div>
+                    </div>
+                    <div class="section-body">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <span class="required">*</span> 捕捉总数量
+                                </label>
+                                <div class="number-input-wrapper">
+                                    <input type="number" class="form-input number-input" id="petCount" min="1" max="100" placeholder="输入数量" onchange="generatePetIds()" required>
+                                    <button type="button" class="generate-btn" onclick="generatePetIds()">
+                                        🔢 生成编号
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group full-width">
+                                <label class="form-label">自动生成宠物编号</label>
+                                <div class="pet-id-list" id="petIdList">
+                                    <span style="color: #999; font-size: 14px;">请输入捕捉数量后点击"生成编号"</span>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group full-width">
+                                <label class="form-label">
+                                    <span class="required">*</span> 批次整体合影
+                                </label>
+                                <div class="upload-area" onclick="document.getElementById('groupPhoto').click()">
+                                    <div class="upload-icon">📷</div>
+                                    <div class="upload-text">点击上传批次整体合影</div>
+                                    <div class="upload-hint">支持 JPG、PNG 格式，最大 10MB</div>
+                                    <input type="file" id="groupPhoto" accept="image/*" style="display: none;" onchange="handlePhotoUpload(this, 'groupPreview')">
+                                </div>
+                                <div class="photo-grid" id="groupPreview"></div>
+                            </div>
+                            
+                            <div class="form-group full-width">
+                                <label class="form-label">
+                                    <span class="required">*</span> 单只编号对应照片
+                                </label>
+                                <div class="upload-area" onclick="document.getElementById('singlePhotos').click()">
+                                    <div class="upload-icon">📸</div>
+                                    <div class="upload-text">点击上传单只宠物照片</div>
+                                    <div class="upload-hint">可多选，按编号顺序上传</div>
+                                    <input type="file" id="singlePhotos" accept="image/*" multiple style="display: none;" onchange="handleSinglePhotoUpload(this)">
+                                </div>
+                                <div class="photo-grid" id="singlePhotoPreview"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 确认区 -->
+                <div class="section">
+                    <div class="section-header">
+                        <div class="section-icon">✍️</div>
+                        <div class="section-title">物业电子签名确认</div>
+                    </div>
+                    <div class="section-body">
+                        <div class="form-group">
+                            <label class="form-label">请物业交接人在下方签名区域手写签名</label>
+                            <canvas class="signature-pad" id="signaturePad" width="800" height="300"></canvas>
+                            <div class="signature-actions">
+                                <button type="button" class="clear-btn" onclick="clearSignature()">🗑️ 清除签名</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 提交按钮 -->
+                <div class="submit-section">
+                    <button type="button" class="cancel-btn" onclick="window.history.back()">❌ 取消</button>
+                    <button type="submit" class="submit-btn">✅ 提交保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 提交成功弹窗 -->
+    <div class="modal" id="successModal">
+        <div class="modal-content">
+            <div class="success-animation">
+                <div class="success-icon">✓</div>
+                <h3 style="margin-bottom: 16px; color: #333;">捕捉登记成功！</h3>
+                <p style="color: #666; margin-bottom: 24px;">
+                    已生成捕捉单据，宠物状态：<span class="status-badge status-in-transit">在途</span>
+                </p>
+                
+                <div class="document-preview">
+                    <div class="document-title">流浪动物捕捉登记表</div>
+                    <div id="documentContent"></div>
+                </div>
+                
+                <div style="margin-top: 24px; display: flex; gap: 12px;">
+                    <button class="cancel-btn" style="flex: 1;" onclick="printDocument()">🖨️ 打印单据</button>
+                    <button class="submit-btn" style="flex: 1;" onclick="closeModal()">✓ 确定</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>showCurrentDate();</script>
+</body>
+</html>
+

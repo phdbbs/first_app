@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>台账中心 - 流浪动物 TNR 管理系统</title>
+    <link rel="stylesheet" href="../../assets/css/tnr-common.css">
+    <link rel="stylesheet" href="../../assets/css/tnr-government.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo"><div class="logo-icon">🏛️</div><h1>流浪动物 TNR 管理系统</h1></div>
+            <div class="header-info"><div class="current-time" id="currentTime"></div><div class="admin-badge">👤 市级管理员</div></div>
+        </header>
+        <nav class="gov-nav">
+            <a href="dashboard.html" class="gov-nav-item">📊 数据大屏</a>
+            <a href="institutions.html" class="gov-nav-item">🏛️ 机构管理</a>
+            <a href="supervision.html" class="gov-nav-item">🔍 全业务监管</a>
+            <a href="material.html" class="gov-nav-item">📦 物料监管</a>
+            <a href="ledger.html" class="gov-nav-item active">📑 台账中心</a>
+            <a href="pet-code.html" class="gov-nav-item">📱 一宠一码</a>
+        </nav>
+        <div class="gov-section" style="padding:var(--space-5);">
+            <div class="section-header"><h3 class="section-title">全局台账中心</h3><div style="display:flex;gap:var(--space-3);">
+                <button class="btn btn-cyan" onclick="exportLedger()">📥 导出汇总</button>
+                <select class="form-select" style="background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.15);color:white;"><option>本月</option><option>本季度</option><option>本年度</option></select>
+            </div></div>
+            <div class="tab-bar" style="background:rgba(255,255,255,0.06);margin-bottom:var(--space-5);">
+                <div class="tab-item active" onclick="switchLedgerTab('capture')" style="color:rgba(255,255,255,0.7);">捕捉台账</div>
+                <div class="tab-item" onclick="switchLedgerTab('medical')" style="color:rgba(255,255,255,0.7);">诊疗台账</div>
+                <div class="tab-item" onclick="switchLedgerTab('material')" style="color:rgba(255,255,255,0.7);">物料台账</div>
+                <div class="tab-item" onclick="switchLedgerTab('adoption')" style="color:rgba(255,255,255,0.7);">领养台账</div>
+            </div>
+            <div id="captureTab" class="tab-content active">
+            <div class="table-wrapper"><table>
+                <thead><tr><th>日期</th><th>机构</th><th>业务类型</th><th>数量</th><th>相关编号</th><th>状态</th></tr></thead>
+                <tbody>
+                    <tr><td>2025-01-15</td><td>阳光捕捉站</td><td>捕捉登记</td><td>3只</td><td>CT20250115001</td><td><span class="badge badge-ok">已录入</span></td></tr>
+                    <tr><td>2025-01-14</td><td>幸福捕捉站</td><td>捕捉登记</td><td>5只</td><td>CT20250114002</td><td><span class="badge badge-ok">已录入</span></td></tr>
+                    <tr><td>2025-01-13</td><td>阳光捕捉站</td><td>转运交接</td><td>8只</td><td>TR20250113001</td><td><span class="badge badge-ok">已完成</span></td></tr>
+                    <tr><td>2025-01-12</td><td>翠湖捕捉站</td><td>放归确认</td><td>6只</td><td>RL20250112001</td><td><span class="badge badge-ok">已放归</span></td></tr>
+                </tbody>
+            </table></div></div>
+            <div id="medicalTab" class="tab-content">
+            <div class="table-wrapper"><table>
+                <thead><tr><th>日期</th><th>医院</th><th>诊疗项目</th><th>数量</th><th>动物编号</th><th>状态</th></tr></thead>
+                <tbody>
+                    <tr><td>2025-01-15</td><td>爱心宠物医院</td><td>绝育手术</td><td>2只</td><td>A012,A013</td><td><span class="badge badge-ok">已完成</span></td></tr>
+                    <tr><td>2025-01-14</td><td>瑞鹏宠物医院</td><td>疫苗接种</td><td>5只</td><td>A015-A019</td><td><span class="badge badge-ok">已完成</span></td></tr>
+                    <tr><td>2025-01-13</td><td>芭比堂动物医院</td><td>芯片植入</td><td>3只</td><td>A020-A022</td><td><span class="badge badge-ok">已完成</span></td></tr>
+                    <tr><td>2025-01-12</td><td>爱心宠物医院</td><td>驱虫治疗</td><td>4只</td><td>A023-A026</td><td><span class="badge badge-ok">已完成</span></td></tr>
+                </tbody>
+            </table></div></div>
+            <div id="materialTab" class="tab-content">
+            <div class="table-wrapper"><table>
+                <thead><tr><th>日期</th><th>机构</th><th>物料名称</th><th>入库/出库</th><th>数量</th><th>状态</th></tr></thead>
+                <tbody>
+                    <tr><td>2025-01-15</td><td>阳光捕捉站</td><td>狂犬疫苗</td><td>入库</td><td>50支</td><td><span class="badge badge-ok">已入库</span></td></tr>
+                    <tr><td>2025-01-14</td><td>爱心宠物医院</td><td>猫三联疫苗</td><td>出库</td><td>10支</td><td><span class="badge badge-ok">已消耗</span></td></tr>
+                    <tr><td>2025-01-13</td><td>幸福捕捉站</td><td>猫粮</td><td>入库</td><td>100kg</td><td><span class="badge badge-ok">已入库</span></td></tr>
+                    <tr><td>2025-01-12</td><td>瑞鹏宠物医院</td><td>芯片</td><td>出库</td><td>20个</td><td><span class="badge badge-ok">已消耗</span></td></tr>
+                </tbody>
+            </table></div></div>
+            <div id="adoptionTab" class="tab-content">
+            <div class="table-wrapper"><table>
+                <thead><tr><th>日期</th><th>捕捉站</th><th>领养人</th><th>动物编号</th><th>审核状态</th><th>状态</th></tr></thead>
+                <tbody>
+                    <tr><td>2025-01-15</td><td>阳光捕捉站</td><td>王女士</td><td>A005</td><td>已通过</td><td><span class="badge badge-approved">已领养</span></td></tr>
+                    <tr><td>2025-01-14</td><td>幸福捕捉站</td><td>李先生</td><td>A008</td><td>审核中</td><td><span class="badge badge-pending">待审核</span></td></tr>
+                    <tr><td>2025-01-13</td><td>阳光捕捉站</td><td>张女士</td><td>A010</td><td>已通过</td><td><span class="badge badge-approved">已领养</span></td></tr>
+                    <tr><td>2025-01-12</td><td>翠湖捕捉站</td><td>赵先生</td><td>A011</td><td>已驳回</td><td><span class="badge badge-rejected">已驳回</span></td></tr>
+                </tbody>
+            </table></div></div>
+        </div>
+    </div>
+    <script src="../../assets/js/tnr-common.js"></script>
+    <script src="../../assets/js/tnr-government.js"></script>
+    <script>showCurrentDate();</script>
+</body>
+</html>

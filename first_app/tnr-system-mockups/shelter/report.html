@@ -1,0 +1,63 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据报表 - 流浪动物 TNR 管理系统</title>
+    <link rel="stylesheet" href="../../assets/css/tnr-common.css">
+    <link rel="stylesheet" href="../../assets/css/tnr-shelter.css">
+</head>
+<body>
+    <script src="../../assets/js/tnr-common.js"></script>
+    <script src="../../assets/js/tnr-shelter.js"></script>
+    <script>injectSidebar("report");</script>
+    <main class="main-content">
+        <div class="header-bar"><h2 class="page-title">数据报表</h2><div class="current-time" id="currentTime"></div></div>
+        <div class="stats-grid">
+            <div class="stat-card yellow"><span class="stat-icon">📋</span><span class="stat-value">128</span><span class="stat-label">本月捕捉</span></div>
+            <div class="stat-card green"><span class="stat-icon">✅</span><span class="stat-value">86</span><span class="stat-label">已绝育</span></div>
+            <div class="stat-card cyan"><span class="stat-icon">🌿</span><span class="stat-value">52</span><span class="stat-label">已放归</span></div>
+            <div class="stat-card blue"><span class="stat-icon">🏠</span><span class="stat-value">22</span><span class="stat-label">已领养</span></div>
+        </div>
+        <div class="filter-bar">
+            <select class="form-select"><option>本月</option><option>本季度</option><option>本年度</option><option>自定义</option></select>
+            <select class="form-select"><option>全部小区</option><option>阳光花园小区</option><option>幸福家园</option><option>绿色新城</option></select>
+        </div>
+        <div class="tab-bar">
+            <div class="tab-item active" onclick="switchReportTab('overview')">数据总览</div>
+            <div class="tab-item" onclick="switchReportTab('shelter')">捕捉统计</div>
+            <div class="tab-item" onclick="switchReportTab('medical')">诊疗统计</div>
+            <div class="tab-item" onclick="switchReportTab('material')">物料统计</div>
+            <div class="tab-item" onclick="switchReportTab('adoption')">领养统计</div>
+        </div>
+        <div id="overviewTab" class="tab-content active">
+            <div class="chart-container">
+                <div class="chart-box">
+                    <div class="chart-title">月度捕捉趋势</div>
+                    <div class="bar-chart">
+                        <div class="bar-group"><div class="bar-value">45</div><div class="bar" style="height:90px;background:linear-gradient(180deg,#f6ad55,#ed8936);"></div><div class="bar-label">7月</div></div>
+                        <div class="bar-group"><div class="bar-value">62</div><div class="bar" style="height:124px;background:linear-gradient(180deg,#f6ad55,#ed8936);"></div><div class="bar-label">8月</div></div>
+                        <div class="bar-group"><div class="bar-value">78</div><div class="bar" style="height:156px;background:linear-gradient(180deg,#f6ad55,#ed8936);"></div><div class="bar-label">9月</div></div>
+                        <div class="bar-group"><div class="bar-value">55</div><div class="bar" style="height:110px;background:linear-gradient(180deg,#f6ad55,#ed8936);"></div><div class="bar-label">10月</div></div>
+                        <div class="bar-group"><div class="bar-value">92</div><div class="bar" style="height:184px;background:linear-gradient(180deg,#f6ad55,#ed8936);"></div><div class="bar-label">11月</div></div>
+                        <div class="bar-group"><div class="bar-value">128</div><div class="bar" style="height:200px;background:linear-gradient(180deg,#68d391,#48bb78);"></div><div class="bar-label">12月</div></div>
+                    </div>
+                </div>
+                <div class="chart-box">
+                    <div class="chart-title">动物去向分布</div>
+                    <div class="pie-chart">
+                        <div class="pie-visual" style="background:conic-gradient(#48bb78 0deg 151deg,#ed8936 151deg 252deg,#4299e1 252deg 324deg,#fc8181 324deg 360deg);"></div>
+                        <div class="pie-legend">
+                            <div class="legend-item"><div class="legend-color" style="background:#48bb78;"></div><div>放归 <span class="legend-value">42%</span></div></div>
+                            <div class="legend-item"><div class="legend-color" style="background:#ed8936;"></div><div>领养 <span class="legend-value">28%</span></div></div>
+                            <div class="legend-item"><div class="legend-color" style="background:#4299e1;"></div><div>主人领回 <span class="legend-value">20%</span></div></div>
+                            <div class="legend-item"><div class="legend-color" style="background:#fc8181;"></div><div>在捕捉 <span class="legend-value">10%</span></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <script>showCurrentDate();</script>
+</body>
+</html>

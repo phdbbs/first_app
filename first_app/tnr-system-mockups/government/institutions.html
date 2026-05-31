@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>机构管理 - 流浪动物 TNR 管理系统</title>
+    <link rel="stylesheet" href="../../assets/css/tnr-common.css">
+    <link rel="stylesheet" href="../../assets/css/tnr-government.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo"><div class="logo-icon">🏛️</div><h1>流浪动物 TNR 管理系统</h1></div>
+            <div class="header-info"><div class="current-time" id="currentTime"></div><div class="admin-badge">👤 市级管理员</div></div>
+        </header>
+        <nav class="gov-nav">
+            <a href="dashboard.html" class="gov-nav-item">📊 数据大屏</a>
+            <a href="institutions.html" class="gov-nav-item active">🏛️ 机构管理</a>
+            <a href="supervision.html" class="gov-nav-item">🔍 全业务监管</a>
+            <a href="material.html" class="gov-nav-item">📦 物料监管</a>
+            <a href="ledger.html" class="gov-nav-item">📑 台账中心</a>
+            <a href="pet-code.html" class="gov-nav-item">📱 一宠一码</a>
+        </nav>
+        <div class="stats-overview">
+            <div class="gov-stat-card"><div class="gov-stat-icon">🏠</div><div class="gov-stat-value">12</div><div class="gov-stat-label">捕捉站总数</div></div>
+            <div class="gov-stat-card"><div class="gov-stat-icon">🏥</div><div class="gov-stat-value">8</div><div class="gov-stat-label">合作医院</div></div>
+            <div class="gov-stat-card"><div class="gov-stat-icon">👤</div><div class="gov-stat-value">56</div><div class="gov-stat-label">系统账号</div></div>
+            <div class="gov-stat-card"><div class="gov-stat-icon">✅</div><div class="gov-stat-value">100%</div><div class="gov-stat-label">认证率</div></div>
+        </div>
+        <div class="gov-section" style="padding:var(--space-5);">
+            <div class="section-header"><h3 class="section-title">机构列表</h3><button class="btn btn-blue" onclick="addHospital()">➕ 新增机构</button></div>
+            <div class="filter-bar">
+                <select class="form-select" style="background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.15);color:white;"><option>全部类型</option><option>捕捉站</option><option>宠物医院</option></select>
+                <select class="form-select" style="background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.15);color:white;"><option>全部状态</option><option>正常</option><option>暂停</option></select>
+                <input type="text" class="form-input" placeholder="搜索机构名称..." style="min-width:200px;background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.15);color:white;">
+            </div>
+            <table>
+                <thead><tr><th>机构编号</th><th>机构名称</th><th>类型</th><th>联系人</th><th>联系电话</th><th>状态</th><th>操作</th></tr></thead>
+                <tbody>
+                    <tr><td>SH001</td><td><strong>阳光捕捉站</strong></td><td>捕捉站</td><td>王站长</td><td>138****0001</td><td><span class="badge badge-ok">正常</span></td><td><div class="actions-cell"><button class="btn btn-sm btn-blue" onclick="viewShelterDetail('SH001')">编辑</button><button class="btn btn-sm" style="background:rgba(255,255,255,0.08);color:white;border-color:rgba(255,255,255,0.2);" onclick="viewShelterDetail('SH001')">详情</button></div></td></tr>
+                    <tr><td>SH002</td><td><strong>幸福捕捉站</strong></td><td>捕捉站</td><td>李站长</td><td>138****0002</td><td><span class="badge badge-ok">正常</span></td><td><div class="actions-cell"><button class="btn btn-sm btn-blue" onclick="viewShelterDetail('SH002')">编辑</button><button class="btn btn-sm" style="background:rgba(255,255,255,0.08);color:white;border-color:rgba(255,255,255,0.2);" onclick="viewShelterDetail('SH002')">详情</button></div></td></tr>
+                    <tr><td>HP001</td><td><strong>爱心宠物医院</strong></td><td>宠物医院</td><td>张院长</td><td>139****1001</td><td><span class="badge badge-ok">正常</span></td><td><div class="actions-cell"><button class="btn btn-sm btn-blue" onclick="viewHospitalDetail('HP001')">编辑</button><button class="btn btn-sm" style="background:rgba(255,255,255,0.08);color:white;border-color:rgba(255,255,255,0.2);" onclick="viewHospitalDetail('HP001')">详情</button></div></td></tr>
+                    <tr><td>HP002</td><td><strong>瑞鹏宠物医院</strong></td><td>宠物医院</td><td>赵院长</td><td>139****1002</td><td><span class="badge badge-ok">正常</span></td><td><div class="actions-cell"><button class="btn btn-sm btn-blue" onclick="viewHospitalDetail('HP002')">编辑</button><button class="btn btn-sm" style="background:rgba(255,255,255,0.08);color:white;border-color:rgba(255,255,255,0.2);" onclick="viewHospitalDetail('HP002')">详情</button></div></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script src="../../assets/js/tnr-common.js"></script>
+    <script src="../../assets/js/tnr-government.js"></script>
+    <script>showCurrentDate();</script>
+</body>
+</html>

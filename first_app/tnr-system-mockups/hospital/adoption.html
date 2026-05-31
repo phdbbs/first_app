@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>领养维护 - 流浪动物 TNR 管理系统</title>
+    <link rel="stylesheet" href="../../assets/css/tnr-common.css">
+    <link rel="stylesheet" href="../../assets/css/tnr-hospital.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo"><div class="logo-icon">🏥</div><h1>爱心宠物医院 · 工作站</h1></div>
+            <button class="back-btn" onclick="location.href='homepage.html'">← 返回首页</button>
+        </div>
+        <nav class="nav-bar">
+            <a href="homepage.html" class="nav-item">🏠 首页</a>
+            <a href="receive.html" class="nav-item">📥 动物接收</a>
+            <a href="treatment.html" class="nav-item">🩺 诊疗业务</a>
+            <a href="material.html" class="nav-item">📦 物料库存</a>
+            <a href="adoption.html" class="nav-item active">🐾 领养维护</a>
+        </nav>
+        <div class="stats-grid">
+            <div class="stat-card purple"><span class="stat-icon">🐱</span><span class="stat-value">8</span><span class="stat-label">待领养</span></div>
+            <div class="stat-card green"><span class="stat-icon">✅</span><span class="stat-value">22</span><span class="stat-label">已领养</span></div>
+        </div>
+        <div class="section">
+            <div class="section-header"><h3 class="section-title">待领养动物</h3><button class="btn btn-primary" onclick="alert('➕ 添加待领养动物（演示模式）')">➕ 添加待领养</button></div>
+            <div class="table-wrapper"><table>
+                <thead><tr><th>动物编号</th><th>名称</th><th>种类</th><th>绝育状态</th><th>疫苗状态</th><th>芯片号</th><th>状态</th><th>操作</th></tr></thead>
+                <tbody>
+                    <tr><td><strong>A005</strong></td><td>小橘</td><td>橘猫·公·2岁</td><td>已绝育</td><td>已完成</td><td>Chip005</td><td><span class="badge badge-ok">可领养</span></td><td><button class="btn btn-sm btn-blue" onclick="selectAnimalForAdoption('小橘')">设为领养</button></td></tr>
+                    <tr><td><strong>A008</strong></td><td>雪球</td><td>白猫·母·1岁</td><td>已绝育</td><td>已完成</td><td>Chip008</td><td><span class="badge badge-ok">可领养</span></td><td><button class="btn btn-sm btn-blue" onclick="selectAnimalForAdoption('雪球')">设为领养</button></td></tr>
+                    <tr><td><strong>A010</strong></td><td>小黑</td><td>黑猫·公·3岁</td><td>已绝育</td><td>已完成</td><td>Chip010</td><td><span class="badge badge-ok">可领养</span></td><td><button class="btn btn-sm btn-blue" onclick="selectAnimalForAdoption('小黑')">设为领养</button></td></tr>
+                </tbody>
+            </table></div>
+        </div>
+    </div>
+    <script src="../../assets/js/tnr-common.js"></script>
+    <script src="../../assets/js/tnr-hospital.js"></script>
+    <script>showCurrentDate();</script>
+</body>
+</html>

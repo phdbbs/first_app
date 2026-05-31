@@ -1,0 +1,150 @@
+﻿/* ===== TNR Government - Modern Dark Dashboard ===== */
+body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; color: white; overflow-x: hidden; }
+.container { max-width: 1920px; margin: 0 auto; padding: var(--space-5); }
+
+/* ====== Header ====== */
+.header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: var(--space-5) var(--space-6); background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(12px); border-radius: var(--radius-xl);
+  margin-bottom: var(--space-6); border: 1px solid rgba(255,255,255,0.08);
+  flex-wrap: wrap; gap: var(--space-3);
+}
+.logo { display: flex; align-items: center; gap: var(--space-4); }
+.logo-icon {
+  width: 52px; height: 52px;
+  background: linear-gradient(135deg, #38bdf8, #3b82f6);
+  border-radius: var(--radius-lg); display: flex;
+  align-items: center; justify-content: center; font-size: 26px; flex-shrink: 0;
+  box-shadow: 0 4px 16px rgba(59,130,246,0.3);
+}
+.logo h1 { font-size: 24px; font-weight: 700; background: linear-gradient(90deg, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.header-info { display: flex; align-items: center; gap: var(--space-4); flex-wrap: wrap; }
+.admin-badge { padding: var(--space-2) var(--space-5); background: linear-gradient(135deg, #38bdf8, #3b82f6); border-radius: var(--radius-full); font-size: 14px; font-weight: 600; }
+.header .current-time { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.8); }
+
+/* ====== Navigation ====== */
+.gov-nav { display: flex; gap: var(--space-3); margin-bottom: var(--space-6); flex-wrap: wrap; }
+.gov-nav-item {
+  padding: var(--space-3) var(--space-6); background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08); border-radius: var(--radius-md);
+  cursor: pointer; font-size: 14px; font-weight: 500; transition: var(--transition-normal);
+  text-decoration: none; color: rgba(255,255,255,0.7); display: flex; align-items: center; gap: var(--space-2);
+}
+.gov-nav-item:hover, .gov-nav-item.active {
+  background: linear-gradient(135deg, #38bdf8, #3b82f6);
+  border-color: transparent; color: white; transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(59,130,246,0.3);
+}
+
+/* ====== Alert Banner ====== */
+.alert-banner {
+  display: flex; align-items: center; gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  background: linear-gradient(135deg, rgba(251,146,60,0.15), rgba(249,115,22,0.1));
+  border: 1px solid rgba(251,146,60,0.2);
+  border-radius: var(--radius-lg); margin-bottom: var(--space-6);
+}
+.alert-icon { font-size: 24px; flex-shrink: 0; }
+.alert-content { flex: 1; }
+.alert-title { font-size: 15px; font-weight: 600; color: #fb923c; margin-bottom: 2px; }
+.alert-desc { font-size: 13px; color: rgba(255,255,255,0.6); }
+.alert-action {
+  padding: var(--space-2) var(--space-5);
+  background: rgba(251,146,60,0.2); border: 1px solid rgba(251,146,60,0.3);
+  border-radius: var(--radius-sm); color: #fb923c; cursor: pointer;
+  font-size: 13px; font-weight: 500; white-space: nowrap; transition: var(--transition-fast);
+}
+.alert-action:hover { background: rgba(251,146,60,0.3); }
+
+/* ====== Stats Overview ====== */
+.stats-overview { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-4); margin-bottom: var(--space-6); }
+.gov-stat-card {
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius-xl); padding: var(--space-6); transition: var(--transition-slow);
+}
+.gov-stat-card:hover { transform: translateY(-4px); border-color: #38bdf8; box-shadow: 0 12px 32px rgba(59,130,246,0.15); }
+.gov-stat-value { font-size: 36px; font-weight: 700; background: linear-gradient(135deg, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.gov-stat-label { font-size: 14px; color: rgba(255,255,255,0.5); margin-top: var(--space-1); }
+.gov-stat-icon { font-size: 32px; margin-bottom: var(--space-3); }
+
+/* Legacy stat-card overrides for gov pages */
+.gov-stat-card .stat-card { background: transparent; padding: 0; border: none; }
+.gov-stat-card .stat-value { font-size: 36px; font-weight: 700; }
+.gov-stat-card .stat-label { font-size: 14px; color: rgba(255,255,255,0.5); }
+
+/* ====== Main Content Grid ====== */
+.main-content { display: grid; grid-template-columns: 1.5fr 1fr; gap: var(--space-4); margin-bottom: var(--space-6); }
+@media (max-width: 1024px) { .main-content { grid-template-columns: 1fr; } }
+
+/* ====== Chart Section ====== */
+.chart-section { margin-bottom: var(--space-4); }
+.chart-section .section-header { margin-bottom: var(--space-4); }
+.section-icon { font-size: 18px; }
+
+.chart-placeholder {
+  display: flex; align-items: flex-end; gap: var(--space-4);
+  height: 220px; padding: var(--space-4) 0;
+}
+.bar-group { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; }
+.bar { width: 100%; max-width: 56px; border-radius: var(--radius-sm) var(--radius-sm) 0 0; transition: var(--transition-slow); min-height: 8px; }
+.bar-value { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.8); margin-bottom: 6px; }
+.bar-label { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: var(--space-2); }
+
+/* ====== Gov Section ====== */
+.gov-section { background: rgba(255,255,255,0.04); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.08); border-radius: var(--radius-xl); padding: var(--space-5); }
+.gov-section .section-title { color: rgba(255,255,255,0.95); }
+.gov-section .section-title::before { background: linear-gradient(180deg, #38bdf8, #3b82f6); }
+.gov-section table { border-collapse: separate; border-spacing: 0; }
+.gov-section thead th { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.7); border-bottom-color: rgba(255,255,255,0.1); }
+.gov-section tbody td { color: rgba(255,255,255,0.8); border-bottom-color: rgba(255,255,255,0.06); }
+.gov-section tbody tr:hover { background: rgba(255,255,255,0.06); }
+.gov-section .form-select, .gov-section .form-input { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.15); color: white; }
+.gov-section .form-select option { background: #1e293b; color: white; }
+.gov-section .form-select:focus, .gov-section .form-input:focus { border-color: #38bdf8; }
+
+/* ====== Ranking List ====== */
+.ranking-list { display: flex; flex-direction: column; gap: var(--space-2); }
+.ranking-item { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); background: rgba(255,255,255,0.03); border-radius: var(--radius-md); border: 1px solid rgba(255,255,255,0.06); transition: var(--transition-fast); }
+.ranking-item:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.1); }
+.rank-number { width: 28px; height: 28px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+.rank-1 { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #1e293b; }
+.rank-2 { background: linear-gradient(135deg, #94a3b8, #64748b); color: white; }
+.rank-3 { background: linear-gradient(135deg, #d97706, #b45309); color: white; }
+.rank-other { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.6); }
+.rank-info { flex: 1; min-width: 0; }
+.rank-name { font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.9); }
+.rank-stats { font-size: 12px; color: rgba(255,255,255,0.5); }
+.rank-score { font-size: 14px; font-weight: 700; color: #38bdf8; }
+
+/* ====== Pie Chart ====== */
+.gov-section .pie-chart { display: flex; align-items: center; gap: var(--space-8); padding: var(--space-4) 0; }
+.gov-section .pie-center { position: relative; width: 140px; height: 140px; border-radius: 50%; background: conic-gradient(#38bdf8 0deg 144deg, #4ade80 144deg 248deg, #fb923c 248deg 313deg, #f472b6 313deg 360deg); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.gov-section .pie-center::before { content: ''; position: absolute; width: 80px; height: 80px; border-radius: 50%; background: #1e293b; }
+.gov-section .pie-total { position: relative; z-index: 1; font-size: 24px; font-weight: 700; color: white; text-align: center; line-height: 1.2; }
+.gov-section .pie-label { position: relative; z-index: 1; font-size: 11px; color: rgba(255,255,255,0.5); text-align: center; }
+.gov-section .legend { display: flex; flex-direction: column; gap: var(--space-3); }
+.legend-item { display: flex; align-items: center; gap: var(--space-2); font-size: 14px; color: rgba(255,255,255,0.7); }
+.legend-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+
+/* ====== Material Stats ====== */
+.material-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4); }
+.material-stat { text-align: center; padding: var(--space-4); background: rgba(255,255,255,0.03); border-radius: var(--radius-md); }
+.material-value { font-size: 24px; font-weight: 700; }
+.value-blue { color: #38bdf8; }
+.value-green { color: #4ade80; }
+.value-orange { color: #fb923c; }
+.value-pink { color: #f472b6; }
+.value-purple { color: #a78bfa; }
+.material-label { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: var(--space-1); }
+
+/* ====== Responsive ====== */
+@media (max-width: 768px) {
+  .container { padding: var(--space-3); }
+  .header { padding: var(--space-4); flex-direction: column; align-items: stretch; }
+  .logo h1 { font-size: 18px; }
+  .gov-nav-item { padding: var(--space-2) var(--space-4); font-size: 12px; }
+  .stats-overview { grid-template-columns: repeat(2, 1fr); }
+  .material-stats { grid-template-columns: repeat(2, 1fr); }
+  .gov-section .pie-chart { flex-direction: column; align-items: flex-start; }
+}

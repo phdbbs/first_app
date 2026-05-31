@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>动物接收 - 流浪动物 TNR 管理系统</title>
+    <link rel="stylesheet" href="../../assets/css/tnr-common.css">
+    <link rel="stylesheet" href="../../assets/css/tnr-hospital.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo"><div class="logo-icon">🏥</div><h1>爱心宠物医院 · 工作站</h1></div>
+            <button class="back-btn" onclick="location.href='homepage.html'">← 返回首页</button>
+        </div>
+        <nav class="nav-bar">
+            <a href="homepage.html" class="nav-item">🏠 首页</a>
+            <a href="receive.html" class="nav-item active">📥 动物接收</a>
+            <a href="treatment.html" class="nav-item">🩺 诊疗业务</a>
+            <a href="material.html" class="nav-item">📦 物料库存</a>
+            <a href="adoption.html" class="nav-item">🐾 领养维护</a>
+        </nav>
+        <div class="stats-grid">
+            <div class="stat-card yellow"><span class="stat-icon">🚚</span><span class="stat-value">3</span><span class="stat-label">待接收批次</span></div>
+            <div class="stat-card green"><span class="stat-icon">✅</span><span class="stat-value">42</span><span class="stat-label">已接收批次</span></div>
+            <div class="stat-card blue"><span class="stat-icon">🐱</span><span class="stat-value">128</span><span class="stat-label">累计接收</span></div>
+        </div>
+        <div class="section">
+            <div class="section-header"><h3 class="section-title">待接收转运批次</h3></div>
+            <div class="table-wrapper"><table>
+                <thead><tr><th>批次号</th><th>来源捕捉站</th><th>动物数量</th><th>预计到达</th><th>状态</th><th>操作</th></tr></thead>
+                <tbody>
+                    <tr><td><strong>TR20250115001</strong></td><td>阳光捕捉站</td><td>5只</td><td>2025-01-15 14:00</td><td><span class="badge badge-pending">途中</span></td><td><button class="btn btn-sm btn-green" onclick="confirmReceive('TR20250115001')">确认接收</button></td></tr>
+                    <tr><td><strong>TR20250114002</strong></td><td>幸福捕捉站</td><td>3只</td><td>2025-01-14 16:30</td><td><span class="badge badge-pending">途中</span></td><td><button class="btn btn-sm btn-green" onclick="confirmReceive('TR20250114002')">确认接收</button></td></tr>
+                    <tr><td><strong>TR20250113001</strong></td><td>绿色捕捉站</td><td>8只</td><td>2025-01-13 15:00</td><td><span class="badge badge-ok">已接收</span></td><td><button class="btn btn-sm btn-secondary" onclick="viewDetail('TR20250113001')">详情</button></td></tr>
+                </tbody>
+            </table></div>
+        </div>
+    </div>
+    <script src="../../assets/js/tnr-common.js"></script>
+    <script src="../../assets/js/tnr-hospital.js"></script>
+    <script>showCurrentDate();</script>
+</body>
+</html>
