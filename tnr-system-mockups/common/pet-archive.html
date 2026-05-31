@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>一宠一档 - 流浪动物 TNR 管理系统</title>
+    <style>
+        :root {
+            --primary-green: #10B981;
+            --dark-green: #059669;
+            --warning-yellow: #F59E0B;
+            --danger-red: #EF4444;
+            --text-dark: #1F2937;
+            --text-gray: #6B7280;
+            --bg-light: #F3F4F6;
+            --border-color: #E5E7EB;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; }
+        body { background-color: var(--bg-light); color: var(--text-dark); line-height: 1.6; }
+        
+        /* 顶部导航 */
+        .header { background: white; padding: 1rem 2rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { font-size: 1.25rem; color: var(--text-dark); font-weight: 600; }
+        .role-badge { background: var(--primary-green); color: white; padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.875rem; }
+        
+        /* 主体内容 */
+        .container { max-width: 1000px; margin: 2rem auto; padding: 0 1rem; }
+        
+        /* 档案表容器 - A4 比例模拟 */
+        .archive-paper { background: white; padding: 3rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid var(--border-color); }
+        .archive-title { text-align: center; font-size: 1.5rem; font-weight: bold; margin-bottom: 0.5rem; color: var(--text-dark); }
+        .archive-no { text-align: center; color: var(--text-gray); margin-bottom: 2rem; font-size: 0.9rem; }
+        
+        /* 表格样式 */
+        .info-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--text-dark); border: 1px solid var(--text-dark); margin-bottom: 1.5rem; }
+        .info-item { background: white; padding: 0.75rem; display: flex; flex-direction: column; }
+        .info-label { font-size: 0.85rem; color: var(--text-gray); margin-bottom: 0.25rem; }
+        .info-value { font-weight: 500; font-size: 0.95rem; }
+        .full-width { grid-column: span 4; }
+        .half-width { grid-column: span 2; }
+        
+        /* 医疗记录表 */
+        .medical-section { margin-top: 2rem; border: 1px solid var(--text-dark); }
+        .section-header { background: #F9FAFB; padding: 0.75rem; font-weight: bold; border-bottom: 1px solid var(--text-dark); display: flex; justify-content: space-between; }
+        .medical-table { width: 100%; border-collapse: collapse; }
+        .medical-table th, .medical-table td { border: 1px solid var(--border-color); padding: 0.75rem; text-align: left; font-size: 0.9rem; }
+        .medical-table th { background: #F3F4F6; font-weight: 600; width: 25%; }
+        .add-row-btn { background: none; border: none; color: var(--primary-green); cursor: pointer; font-size: 0.85rem; padding: 0.25rem 0.5rem; }
+        
+        /* 附件区 */
+        .attachment-area { margin-top: 2rem; padding: 1.5rem; border: 2px dashed var(--border-color); background: #FAFAFA; text-align: center; color: var(--text-gray); }
+        
+        /* 操作按钮区 */
+        .action-bar { margin-top: 2rem; display: flex; gap: 1rem; justify-content: flex-end; }
+        .btn { padding: 0.75rem 1.5rem; border-radius: 0.375rem; font-weight: 500; cursor: pointer; border: none; display: flex; align-items: center; gap: 0.5rem; transition: all 0.2s; }
+        .btn-primary { background: var(--primary-green); color: white; }
+        .btn-primary:hover { background: var(--dark-green); }
+        .btn-outline { background: white; border: 1px solid var(--border-color); color: var(--text-dark); }
+        .btn-outline:hover { background: #F9FAFB; }
+        .btn-danger { background: var(--danger-red); color: white; }
+        
+        /* 打印样式 */
+        @media print {
+            .header, .action-bar, .add-row-btn { display: none; }
+            .container { margin: 0; padding: 0; }
+            .archive-paper { box-shadow: none; border: none; padding: 0; }
+            body { background: white; }
+        }
+        
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .info-grid { grid-template-columns: repeat(2, 1fr); }
+            .half-width, .full-width { grid-column: span 2; }
+            .archive-paper { padding: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 顶部导航 -->
+    <header class="header">
+        <h1>🐾 流浪动物 TNR 管理系统 - 一宠一档</h1>
+        <span class="role-badge" id="roleDisplay">查看角色：加载中...</span>
+    </header>
+
+    <div class="container">
+        <!-- 档案纸 -->
+        <div class="archive-paper">
+            <div class="archive-title">康茁流浪犬猫收容中心档案表</div>
+            <div class="archive-no">档案编号：<span id="arcNo">000000</span></div>
+
+            <!-- 基础信息网格 -->
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">分类</span>
+                    <span class="info-value" id="valCategory">犬</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">品种</span>
+                    <span class="info-value" id="valBreed">中华田园犬</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">性别</span>
+                    <span class="info-value" id="valGender">公</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">年龄</span>
+                    <span class="info-value" id="valAge">约 2 岁</span>
+                </div>
+
+                <div class="info-item">
+                    <span class="info-label">芯片号码</span>
+                    <span class="info-value" id="valChip">982000123456789</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">进站时间</span>
+                    <span class="info-value" id="valInDate">2023-10-15</span>
+                </div>
+                <div class="info-item full-width">
+                    <span class="info-label">收容原因</span>
+                    <span class="info-value" id="valReason">小区物业捕捉，无人认领</span>
+                </div>
+
+                <div class="info-item">
+                    <span class="info-label">出库时间</span>
+                    <span class="info-value" id="valOutDate">-</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">出库原因</span>
+                    <span class="info-value" id="valOutReason">-</span>
+                </div>
+                <div class="info-item half-width">
+                    <span class="info-label">送达单位</span>
+                    <span class="info-value" id="valSource">阳光花园物业</span>
+                </div>
+                <div class="info-item half-width">
+                    <span class="info-label">收容登记表档案号</span>
+                    <span class="info-value">CAT-20231015-003</span>
+                </div>
+
+                <div class="info-item half-width">
+                    <span class="info-label">绝育情况</span>
+                    <span class="info-value" id="valSterilized">是 (2023-10-20)</span>
+                </div>
+                <div class="info-item half-width">
+                    <span class="info-label">当前状态</span>
+                    <span class="info-value" style="color: var(--primary-green); font-weight: bold;" id="valStatus">待领养</span>
+                </div>
+            </div>
+
+            <!-- 医疗记录 -->
+            <div class="medical-section">
+                <div class="section-header">
+                    <span>📋 驱虫与免疫记录</span>
+                    <button class="add-row-btn" onclick="addMedicalRow()">+ 添加记录 (仅管理员)</button>
+                </div>
+                <table class="medical-table">
+                    <thead>
+                        <tr>
+                            <th>驱虫记录</th>
+                            <th>时间</th>
+                            <th>免疫记录</th>
+                            <th>时间</th>
+                        </tr>
+                    </thead>
+                    <tbody id="medicalBody">
+                        <tr>
+                            <td>海乐妙</td>
+                            <td>2023-10-20</td>
+                            <td>狂犬疫苗</td>
+                            <td>2023-10-20</td>
+                        </tr>
+                        <tr>
+                            <td>大宠爱</td>
+                            <td>2024-01-20</td>
+                            <td>猫三联 (第二针)</td>
+                            <td>2023-11-10</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 附件区 -->
+            <div class="attachment-area">
+                <p>📎 其他材料作为附件附在本档案之后</p>
+                <div style="margin-top: 1rem; display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                    <span style="background: white; padding: 0.5rem 1rem; border: 1px solid var(--border-color); border-radius: 4px;">📄 收容登记表.pdf</span>
+                    <span style="background: white; padding: 0.5rem 1rem; border: 1px solid var(--border-color); border-radius: 4px;">📄 绝育病历.pdf</span>
+                    <span style="background: white; padding: 0.5rem 1rem; border: 1px solid var(--border-color); border-radius: 4px;">🖼️ 宠物照片集.zip</span>
+                </div>
+            </div>
+
+            <!-- 操作按钮 (根据角色动态显示) -->
+            <div class="action-bar" id="actionBar">
+                <!-- 由 JS 注入 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 模拟角色和权限控制
+        const urlParams = new URLSearchParams(window.location.search);
+        const role = urlParams.get('role') || 'government'; // government, shelter, hospital, adopter
+        const petId = urlParams.get('id') || '000001';
+
+        // 角色配置
+        const roleConfig = {
+            'government': { name: '政府监管端', canEdit: true, canPrint: true, canExport: true },
+            'shelter': { name: '收容中心端', canEdit: true, canPrint: true, canExport: true },
+            'hospital': { name: '宠物医院端', canEdit: true, canPrint: true, canExport: false },
+            'adopter': { name: '领养人端', canEdit: false, canPrint: false, canExport: false }
+        };
+
+        const currentRole = roleConfig[role] || roleConfig['government'];
+
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', () => {
+            // 设置角色标识
+            document.getElementById('roleDisplay').textContent = `查看角色：${currentRole.name}`;
+            document.getElementById('arcNo').textContent = petId;
+
+            // 模拟数据加载 (实际应从 API 获取)
+            loadPetData(petId);
+
+            // 渲染操作按钮
+            renderActions();
+        });
+
+        function loadPetData(id) {
+            // 这里模拟从后端获取数据并填充
+            // 实际开发中请替换为 fetch(`/api/pet/${id}`)
+            console.log(`Loading data for pet ${id} as ${role}`);
+            
+            // 模拟不同状态的数据展示
+            if(id === '000002') {
+                document.getElementById('valStatus').textContent = '已领养';
+                document.getElementById('valStatus').style.color = '#10B981';
+                document.getElementById('valOutReason').textContent = '领养出库';
+                document.getElementById('valOutDate').textContent = '2024-05-01';
+            }
+        }
+
+        function renderActions() {
+            const container = document.getElementById('actionBar');
+            let html = '';
+
+            if (currentRole.canPrint) {
+                html += `<button class="btn btn-outline" onclick="window.print()">🖨️ 打印档案</button>`;
+            }
+            if (currentRole.canExport) {
+                html += `<button class="btn btn-outline">📥 导出 PDF</button>`;
+            }
+            if (currentRole.canEdit) {
+                html += `<button class="btn btn-primary">✏️ 编辑档案</button>`;
+                if(role === 'shelter' || role === 'hospital') {
+                     html += `<button class="btn btn-danger">⚠️ 标记异常</button>`;
+                }
+            }
+            
+            // 返回上一级按钮
+            html += `<button class="btn btn-outline" onclick="history.back()">↩️ 返回</button>`;
+
+            container.innerHTML = html;
+        }
+
+        function addMedicalRow() {
+            if (!currentRole.canEdit) {
+                alert('只有管理员才能添加记录');
+                return;
+            }
+            const tbody = document.getElementById('medicalBody');
+            const row = tbody.insertRow();
+            row.innerHTML = `
+                <td><input type="text" placeholder="药品名" style="width:100%; border:none; outline:none;"></td>
+                <td><input type="date" style="width:100%; border:none; outline:none;"></td>
+                <td><input type="text" placeholder="疫苗名" style="width:100%; border:none; outline:none;"></td>
+                <td><input type="date" style="width:100%; border:none; outline:none;"></td>
+            `;
+        }
+    </script>
+</body>
+</html>

@@ -136,7 +136,9 @@
     </div>
 
     <script>
-        function viewPetProfile(id){alert('查看宠物全生命周期档案\n\n宠物编号：'+id+'\n\n捕捉记录 → 转运记录 → 诊疗记录 → 绝育疫苗 → 芯片植入 → 领养出库')}
+        function viewPetProfile(id){
+            window.location.href = '../common/pet-archive.html?role=adopter&id=' + id;
+        }
     </script>
 </body>
 </html>
