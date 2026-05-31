@@ -218,7 +218,10 @@
         function printLedger(type){alert('正在打印'+(type==='capture'?'捕捉':'')+'台账\n\n请确保打印机已连接')}
         function previewReport(type){alert('预览捕捉台账报表\n\n报表将新窗口打开显示')}
         function exportReport(type){alert('✅ 正在导出Excel文件\n\n文件将自动下载...')}
-        function viewPetFile(id){window.location.href='../shelter/pet-archive.html?id='+id}
+        function viewPetFile(id){
+            // 在本端查看档案详情，不跳转
+            alert('查看宠物档案：'+id+'\n\n包含信息：\n- 基础信息（品种、性别、年龄等）\n- 芯片信息\n- 诊疗记录\n- 疫苗记录\n- 全生命周期轨迹');
+        }
         function addPetFile(){alert('新建宠物档案\n\n请填写宠物基本信息')}
     </script>
 </body>
