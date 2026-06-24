@@ -1,0 +1,159 @@
+{% extends "shelter/base.html" %}
+
+{% block title %}首页看板 - TNR管理系统{% endblock %}
+{% block page_title %}欢迎回来，{{ session.get('name', '管理员') }}{% endblock %}
+
+{% block content %}
+{% if alerts %}
+<div class="alert-box">
+    <span class="alert-icon">⚠️</span>
+    <div class="alert-content">
+        <div class="alert-title">库存预警提醒</div>
+        <div class="alert-text">有 {{ alerts|length }} 项物料库存不足，请及时采购补充</div>
+    </div>
+    <a href="{{ url_for('shelter_material') }}" class="btn btn-primary btn-sm">去处理</a>
+</div>
+{% endif %}
+
+<section class="section">
+    <div class="section-header">
+        <h3 class="section-title">快捷操作</h3>
+    </div>
+    <div class="action-grid">
+        <a href="{{ url_for('shelter_add') }}" class="action-card">
+            <span class="action-icon">➕</span>
+            <span class="action-label">新增捕捉</span>
+        </a>
+        <a href="{{ url_for('shelter_owner_return') }}" class="action-card green">
+            <span class="action-icon">🏡</span>
+            <span class="action-label">主人领回</span>
+        </a>
+        <a href="{{ url_for('shelter_material') }}" class="action-card blue">
+            <span class="action-icon">📦</span>
+            <span class="action-label">物料采购</span>
+        </a>
+        <a href="{{ url_for('shelter_transfer') }}" class="action-card pink">
+            <span class="action-icon">🚚</span>
+            <span class="action-label">转运交接</span>
+        </a>
+        <a href="{{ url_for('shelter_release') }}" class="action-card cyan">
+            <span class="action-icon">🌿</span>
+            <span class="action-label">放养管理</span>
+        </a>
+        <a href="{{ url_for('shelter_adoption') }}" class="action-card purple">
+            <span class="action-icon">👤</span>
+            <span class="action-label">领养管理</span>
+        </a>
+    </div>
+</section>
+
+<section class="section">
+    <div class="section-header">
+        <h3 class="section-title">数据概览</h3>
+    </div>
+    <div class="stats-grid">
+        <div class="stat-card yellow">
+            <span class="stat-icon">📋</span>
+            <span class="stat-value">{{ stats.intake if stats else 0 }}</span>
+            <span class="stat-label">待捕捉登记</span>
+        </div>
+        <div class="stat-card orange">
+            <span class="stat-icon">🚚</span>
+            <span class="stat-value">{{ stats.transit if stats else 0 }}</span>
+            <span class="stat-label">待转运交接</span>
+        </div>
+        <div class="stat-card green">
+            <span class="stat-icon">🌿</span>
+            <span class="stat-value">{{ stats.pending_release if stats else 0 }}</span>
+            <span class="stat-label">待回收放养</span>
+        </div>
+        <div class="stat-card blue">
+            <span class="stat-icon">👤</span>
+            <span class="stat-value">{{ stats.pending_adoption if stats else 0 }}</span>
+            <span class="stat-label">待领养审核</span>
+        </div>
+        <div class="stat-card red">
+            <span class="stat-icon">⚠️</span>
+            <span class="stat-value">{{ alerts|length if alerts else 0 }}</span>
+            <span class="stat-label">物料库存预警</span>
+        </div>
+    </div>
+</section>
+
+{% if tasks %}
+<section class="section">
+    <div class="section-header">
+        <h3 class="section-title">待办任务</h3>
+        <a href="#" class="view-all" style="color: #ed8936; text-decoration: none; font-size: 14px; font-weight: 500;">查看全部 →</a>
+    </div>
+    <div class="task-list">
+        {% for task in tasks %}
+        <div class="task-item">
+            <div class="task-priority {% if task.priority == 'high' %}priority-high{% elif task.priority == 'medium' %}priority-medium{% else %}priority-low{% endif %}"></div>
+            <div class="task-content">
+                <div class="task-name">{{ task.name }}</div>
+                <div class="task-desc">{{ task.desc }}</div>
+            </div>
+            <div class="task-time">{{ task.time }}</div>
+            <span class="task-badge {% if task.urgent %}badge-urgent{% else %}badge-normal{% endif %}">{{ '紧急' if task.urgent else '普通' }}</span>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<section class="section">
+    <div class="section-header">
+        <h3 class="section-title">最近捕捉动物</h3>
+        <a href="{{ url_for('shelter_report') }}" class="view-all" style="color: #ed8936; text-decoration: none; font-size: 14px; font-weight: 500;">查看全部 →</a>
+    </div>
+    {% if recent_pets %}
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>宠物编号</th>
+                    <th>所在小区</th>
+                    <th>状态</th>
+                    <th>捕捉日期</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pet in recent_pets %}
+                <tr>
+                    <td style="font-weight: 600; color: #c05621;">{{ pet.pet_code }}</td>
+                    <td>{{ pet.community_name }}</td>
+                    <td>
+                        {% set status_colors = {
+                            'intake': 'warning',
+                            'transit': 'info',
+                            'pending_treatment': 'warning',
+                            'treating': 'primary',
+                            'treated': 'success',
+                            'pending_adoption': 'info',
+                            'adopted': 'primary',
+                            'pending_release': 'info',
+                            'released': 'success',
+                            'euthanized': 'danger',
+                            'returned': 'success'
+                        } %}
+                        <span class="badge badge-{{ status_colors.get(pet.status, 'secondary') }}">{{ pet.status|status_label }}</span>
+                    </td>
+                    <td>{{ pet.intake_date|dt('%Y-%m-%d') if pet.intake_date else '-' }}</td>
+                    <td>
+                        <a href="{{ url_for('pet_archive', pet_id=pet.id) }}" class="btn btn-secondary btn-sm">查看档案</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">🐾</div>
+        <div class="empty-text">暂无捕捉记录</div>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

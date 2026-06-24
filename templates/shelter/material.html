@@ -1,0 +1,284 @@
+{% extends "shelter/base.html" %}
+
+{% block title %}物料管理 - TNR管理系统{% endblock %}
+{% block page_title %}物料管理{% endblock %}
+
+{% block content %}
+<div class="tab-bar">
+    <div class="tab-item active" onclick="switchTab('material', 'forms')">采购/分发</div>
+    <div class="tab-item" onclick="switchTab('material', 'inventory')">库存概览</div>
+    <div class="tab-item" onclick="switchTab('material', 'distributions')">分发记录</div>
+    <div class="tab-item" onclick="switchTab('material', 'ledger')">台账记录</div>
+</div>
+
+<div id="material_forms" class="tab-content active">
+    <div class="form-section">
+        <div class="form-section-header">
+            <span class="form-section-icon">📥</span>
+            <span class="form-section-title">物料采购入库</span>
+        </div>
+        <div class="form-section-body">
+            <form method="POST" action="{{ url_for('shelter_material') }}">
+                <input type="hidden" name="action" value="purchase">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <span class="required">*</span> 物料类型
+                        </label>
+                        <select name="material_type" class="form-select" required id="purchaseMaterialType" onchange="toggleChipRange('purchase')">
+                            <option value="">请选择物料类型</option>
+                            <option value="vaccine">疫苗</option>
+                            <option value="chip">芯片</option>
+                            <option value="dewormer">驱虫药</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            <span class="required">*</span> 采购数量
+                        </label>
+                        <input type="number" name="quantity" class="form-input" min="1" placeholder="请输入采购数量" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            <span class="required">*</span> 批号
+                        </label>
+                        <input type="text" name="batch_no" class="form-input" placeholder="请输入物料批号" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            <span class="required">*</span> 供应商
+                        </label>
+                        <input type="text" name="supplier" class="form-input" placeholder="请输入供应商名称" required>
+                    </div>
+                    
+                    <div class="form-group" id="purchaseChipStart" style="display: none;">
+                        <label class="form-label">芯片起始号</label>
+                        <input type="text" name="chip_start" class="form-input" placeholder="请输入芯片起始编号">
+                    </div>
+                    
+                    <div class="form-group" id="purchaseChipEnd" style="display: none;">
+                        <label class="form-label">芯片结束号</label>
+                        <input type="text" name="chip_end" class="form-input" placeholder="请输入芯片结束编号">
+                    </div>
+                </div>
+                
+                <div class="submit-section">
+                    <button type="reset" class="btn btn-secondary">重置</button>
+                    <button type="submit" class="btn btn-blue">📥 提交采购</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="form-section">
+        <div class="form-section-header">
+            <span class="form-section-icon">📤</span>
+            <span class="form-section-title">物料分发下发</span>
+        </div>
+        <div class="form-section-body">
+            <form method="POST" action="{{ url_for('shelter_material') }}">
+                <input type="hidden" name="action" value="distribute">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <span class="required">*</span> 接收医院
+                        </label>
+                        <select name="hospital_id" class="form-select" required>
+                            <option value="">请选择医院</option>
+                            {% for hospital in hospitals %}
+                            <option value="{{ hospital.id }}">{{ hospital.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            <span class="required">*</span> 物料类型
+                        </label>
+                        <select name="material_type" class="form-select" required id="distributeMaterialType" onchange="toggleChipRange('distribute')">
+                            <option value="">请选择物料类型</option>
+                            <option value="vaccine">疫苗</option>
+                            <option value="chip">芯片</option>
+                            <option value="dewormer">驱虫药</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            <span class="required">*</span> 分发数量
+                        </label>
+                        <input type="number" name="quantity" class="form-input" min="1" placeholder="请输入分发数量" required>
+                    </div>
+                    
+                    <div class="form-group" id="distributeChipStart" style="display: none;">
+                        <label class="form-label">芯片起始号</label>
+                        <input type="text" name="chip_start" class="form-input" placeholder="请输入芯片起始编号">
+                    </div>
+                    
+                    <div class="form-group" id="distributeChipEnd" style="display: none;">
+                        <label class="form-label">芯片结束号</label>
+                        <input type="text" name="chip_end" class="form-input" placeholder="请输入芯片结束编号">
+                    </div>
+                </div>
+                
+                <div class="submit-section">
+                    <button type="reset" class="btn btn-secondary">重置</button>
+                    <button type="submit" class="btn btn-primary">📤 提交分发</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div id="material_inventory" class="tab-content">
+    <section class="section">
+        <div class="section-header">
+            <h3 class="section-title">当前库存概览</h3>
+        </div>
+        <div class="inventory-grid">
+            <div class="inventory-card stat-card blue">
+                <span class="stat-icon">💉</span>
+                <span class="stat-value">{{ inventory.vaccine if inventory else 0 }}</span>
+                <span class="stat-label">疫苗库存（支）</span>
+            </div>
+            <div class="inventory-card stat-card purple">
+                <span class="stat-icon">💾</span>
+                <span class="stat-value">{{ inventory.chip if inventory else 0 }}</span>
+                <span class="stat-label">芯片库存（个）</span>
+            </div>
+            <div class="inventory-card stat-card green">
+                <span class="stat-icon">💊</span>
+                <span class="stat-value">{{ inventory.dewormer if inventory else 0 }}</span>
+                <span class="stat-label">驱虫药库存（盒）</span>
+            </div>
+        </div>
+    </section>
+</div>
+
+<div id="material_distributions" class="tab-content">
+    <section class="section">
+        <div class="section-header">
+            <h3 class="section-title">分发记录列表</h3>
+        </div>
+        {% if distributions %}
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>批号</th>
+                        <th>物料类型</th>
+                        <th>接收医院</th>
+                        <th>数量</th>
+                        <th>状态</th>
+                        <th>分发时间</th>
+                        <th>接收时间</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for dist in distributions %}
+                    <tr>
+                        <td style="font-weight: 600;">{{ dist.batch_no }}</td>
+                        <td>{{ MATERIAL_TYPES.get(dist.material_type, dist.material_type) if MATERIAL_TYPES is defined else dist.material_type }}</td>
+                        <td>{{ dist.hospital_name }}</td>
+                        <td>{{ dist.quantity }}</td>
+                        <td>
+                            {% if dist.status == 'pending' %}
+                            <span class="badge badge-warning">待接收</span>
+                            {% elif dist.status == 'received' %}
+                            <span class="badge badge-success">已接收</span>
+                            {% elif dist.status == 'rejected' %}
+                            <span class="badge badge-danger">已拒收</span>
+                            {% else %}
+                            <span class="badge badge-secondary">{{ dist.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ dist.created_at|dt('%Y-%m-%d %H:%M') if dist.created_at else '-' }}</td>
+                        <td>{{ dist.received_at|dt('%Y-%m-%d %H:%M') if dist.received_at else '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📦</div>
+            <div class="empty-text">暂无分发记录</div>
+        </div>
+        {% endif %}
+    </section>
+</div>
+
+<div id="material_ledger" class="tab-content">
+    <section class="section">
+        <div class="section-header">
+            <h3 class="section-title">物料台账流水</h3>
+        </div>
+        {% if material_ledger %}
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>时间</th>
+                        <th>类型</th>
+                        <th>物料类型</th>
+                        <th>数量变动</th>
+                        <th>批号</th>
+                        <th>往来单位</th>
+                        <th>操作人</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in material_ledger %}
+                    <tr>
+                        <td>{{ entry.created_at|dt('%Y-%m-%d %H:%M') if entry.created_at else '-' }}</td>
+                        <td>
+                            {% if entry.type == 'purchase' %}
+                            <span class="badge badge-info">采购入库</span>
+                            {% elif entry.type == 'distribute' %}
+                            <span class="badge badge-warning">分发出库</span>
+                            {% else %}
+                            <span class="badge badge-secondary">{{ entry.type }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ MATERIAL_TYPES.get(entry.material_type, entry.material_type) if MATERIAL_TYPES is defined else entry.material_type }}</td>
+                        <td style="color: {{ '#276749' if entry.quantity > 0 else '#9b2c2c' }}; font-weight: 600;">
+                            {{ '+' if entry.quantity > 0 else '' }}{{ entry.quantity }}
+                        </td>
+                        <td>{{ entry.batch_no or '-' }}</td>
+                        <td>{{ entry.counterparty or '-' }}</td>
+                        <td>{{ entry.operator_name or '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📋</div>
+            <div class="empty-text">暂无台账记录</div>
+        </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function toggleChipRange(prefix) {
+        const typeSelect = document.getElementById(prefix + 'MaterialType');
+        const chipStart = document.getElementById(prefix + 'ChipStart');
+        const chipEnd = document.getElementById(prefix + 'ChipEnd');
+        
+        if (typeSelect.value === 'chip') {
+            chipStart.style.display = 'block';
+            chipEnd.style.display = 'block';
+        } else {
+            chipStart.style.display = 'none';
+            chipEnd.style.display = 'none';
+        }
+    }
+</script>
+{% endblock %}

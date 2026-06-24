@@ -1,0 +1,119 @@
+{% extends "shelter/base.html" %}
+
+{% block title %}放养管理 - TNR管理系统{% endblock %}
+{% block page_title %}放养管理{% endblock %}
+
+{% block content %}
+<div class="form-section">
+    <div class="form-section-header">
+        <span class="form-section-icon">🏥</span>
+        <span class="form-section-title">已治疗待接回（status='treated'）</span>
+    </div>
+    <div class="form-section-body">
+        {% if treated_pets %}
+        <form method="POST" action="{{ url_for('shelter_release') }}">
+            <input type="hidden" name="action" value="recover">
+            <div class="checkbox-group" style="margin-bottom: 20px;">
+                {% for pet in treated_pets %}
+                <div class="checkbox-item">
+                    <input type="checkbox" name="pet_ids" value="{{ pet.id }}" id="treated_{{ pet.id }}">
+                    <label for="treated_{{ pet.id }}">
+                        <strong style="color: #c05621;">{{ pet.pet_code }}</strong>
+                        <span style="margin: 0 8px; color: #a0aec0;">|</span>
+                        {{ '🐱 猫咪' if pet.species == 'cat' else '🐶 狗狗' }}
+                        <span style="margin: 0 8px; color: #a0aec0;">|</span>
+                        {{ pet.community_name }}
+                        <span style="margin: 0 8px; color: #a0aec0;">|</span>
+                        医院：{{ pet.hospital_name or '-' }}
+                    </label>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="submit-section">
+                <button type="submit" class="btn btn-blue">🏥 确认接回</button>
+            </div>
+        </form>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">🏥</div>
+            <div class="empty-text">暂无已治疗待接回动物</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="form-section">
+    <div class="form-section-header">
+        <span class="form-section-icon">🌿</span>
+        <span class="form-section-title">待放养确认（status='pending_release'）</span>
+    </div>
+    <div class="form-section-body">
+        {% if pending_release_pets %}
+        <form method="POST" action="{{ url_for('shelter_release') }}">
+            <input type="hidden" name="action" value="release">
+            <div class="checkbox-group" style="margin-bottom: 20px;">
+                {% for pet in pending_release_pets %}
+                <div class="checkbox-item">
+                    <input type="checkbox" name="pet_ids" value="{{ pet.id }}" id="pending_{{ pet.id }}">
+                    <label for="pending_{{ pet.id }}">
+                        <strong style="color: #c05621;">{{ pet.pet_code }}</strong>
+                        <span style="margin: 0 8px; color: #a0aec0;">|</span>
+                        {{ '🐱 猫咪' if pet.species == 'cat' else '🐶 狗狗' }}
+                        <span style="margin: 0 8px; color: #a0aec0;">|</span>
+                        {{ pet.community_name }}
+                    </label>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="submit-section">
+                <button type="submit" class="btn btn-green">🌿 确认放养</button>
+            </div>
+        </form>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">🌿</div>
+            <div class="empty-text">暂无待放养动物</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<section class="section">
+    <div class="section-header">
+        <h3 class="section-title">已放养记录</h3>
+    </div>
+    {% if released_pets %}
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>宠物编号</th>
+                    <th>所在小区</th>
+                    <th>物种</th>
+                    <th>放养日期</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pet in released_pets %}
+                <tr>
+                    <td style="font-weight: 600; color: #c05621;">{{ pet.pet_code }}</td>
+                    <td>{{ pet.community_name }}</td>
+                    <td>{{ '🐱 猫咪' if pet.species == 'cat' else '🐶 狗狗' }}</td>
+                    <td>{{ pet.release_date|dt('%Y-%m-%d') if pet.release_date else '-' }}</td>
+                    <td>
+                        <a href="{{ url_for('pet_archive', pet_id=pet.id) }}" class="btn btn-secondary btn-sm">查看档案</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">🌿</div>
+        <div class="empty-text">暂无放养记录</div>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

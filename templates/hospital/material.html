@@ -1,0 +1,200 @@
+{% extends "hospital/base.html" %}
+
+{% block title %}物料库存 - 宠物医院端 - TNR管理系统{% endblock %}
+{% block page_title %}💉 物料库存{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+    {% for mtype, mlabel in MATERIAL_TYPES.items() %}
+    {% set stock = inventory.get(mtype, 0) %}
+    <div class="stat-card {% if stock < 10 %}red{% elif stock < 20 %}orange{% else %}green{% endif %}">
+        <div class="stat-header">
+            <span class="stat-label">{{ mlabel }}库存</span>
+            <div class="stat-icon icon-{% if stock < 10 %}red{% elif stock < 20 %}orange{% else %}green{% endif %}">
+                {% if mtype == 'vaccine' %}💉{% elif mtype == 'chip' %}📟{% else %}💊{% endif %}
+            </div>
+        </div>
+        <div class="stat-value">{{ stock }}</div>
+        <div class="stat-trend">
+            {% if stock < 10 %}<span style="color:#e53e3e;">⚠️ 库存不足</span>
+            {% elif stock < 20 %}<span style="color:#dd6b20;">⚡ 库存偏低</span>
+            {% else %}<span style="color:#38a169;">✅ 库存正常</span>{% endif %}
+        </div>
+    </div>
+    {% endfor %}
+    <div class="stat-card blue">
+        <div class="stat-header">
+            <span class="stat-label">待接收入库</span>
+            <div class="stat-icon icon-blue">📦</div>
+        </div>
+        <div class="stat-value">{{ pending_dist|length }}</div>
+        <div class="stat-trend">捕捉站下发物料</div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="section-header">
+        <h3 class="section-title">待接收入库单 ({{ pending_dist|length }})</h3>
+    </div>
+
+    {% if pending_dist %}
+        {% for d in pending_dist %}
+        <div class="pet-card">
+            <div class="pet-card-header">
+                <div>
+                    <span class="pet-code">{{ MATERIAL_TYPES.get(d.material_type, d.material_type) }}</span>
+                    <span class="badge badge-orange" style="margin-left:8px;">⏳ 待确认</span>
+                </div>
+                <span style="font-size:13px;color:#a0aec0;">批次号：{{ d.batch_no }}</span>
+            </div>
+            <div class="pet-info-grid">
+                <div class="info-item">
+                    <span class="info-label">物料类型：</span>
+                    <span class="info-value">{{ MATERIAL_TYPES.get(d.material_type, d.material_type) }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">数量：</span>
+                    <span class="info-value" style="color:#11998e;font-weight:700;font-size:16px;">
+                        {{ d.quantity }}{% if d.material_type == 'chip' %}个{% else %}支{% endif %}
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">来源：</span>
+                    <span class="info-value">{{ d.shelter_name or '捕捉站' }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">下发时间：</span>
+                    <span class="info-value">{{ d.created_at }}</span>
+                </div>
+            </div>
+            <div class="pet-actions">
+                <form method="POST" action="{{ url_for('hospital_material') }}" style="display:inline;">
+                    <input type="hidden" name="dist_id" value="{{ d.id }}">
+                    <input type="hidden" name="action" value="receive_mat">
+                    <button type="submit" class="btn btn-success">✅ 接收入库</button>
+                </form>
+                <button type="button" class="btn btn-danger" onclick="toggleRejectMat({{ d.id }})">❌ 拒收</button>
+            </div>
+            <div id="reject-mat-{{ d.id }}" style="display:none;margin-top:14px;padding:16px;background:#fff5f5;border-radius:12px;border:2px solid #fed7d7;">
+                <form method="POST" action="{{ url_for('hospital_material') }}">
+                    <input type="hidden" name="dist_id" value="{{ d.id }}">
+                    <input type="hidden" name="action" value="reject_mat">
+                    <div class="form-group" style="margin-bottom:12px;">
+                        <label class="form-label" style="color:#c53030;">拒收原因（必填）</label>
+                        <textarea name="reject_reason" class="form-textarea" placeholder="请填写拒收原因..." required style="min-height:80px;border-color:#feb2b2;"></textarea>
+                    </div>
+                    <div style="display:flex;gap:10px;">
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="toggleRejectMat({{ d.id }})">取消</button>
+                        <button type="submit" class="btn btn-danger btn-sm">确认拒收</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">📦</div>
+        <div class="empty-text">暂无待接收入库单</div>
+    </div>
+    {% endif %}
+</div>
+
+<div class="card">
+    <div class="section-header">
+        <h3 class="section-title">当前库存一览</h3>
+    </div>
+    <div style="overflow-x:auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>物料类型</th>
+                    <th>当前库存</th>
+                    <th>单位</th>
+                    <th>状态</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for mtype, mlabel in MATERIAL_TYPES.items() %}
+                {% set stock = inventory.get(mtype, 0) %}
+                <tr>
+                    <td style="font-weight:500;">
+                        {% if mtype == 'vaccine' %}💉{% elif mtype == 'chip' %}📟{% else %}💊{% endif %}
+                        {{ mlabel }}
+                    </td>
+                    <td style="font-size:20px;font-weight:700;color:{% if stock < 10 %}#e53e3e{% elif stock < 20 %}#dd6b20{% else %}#38a169{% endif %}">{{ stock }}</td>
+                    <td>{% if mtype == 'chip' %}个{% else %}支{% endif %}</td>
+                    <td>
+                        {% if stock < 10 %}
+                        <span class="badge badge-red">⚠️ 库存不足</span>
+                        {% elif stock < 20 %}
+                        <span class="badge badge-orange">⚡ 库存偏低</span>
+                        {% else %}
+                        <span class="badge badge-green">✅ 正常</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card">
+    <div class="section-header">
+        <h3 class="section-title">物料台账记录</h3>
+    </div>
+    {% if ledger %}
+    <div style="overflow-x:auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>时间</th>
+                    <th>物料类型</th>
+                    <th>操作类型</th>
+                    <th>数量变动</th>
+                    <th>原因/备注</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for l in ledger %}
+                <tr>
+                    <td style="color:#a0aec0;font-size:13px;">{{ l.created_at }}</td>
+                    <td>{{ MATERIAL_TYPES.get(l.type, l.type) }}</td>
+                    <td>
+                        {% if l.action == 'purchase' %}<span class="badge badge-blue">采购入库</span>
+                        {% elif l.action == 'distribute_receive' %}<span class="badge badge-green">接收入库</span>
+                        {% elif l.action == 'consume' %}<span class="badge badge-orange">诊疗消耗</span>
+                        {% else %}<span class="badge badge-gray">{{ l.action }}</span>{% endif %}
+                    </td>
+                    <td style="font-weight:600;">
+                        {% if l.action in ['purchase', 'distribute_receive'] %}<span style="color:#38a169;">+{{ l.quantity }}</span>
+                        {% elif l.action == 'consume' %}<span style="color:#e53e3e;">-{{ l.quantity }}</span>
+                        {% else %}{{ l.quantity }}{% endif %}
+                    </td>
+                    <td style="font-size:13px;color:#718096;">{{ l.reason or '-' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">📋</div>
+        <div class="empty-text">暂无台账记录</div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+function toggleRejectMat(id) {
+    var el = document.getElementById('reject-mat-' + id);
+    if (el.style.display === 'none') {
+        document.querySelectorAll('[id^="reject-mat-"]').forEach(function(e) { e.style.display = 'none'; });
+        el.style.display = 'block';
+        el.querySelector('textarea').focus();
+    } else {
+        el.style.display = 'none';
+    }
+}
+{% endblock %}

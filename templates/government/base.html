@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}政府监管端{% endblock %} - 流浪动物TNR管理系统</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #fff;
+            overflow-x: hidden;
+        }
+        .gov-header {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            padding: 0 32px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header-inner {
+            max-width: 1920px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 68px;
+        }
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .logo-icon {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, #00d2ff, #3a7bd5);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 4px 16px rgba(0,210,255,0.3);
+        }
+        .logo-text h1 {
+            font-size: 20px;
+            font-weight: 700;
+            background: linear-gradient(90deg, #00d2ff, #3a7bd5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 0.5px;
+        }
+        .logo-text small {
+            font-size: 11px;
+            color: rgba(255,255,255,0.4);
+            display: block;
+            margin-top: -2px;
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .current-time {
+            font-size: 13px;
+            color: rgba(255,255,255,0.6);
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.08);
+            font-variant-numeric: tabular-nums;
+        }
+        .admin-badge {
+            padding: 8px 18px;
+            background: linear-gradient(135deg, #00d2ff, #3a7bd5);
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0,210,255,0.3);
+        }
+        .logout-btn {
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 8px;
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.15);
+            color: #fff;
+        }
+        .nav-bar {
+            background: rgba(255,255,255,0.03);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            padding: 0 32px;
+        }
+        .nav-inner {
+            max-width: 1920px;
+            margin: 0 auto;
+            display: flex;
+            gap: 4px;
+            overflow-x: auto;
+        }
+        .nav-item {
+            padding: 14px 22px;
+            color: rgba(255,255,255,0.65);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+        .nav-item:hover {
+            color: #fff;
+            background: rgba(255,255,255,0.04);
+        }
+        .nav-item.active {
+            color: #fff;
+            background: linear-gradient(180deg, rgba(0,210,255,0.08) 0%, transparent 100%);
+            border-bottom-color: #00d2ff;
+            position: relative;
+        }
+        .nav-item.active::before {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 22px;
+            right: 22px;
+            height: 3px;
+            background: linear-gradient(90deg, #00d2ff, #3a7bd5);
+            border-radius: 3px 3px 0 0;
+        }
+        .main-container {
+            max-width: 1920px;
+            margin: 0 auto;
+            padding: 24px 32px 40px;
+        }
+        .flash-container {
+            margin-bottom: 20px;
+        }
+        .flash-msg {
+            padding: 14px 20px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            backdrop-filter: blur(10px);
+        }
+        .flash-success {
+            background: rgba(0,255,136,0.12);
+            border: 1px solid rgba(0,255,136,0.25);
+            color: #00ff88;
+        }
+        .flash-error {
+            background: rgba(229,57,53,0.12);
+            border: 1px solid rgba(229,57,53,0.25);
+            color: #ff6b6b;
+        }
+        .glass-card {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .page-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .page-title-icon {
+            font-size: 28px;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 14px;
+        }
+        .data-table th {
+            background: rgba(255,255,255,0.06);
+            padding: 14px 16px;
+            text-align: left;
+            color: rgba(255,255,255,0.6);
+            font-weight: 500;
+            font-size: 13px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            white-space: nowrap;
+        }
+        .data-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            color: rgba(255,255,255,0.85);
+        }
+        .data-table tr:hover td {
+            background: rgba(255,255,255,0.03);
+        }
+        .data-table a {
+            color: #00d2ff;
+            text-decoration: none;
+        }
+        .data-table a:hover {
+            text-decoration: underline;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .status-intake, .status-transit { background: rgba(0,210,255,0.15); color: #00d2ff; }
+        .status-pending_treatment, .status-treating { background: rgba(255,149,0,0.15); color: #ff9500; }
+        .status-treated, .status-pending_release { background: rgba(59,130,246,0.15); color: #60a5fa; }
+        .status-pending_adoption { background: rgba(255,107,157,0.15); color: #ff6b9d; }
+        .status-adopted { background: rgba(0,255,136,0.15); color: #00ff88; }
+        .status-released { background: rgba(34,197,94,0.15); color: #4ade80; }
+        .status-euthanized { background: rgba(229,57,53,0.15); color: #ff6b6b; }
+        .status-returned { background: rgba(167,139,250,0.15); color: #a78bfa; }
+        .btn {
+            padding: 8px 18px;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #00d2ff, #3a7bd5);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(0,210,255,0.25);
+        }
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(0,210,255,0.35);
+        }
+        .btn-secondary {
+            background: rgba(255,255,255,0.08);
+            color: rgba(255,255,255,0.85);
+            border: 1px solid rgba(255,255,255,0.12);
+        }
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.14);
+        }
+        .btn-danger {
+            background: rgba(229,57,53,0.2);
+            color: #ff6b6b;
+            border: 1px solid rgba(229,57,53,0.3);
+        }
+        .btn-danger:hover {
+            background: rgba(229,57,53,0.3);
+        }
+        .btn-sm {
+            padding: 5px 12px;
+            font-size: 12px;
+        }
+        .btn-success-sm {
+            background: rgba(0,255,136,0.15);
+            color: #00ff88;
+            border: 1px solid rgba(0,255,136,0.25);
+        }
+        .btn-warning-sm {
+            background: rgba(255,149,0,0.15);
+            color: #ff9500;
+            border: 1px solid rgba(255,149,0,0.25);
+        }
+        .form-input, .form-select {
+            width: 100%;
+            padding: 10px 14px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+        .form-input::placeholder {
+            color: rgba(255,255,255,0.3);
+        }
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: #00d2ff;
+            background: rgba(255,255,255,0.09);
+            box-shadow: 0 0 0 3px rgba(0,210,255,0.1);
+        }
+        .form-select option {
+            background: #1a1a2e;
+            color: #fff;
+        }
+        .form-label {
+            display: block;
+            font-size: 13px;
+            color: rgba(255,255,255,0.65);
+            margin-bottom: 6px;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid rgba(255,255,255,0.1);
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-4px);
+            background: rgba(255,255,255,0.08);
+            border-color: rgba(255,255,255,0.15);
+        }
+        .stat-icon {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+        .stat-title {
+            font-size: 13px;
+            color: rgba(255,255,255,0.6);
+            margin-bottom: 8px;
+        }
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+        .val-blue { color: #00d2ff; }
+        .val-green { color: #00ff88; }
+        .val-orange { color: #ff9500; }
+        .val-pink { color: #ff6b9d; }
+        .val-purple { color: #c56cf0; }
+        .val-red { color: #ff6b6b; }
+        .filter-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .filter-tab {
+            padding: 8px 18px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            color: rgba(255,255,255,0.65);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        .filter-tab:hover {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+        .filter-tab.active {
+            background: linear-gradient(135deg, #00d2ff, #3a7bd5);
+            border-color: transparent;
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(0,210,255,0.3);
+        }
+        @media (max-width: 1200px) {
+            .main-container { padding: 20px 16px 32px; }
+            .gov-header, .nav-bar { padding: 0 16px; }
+        }
+        @media (max-width: 768px) {
+            .header-right .current-time { display: none; }
+            .logo-text h1 { font-size: 16px; }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <header class="gov-header">
+        <div class="header-inner">
+            <div class="logo-area">
+                <div class="logo-icon">🏛️</div>
+                <div class="logo-text">
+                    <h1>流浪动物TNR管理系统</h1>
+                    <small>GOVERNMENT SUPERVISION PORTAL</small>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="current-time" id="currentTime"></div>
+                <div class="admin-badge">👤 市级管理员</div>
+                <a href="{{ url_for('logout') }}" class="logout-btn">退出登录</a>
+            </div>
+        </div>
+    </header>
+
+    <nav class="nav-bar">
+        <div class="nav-inner">
+            {% set nav_active = nav_active|default('dashboard') %}
+            <a href="{{ url_for('gov_dashboard') }}" class="nav-item {% if nav_active == 'dashboard' %}active{% endif %}">📊 数据大屏</a>
+            <a href="{{ url_for('gov_institutions') }}" class="nav-item {% if nav_active == 'institutions' %}active{% endif %}">🏛️ 机构管理</a>
+            <a href="{{ url_for('gov_supervision') }}" class="nav-item {% if nav_active == 'supervision' %}active{% endif %}">🔍 全业务监管</a>
+            <a href="{{ url_for('gov_material') }}" class="nav-item {% if nav_active == 'material' %}active{% endif %}">📦 物料监管</a>
+            <a href="{{ url_for('gov_ledger') }}" class="nav-item {% if nav_active == 'ledger' %}active{% endif %}">📑 台账中心</a>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-container">
+            {% for category, msg in messages %}
+            <div class="flash-msg flash-{{ category }}">
+                {% if category == 'success' %}✅{% else %}⚠️{% endif %}
+                {{ msg }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <script>
+        function updateTime() {
+            var now = new Date();
+            var y = now.getFullYear();
+            var mo = String(now.getMonth()+1).padStart(2,'0');
+            var d = String(now.getDate()).padStart(2,'0');
+            var h = String(now.getHours()).padStart(2,'0');
+            var mi = String(now.getMinutes()).padStart(2,'0');
+            var s = String(now.getSeconds()).padStart(2,'0');
+            var el = document.getElementById('currentTime');
+            if (el) el.textContent = y+'-'+mo+'-'+d+' '+h+':'+mi+':'+s;
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

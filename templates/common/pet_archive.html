@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>一宠一档 - {{ pet.pet_code }} - 流浪动物TNR管理系统</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', sans-serif;
+            background: #f0f2f5;
+            color: #1f2937;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        .top-bar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .top-bar-title { font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+        .back-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .back-btn:hover { background: rgba(255,255,255,0.3); }
+        .container { max-width: 1100px; margin: 24px auto; padding: 0 20px; }
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .card-header {
+            padding: 18px 24px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        .card-header-icon { font-size: 20px; }
+        .card-body { padding: 24px; }
+        .pet-header {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            padding: 24px;
+        }
+        .pet-emoji {
+            font-size: 64px;
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .pet-info-main { flex: 1; }
+        .pet-code { font-size: 24px; font-weight: 700; color: #1f2937; margin-bottom: 8px; }
+        .pet-meta { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
+        .pet-tag {
+            padding: 4px 12px;
+            background: #f3f4f6;
+            border-radius: 20px;
+            font-size: 13px;
+            color: #6b7280;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .status-intake, .status-transit { background: #e0f2fe; color: #0284c7; }
+        .status-pending_treatment, .status-treating { background: #fef3c7; color: #d97706; }
+        .status-treated { background: #dbeafe; color: #2563eb; }
+        .status-pending_adoption { background: #fce7f3; color: #db2777; }
+        .status-adopted { background: #d1fae5; color: #059669; }
+        .status-pending_release { background: #e0e7ff; color: #4f46e5; }
+        .status-released { background: #dcfce7; color: #16a34a; }
+        .status-euthanized { background: #fee2e2; color: #dc2626; }
+        .status-returned { background: #f3e8ff; color: #9333ea; }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 0;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .info-item {
+            padding: 14px 18px;
+            border-bottom: 1px solid #e5e7eb;
+            border-right: 1px solid #e5e7eb;
+        }
+        .info-item:nth-child(4n) { border-right: none; }
+        .info-item:last-child, .info-item:nth-last-child(-n+4) { border-bottom: none; }
+        .info-label { font-size: 12px; color: #9ca3af; margin-bottom: 4px; }
+        .info-value { font-size: 14px; font-weight: 500; color: #1f2937; }
+        .info-value.empty { color: #d1d5db; }
+        .timeline { position: relative; padding-left: 28px; }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 4px;
+            bottom: 4px;
+            width: 2px;
+            background: #e5e7eb;
+        }
+        .timeline-item {
+            position: relative;
+            padding-bottom: 24px;
+        }
+        .timeline-item:last-child { padding-bottom: 0; }
+        .timeline-dot {
+            position: absolute;
+            left: -24px;
+            top: 4px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: 3px solid white;
+            box-shadow: 0 0 0 2px #e5e7eb;
+        }
+        .timeline-time { font-size: 12px; color: #9ca3af; margin-bottom: 4px; }
+        .timeline-title { font-size: 14px; font-weight: 600; color: #1f2937; margin-bottom: 6px; }
+        .timeline-desc { font-size: 13px; color: #6b7280; }
+        .badge-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+        .badge {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .badge-success { background: #d1fae5; color: #059669; }
+        .badge-gray { background: #f3f4f6; color: #9ca3af; }
+        .badge-info { background: #dbeafe; color: #2563eb; }
+        .record-block {
+            background: #f9fafb;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            border-left: 4px solid #667eea;
+        }
+        .record-block:last-child { margin-bottom: 0; }
+        .record-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .record-time { font-size: 13px; color: #6b7280; }
+        .record-doctor { font-size: 13px; color: #6b7280; }
+        .record-content { font-size: 14px; color: #374151; }
+        .record-notes {
+            margin-top: 8px;
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #6b7280;
+        }
+        .info-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 16px;
+        }
+        .info-block {
+            background: #f9fafb;
+            padding: 16px;
+            border-radius: 8px;
+        }
+        .info-block-label { font-size: 12px; color: #9ca3af; margin-bottom: 4px; }
+        .info-block-value { font-size: 15px; font-weight: 500; color: #1f2937; }
+        .checkin-item {
+            background: #f9fafb;
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .checkin-item:last-child { margin-bottom: 0; }
+        .checkin-month { font-weight: 600; color: #1f2937; margin-bottom: 4px; }
+        .checkin-content { font-size: 13px; color: #6b7280; }
+        .checkin-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .checkin-approved { background: #d1fae5; color: #059669; }
+        .checkin-pending { background: #fef3c7; color: #d97706; }
+        .checkin-rejected { background: #fee2e2; color: #dc2626; }
+        .empty-state {
+            text-align: center;
+            padding: 32px;
+            color: #9ca3af;
+            font-size: 14px;
+        }
+        .flash-messages { margin-bottom: 20px; }
+        .flash-msg {
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        .flash-success { background: #d1fae5; color: #059669; border: 1px solid #a7f3d0; }
+        .flash-error { background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; }
+        @media (max-width: 768px) {
+            .pet-header { flex-direction: column; text-align: center; }
+            .info-grid { grid-template-columns: repeat(2, 1fr); }
+            .info-item:nth-child(2n) { border-right: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <div class="top-bar-title">
+            🐾 一宠一档 - 流浪动物全生命周期档案
+        </div>
+        {% if role == 'shelter' %}
+        <a href="{{ url_for('shelter_dashboard') }}" class="back-btn">← 返回捕捉站首页</a>
+        {% elif role == 'hospital' %}
+        <a href="{{ url_for('hospital_dashboard') }}" class="back-btn">← 返回医院首页</a>
+        {% elif role == 'adopter' %}
+        <a href="{{ url_for('adopter_my') }}" class="back-btn">← 返回我的领养</a>
+        {% elif role == 'government' %}
+        <a href="{{ url_for('gov_dashboard') }}" class="back-btn">← 返回监管大屏</a>
+        {% endif %}
+    </div>
+
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-messages">
+            {% for category, msg in messages %}
+            <div class="flash-msg flash-{{ category }}">{{ msg }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <div class="card">
+            <div class="pet-header">
+                <div class="pet-emoji">{% if pet.species == 'dog' %}🐕{% else %}🐱{% endif %}</div>
+                <div class="pet-info-main">
+                    <div class="pet-code">{{ pet.pet_code }}</div>
+                    <div class="pet-meta">
+                        <span class="pet-tag">{% if pet.species == 'dog' %}犬{% else %}猫{% endif %}</span>
+                        {% if pet.gender %}<span class="pet-tag">{{ pet.gender }}</span>{% endif %}
+                        {% if pet.age %}<span class="pet-tag">{{ pet.age }}</span>{% endif %}
+                        {% if pet.color %}<span class="pet-tag">{{ pet.color }}</span>{% endif %}
+                    </div>
+                    <span class="status-badge status-{{ pet.status }}">{{ PET_STATUS[pet.status] }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <span class="card-header-icon">📋</span>
+                收容基础信息
+            </div>
+            <div class="card-body">
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">来源社区</div>
+                        <div class="info-value">{{ pet.community_name or '-' }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">物业单位</div>
+                        <div class="info-value">{{ pet.property_name or '-' }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">物业联系人</div>
+                        <div class="info-value">{{ pet.property_contact or '-' }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">联系电话</div>
+                        <div class="info-value">{{ pet.property_phone or '-' }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">收容地址</div>
+                        <div class="info-value">{{ pet.address or '-' }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">收容日期</div>
+                        <div class="info-value">{{ pet.intake_date or '-' }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">批次编号</div>
+                        <div class="info-value">{{ pet.batch_no or '-' }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">当前所在机构</div>
+                        <div class="info-value">{{ pet.hospital_name or '捕捉站' }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <span class="card-header-icon">🚛</span>
+                转运历史
+            </div>
+            <div class="card-body">
+                {% if transfers %}
+                <div class="timeline">
+                    {% for t in transfers %}
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-time">{{ t.created_at }}{% if t.received_at %} → {{ t.received_at }}（已接收）{% endif %}</div>
+                        <div class="timeline-title">转运至 {{ t.hospital_name }}</div>
+                        <div class="timeline-desc">
+                            批次号：{{ t.batch_no }}
+                            {% if t.status == 'pending' %} · <span style="color:#d97706">待接收</span>
+                            {% elif t.status == 'received' %} · <span style="color:#059669">已接收</span>
+                            {% elif t.status == 'rejected' %} · <span style="color:#dc2626">已驳回</span>
+                            {% endif %}
+                            {% if t.reject_reason %}<br>驳回原因：{{ t.reject_reason }}{% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state">暂无转运记录</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <span class="card-header-icon">🏥</span>
+                诊疗记录
+            </div>
+            <div class="card-body">
+                {% if treatments %}
+                {% for t in treatments %}
+                <div class="record-block">
+                    <div class="record-header">
+                        <div class="record-time">📅 {{ t.treated_at }}</div>
+                        {% if t.doctor_name %}<div class="record-doctor">👨‍⚕️ {{ t.doctor_name }}</div>{% endif %}
+                    </div>
+                    <div class="badge-row">
+                        {% if t.neuter_done %}<span class="badge badge-success">✓ 绝育完成</span>{% else %}<span class="badge badge-gray">○ 待绝育</span>{% endif %}
+                        {% if t.vaccine_done %}<span class="badge badge-success">✓ 疫苗接种</span>{% else %}<span class="badge badge-gray">○ 待接种</span>{% endif %}
+                        {% if t.dewormer_done %}<span class="badge badge-success">✓ 驱虫完成</span>{% else %}<span class="badge badge-gray">○ 待驱虫</span>{% endif %}
+                        {% if t.chip_done %}<span class="badge badge-info">✓ 芯片植入</span>{% else %}<span class="badge badge-gray">○ 待植芯</span>{% endif %}
+                    </div>
+                    {% if t.chip_no %}<div style="font-size:13px;color:#6b7280;margin-bottom:6px;">芯片编号：<strong style="color:#2563eb">{{ t.chip_no }}</strong></div>{% endif %}
+                    {% if t.neuter_record %}<div style="font-size:13px;color:#374151;margin-bottom:6px;">手术记录：{{ t.neuter_record }}</div>{% endif %}
+                    {% if t.notes %}<div class="record-notes">📝 {{ t.notes }}</div>{% endif %}
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="empty-state">暂无诊疗记录</div>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if pet.status == 'adopted' and pet.adopter_name %}
+        <div class="card">
+            <div class="card-header">
+                <span class="card-header-icon">❤️</span>
+                领养信息
+            </div>
+            <div class="card-body">
+                <div class="info-section">
+                    <div class="info-block">
+                        <div class="info-block-label">领养人</div>
+                        <div class="info-block-value">{{ pet.adopter_name }}</div>
+                    </div>
+                    <div class="info-block">
+                        <div class="info-block-label">联系电话</div>
+                        <div class="info-block-value">{{ pet.adopter_phone or '-' }}</div>
+                    </div>
+                    <div class="info-block">
+                        <div class="info-block-label">领养日期</div>
+                        <div class="info-block-value">{{ pet.adoption_date or '-' }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if pet.status == 'adopted' and checkins %}
+        <div class="card">
+            <div class="card-header">
+                <span class="card-header-icon">📅</span>
+                领养回访记录
+            </div>
+            <div class="card-body">
+                {% for c in checkins %}
+                <div class="checkin-item">
+                    <div>
+                        <div class="checkin-month">{{ c.month }} 月度回访</div>
+                        <div class="checkin-content">{{ c.content or '无文字说明' }}</div>
+                    </div>
+                    <span class="checkin-status checkin-{{ c.status }}">
+                        {% if c.status == 'approved' %}已审核通过
+                        {% elif c.status == 'rejected' %}审核未通过
+                        {% else %}待审核{% endif %}
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if pet.status == 'released' %}
+        <div class="card">
+            <div class="card-header">
+                <span class="card-header-icon">🌳</span>
+                放归信息
+            </div>
+            <div class="card-body">
+                <div class="info-section">
+                    <div class="info-block">
+                        <div class="info-block-label">放归日期</div>
+                        <div class="info-block-value">{{ pet.release_date or '-' }}</div>
+                    </div>
+                    <div class="info-block">
+                        <div class="info-block-label">放归社区</div>
+                        <div class="info-block-value">{{ pet.community_name or '-' }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if pet.status == 'euthanized' %}
+        <div class="card">
+            <div class="card-header">
+                <span class="card-header-icon">😢</span>
+                安乐死信息
+            </div>
+            <div class="card-body">
+                <div class="info-section">
+                    <div class="info-block">
+                        <div class="info-block-label">处置原因</div>
+                        <div class="info-block-value">{{ pet.euthanasia_reason or '-' }}</div>
+                    </div>
+                    <div class="info-block">
+                        <div class="info-block-label">处置日期</div>
+                        <div class="info-block-value">{{ pet.euthanasia_date or '-' }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

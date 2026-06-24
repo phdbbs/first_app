@@ -1,0 +1,132 @@
+{% extends "hospital/base.html" %}
+
+{% block title %}交接接收 - 宠物医院端 - TNR管理系统{% endblock %}
+{% block page_title %}📥 交接接收{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="section-header">
+        <h3 class="section-title">待接收转运单 ({{ pending|length }})</h3>
+    </div>
+
+    {% if pending %}
+        {% for tr in pending %}
+        <div class="pet-card">
+            <div class="pet-card-header">
+                <div>
+                    <span class="pet-code">{{ tr.pet_code }}</span>
+                    <span class="badge badge-orange" style="margin-left:8px;">⏳ 待接收</span>
+                </div>
+                <span style="font-size:13px;color:#a0aec0;">转运单号：{{ tr.batch_no }}</span>
+            </div>
+            <div class="pet-info-grid">
+                <div class="info-item">
+                    <span class="info-label">动物种类：</span>
+                    <span class="info-value">{% if tr.species == 'cat' %}🐱 猫{% else %}🐶 狗{% endif %}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">毛色：</span>
+                    <span class="info-value">{{ tr.color or '未记录' }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">来源社区：</span>
+                    <span class="info-value">{{ tr.community_name or '未指定' }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">发出时间：</span>
+                    <span class="info-value">{{ tr.created_at }}</span>
+                </div>
+            </div>
+            {% if tr.description %}
+            <div style="padding:10px 14px;background:#f7fafc;border-radius:10px;margin-bottom:14px;font-size:13px;color:#718096;">
+                {{ tr.description }}
+            </div>
+            {% endif %}
+            <div class="pet-actions">
+                <form method="POST" action="{{ url_for('hospital_receive') }}" style="display:inline;">
+                    <input type="hidden" name="transfer_id" value="{{ tr.id }}">
+                    <input type="hidden" name="action" value="receive">
+                    <button type="submit" class="btn btn-success">✅ 确认接收</button>
+                </form>
+                <button type="button" class="btn btn-danger" onclick="toggleReject({{ tr.id }})">❌ 驳回</button>
+            </div>
+            <div id="reject-area-{{ tr.id }}" style="display:none;margin-top:14px;padding:16px;background:#fff5f5;border-radius:12px;border:2px solid #fed7d7;">
+                <form method="POST" action="{{ url_for('hospital_receive') }}">
+                    <input type="hidden" name="transfer_id" value="{{ tr.id }}">
+                    <input type="hidden" name="action" value="reject">
+                    <div class="form-group" style="margin-bottom:12px;">
+                        <label class="form-label" style="color:#c53030;">驳回原因（必填）</label>
+                        <textarea name="reject_reason" class="form-textarea" placeholder="请填写驳回原因，如：动物健康状态异常、转运单信息与实际不符等..." required style="min-height:80px;border-color:#feb2b2;"></textarea>
+                    </div>
+                    <div style="display:flex;gap:10px;">
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="toggleReject({{ tr.id }})">取消</button>
+                        <button type="submit" class="btn btn-danger btn-sm">确认驳回</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">📭</div>
+        <div class="empty-text">暂无待接收的转运单</div>
+    </div>
+    {% endif %}
+</div>
+
+<div class="card">
+    <div class="section-header">
+        <h3 class="section-title">已接收转运记录</h3>
+    </div>
+    {% if received %}
+    <div style="overflow-x:auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>宠物编号</th>
+                    <th>种类</th>
+                    <th>转运单号</th>
+                    <th>状态</th>
+                    <th>接收时间</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tr in received %}
+                <tr>
+                    <td style="font-weight:600;color:#11998e;">{{ tr.pet_code }}</td>
+                    <td>{% if tr.species == 'cat' %}🐱 猫{% else %}🐶 狗{% endif %}</td>
+                    <td>{{ tr.batch_no }}</td>
+                    <td>
+                        {% if tr.status == 'received' %}
+                        <span class="badge badge-green">✅ 已接收</span>
+                        {% elif tr.status == 'rejected' %}
+                        <span class="badge badge-red">❌ 已驳回</span>
+                        {% endif %}
+                    </td>
+                    <td style="color:#a0aec0;">{{ tr.received_at or tr.created_at }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">📋</div>
+        <div class="empty-text">暂无接收记录</div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+function toggleReject(id) {
+    var el = document.getElementById('reject-area-' + id);
+    if (el.style.display === 'none') {
+        document.querySelectorAll('[id^="reject-area-"]').forEach(function(e) { e.style.display = 'none'; });
+        el.style.display = 'block';
+        el.querySelector('textarea').focus();
+    } else {
+        el.style.display = 'none';
+    }
+}
+{% endblock %}

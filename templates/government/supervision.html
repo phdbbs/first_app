@@ -1,0 +1,107 @@
+{% extends "government/base.html" %}
+{% set nav_active = 'supervision' %}
+{% block title %}全业务监管{% endblock %}
+
+{% block extra_css %}
+<style>
+    .sup-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 14px;
+        margin-bottom: 24px;
+    }
+    .sup-stat {
+        background: rgba(255,255,255,0.05);
+        border-radius: 12px;
+        padding: 16px;
+        text-align: center;
+        border: 1px solid rgba(255,255,255,0.08);
+    }
+    .sup-stat-val { font-size: 26px; font-weight: 700; }
+    .sup-stat-label { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 4px; }
+    .table-wrap { overflow-x: auto; }
+    .species-cell { font-size: 20px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-title">
+    <span class="page-title-icon">🔍</span>
+    全业务监管
+</div>
+
+{% set ns = namespace(total=0, intake=0, pending_treat=0, pending_adopt=0, adopted=0, released=0, euth=0) %}
+{% for p in pets %}
+    {% set ns.total = ns.total + 1 %}
+    {% if p.status in ['intake','transit'] %}{% set ns.intake = ns.intake + 1 %}{% endif %}
+    {% if p.status in ['pending_treatment','treating'] %}{% set ns.pending_treat = ns.pending_treat + 1 %}{% endif %}
+    {% if p.status == 'pending_adoption' %}{% set ns.pending_adopt = ns.pending_adopt + 1 %}{% endif %}
+    {% if p.status == 'adopted' %}{% set ns.adopted = ns.adopted + 1 %}{% endif %}
+    {% if p.status == 'released' %}{% set ns.released = ns.released + 1 %}{% endif %}
+    {% if p.status == 'euthanized' %}{% set ns.euth = ns.euth + 1 %}{% endif %}
+{% endfor %}
+
+<div class="sup-stats">
+    <div class="sup-stat"><div class="sup-stat-val val-blue">{{ ns.total }}</div><div class="sup-stat-label">当前筛选</div></div>
+    <div class="sup-stat"><div class="sup-stat-val" style="color:#00d2ff;">{{ ns.intake }}</div><div class="sup-stat-label">在途/转运中</div></div>
+    <div class="sup-stat"><div class="sup-stat-val val-orange">{{ ns.pending_treat }}</div><div class="sup-stat-label">待诊疗</div></div>
+    <div class="sup-stat"><div class="sup-stat-val val-pink">{{ ns.pending_adopt }}</div><div class="sup-stat-label">待领养</div></div>
+    <div class="sup-stat"><div class="sup-stat-val val-green">{{ ns.adopted }}</div><div class="sup-stat-label">已领养</div></div>
+    <div class="sup-stat"><div class="sup-stat-val" style="color:#4ade80;">{{ ns.released }}</div><div class="sup-stat-label">已放归</div></div>
+    <div class="sup-stat"><div class="sup-stat-val val-red">{{ ns.euth }}</div><div class="sup-stat-label">已安乐死</div></div>
+</div>
+
+<div class="glass-card">
+    <div class="filter-tabs">
+        {% set filters = [
+            ('', '全部'),
+            ('intake', '在途'),
+            ('pending_treatment', '待诊疗'),
+            ('pending_adoption', '待领养'),
+            ('adopted', '已领养'),
+            ('released', '已放归'),
+            ('euthanized', '已安乐死'),
+        ] %}
+        {% for val, label in filters %}
+        <a href="{{ url_for('gov_supervision', status=val) }}"
+           class="filter-tab {% if status_filter == val or (not status_filter and val == '') %}active{% endif %}">{{ label }}</a>
+        {% endfor %}
+    </div>
+
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>宠物编号</th>
+                    <th>动物类型</th>
+                    <th>来源社区</th>
+                    <th>所在医院</th>
+                    <th>领养人</th>
+                    <th>当前状态</th>
+                    <th>收容日期</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in pets %}
+                <tr>
+                    <td style="font-family:monospace;font-weight:600;color:#00d2ff;">{{ p.pet_code }}</td>
+                    <td class="species-cell">{% if p.species == 'dog' %}🐕{% else %}🐱{% endif %}<span style="font-size:13px;color:rgba(255,255,255,0.5);margin-left:4px;">{{ p.gender or '' }}</span></td>
+                    <td>{{ p.community_name or '-' }}</td>
+                    <td>{{ p.hospital_name or '捕捉站' }}</td>
+                    <td>{{ p.adopter_name or '-' }}</td>
+                    <td><span class="status-badge status-{{ p.status }}">{{ PET_STATUS[p.status] }}</span></td>
+                    <td style="color:rgba(255,255,255,0.5);font-size:13px;">{{ p.intake_date[:10] if p.intake_date else '-' }}</td>
+                    <td>
+                        <a href="{{ url_for('pet_archive', pet_id=p.id) }}" class="btn btn-secondary btn-sm">📋 档案</a>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% if not pets %}
+                <tr><td colspan="8" style="text-align:center;padding:50px;color:rgba(255,255,255,0.4);">暂无符合条件的动物记录</td></tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

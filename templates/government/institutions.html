@@ -1,0 +1,244 @@
+{% extends "government/base.html" %}
+{% set nav_active = 'institutions' %}
+{% block title %}机构管理{% endblock %}
+
+{% block extra_css %}
+<style>
+    .inst-tabs {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 24px;
+    }
+    .inst-tab {
+        padding: 10px 24px;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 10px;
+        color: rgba(255,255,255,0.6);
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.3s;
+    }
+    .inst-tab.active {
+        background: linear-gradient(135deg, #00d2ff, #3a7bd5);
+        border-color: transparent;
+        color: #fff;
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .form-card {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    .form-card-title {
+        font-size: 15px;
+        font-weight: 600;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .inst-stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    .inst-stat {
+        background: rgba(255,255,255,0.05);
+        border-radius: 12px;
+        padding: 18px;
+        text-align: center;
+        border: 1px solid rgba(255,255,255,0.08);
+    }
+    .inst-stat-val { font-size: 28px; font-weight: 700; color: #00d2ff; }
+    .inst-stat-label { font-size: 13px; color: rgba(255,255,255,0.5); margin-top: 4px; }
+    .table-wrap { overflow-x: auto; }
+    @media (max-width: 768px) {
+        .inst-stats { grid-template-columns: repeat(2, 1fr); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-title">
+    <span class="page-title-icon">🏛️</span>
+    机构管理
+</div>
+
+<div class="inst-stats">
+    <div class="inst-stat">
+        <div class="inst-stat-val">{{ hospitals|length }}</div>
+        <div class="inst-stat-label">合作医院总数</div>
+    </div>
+    <div class="inst-stat">
+        <div class="inst-stat-val">{{ hospitals|selectattr('status','equalto',1)|list|length }}</div>
+        <div class="inst-stat-label">正常启用</div>
+    </div>
+    <div class="inst-stat">
+        <div class="inst-stat-val">{{ communities|length }}</div>
+        <div class="inst-stat-label">登记社区数</div>
+    </div>
+    <div class="inst-stat">
+        <div class="inst-stat-val">{{ hospitals|rejectattr('status','equalto',1)|list|length }}</div>
+        <div class="inst-stat-label">已停用</div>
+    </div>
+</div>
+
+<div class="inst-tabs">
+    <div class="inst-tab active" onclick="switchTab(this, 'hospitals')">🏥 宠物医院管理</div>
+    <div class="inst-tab" onclick="switchTab(this, 'communities')">🏘️ 社区管理</div>
+</div>
+
+<div id="tab-hospitals" class="tab-content active">
+    <div class="glass-card">
+        <div class="form-card" style="background:transparent;border:none;padding:0;margin-bottom:24px;">
+            <div class="form-card-title">➕ 新增合作医院</div>
+            <form method="POST" action="{{ url_for('gov_institutions') }}">
+                <input type="hidden" name="action" value="add_hospital">
+                <div class="form-row">
+                    <div>
+                        <label class="form-label">医院名称 *</label>
+                        <input type="text" name="name" class="form-input" placeholder="请输入医院名称" required>
+                    </div>
+                    <div>
+                        <label class="form-label">所在区域</label>
+                        <input type="text" name="district" class="form-input" placeholder="如：朝阳区">
+                    </div>
+                    <div>
+                        <label class="form-label">联系人</label>
+                        <input type="text" name="contact_person" class="form-input" placeholder="负责人姓名">
+                    </div>
+                    <div>
+                        <label class="form-label">联系电话</label>
+                        <input type="text" name="contact_phone" class="form-input" placeholder="联系电话">
+                    </div>
+                    <div style="grid-column: 1 / -1;">
+                        <label class="form-label">详细地址</label>
+                        <input type="text" name="address" class="form-input" placeholder="医院详细地址">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">添加医院</button>
+            </form>
+        </div>
+
+        <div class="section-title"><span>🏥</span> 合作医院列表</div>
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>医院名称</th>
+                        <th>所在区域</th>
+                        <th>地址</th>
+                        <th>联系人</th>
+                        <th>联系电话</th>
+                        <th>状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for h in hospitals %}
+                    <tr>
+                        <td style="font-weight:500;">{{ h.name }}</td>
+                        <td>{{ h.district or '-' }}</td>
+                        <td>{{ h.address or '-' }}</td>
+                        <td>{{ h.contact_person or '-' }}</td>
+                        <td>{{ h.contact_phone or '-' }}</td>
+                        <td>
+                            {% if h.status == 1 %}
+                            <span class="status-badge status-adopted">● 启用中</span>
+                            {% else %}
+                            <span class="status-badge status-euthanized">○ 已停用</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <form method="POST" action="{{ url_for('gov_institutions') }}" style="display:inline;"
+                                  onsubmit="return confirm('确认{% if h.status==1 %}停用{% else %}启用{% endif %}该医院？');">
+                                <input type="hidden" name="action" value="toggle">
+                                <input type="hidden" name="inst_id" value="{{ h.id }}">
+                                {% if h.status == 1 %}
+                                <button type="submit" class="btn btn-danger btn-sm">停用</button>
+                                {% else %}
+                                <button type="submit" class="btn btn-secondary btn-sm" style="background:rgba(0,255,136,0.15);color:#00ff88;border-color:rgba(0,255,136,0.25);">启用</button>
+                                {% endif %}
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% if not hospitals %}
+                    <tr><td colspan="7" style="text-align:center;padding:40px;color:rgba(255,255,255,0.4);">暂无医院数据</td></tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="tab-communities" class="tab-content">
+    <div class="glass-card">
+        <div class="form-card" style="background:transparent;border:none;padding:0;margin-bottom:24px;">
+            <div class="form-card-title">➕ 新增社区</div>
+            <form method="POST" action="{{ url_for('gov_institutions') }}">
+                <input type="hidden" name="action" value="add_community">
+                <div class="form-row">
+                    <div>
+                        <label class="form-label">社区名称 *</label>
+                        <input type="text" name="c_name" class="form-input" placeholder="如：阳光花园小区" required>
+                    </div>
+                    <div>
+                        <label class="form-label">所在区域</label>
+                        <input type="text" name="c_district" class="form-input" placeholder="如：朝阳区">
+                    </div>
+                    <div style="grid-column: 1 / -1;">
+                        <label class="form-label">详细地址</label>
+                        <input type="text" name="c_address" class="form-input" placeholder="社区详细地址">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">添加社区</button>
+            </form>
+        </div>
+
+        <div class="section-title"><span>🏘️</span> 已登记社区列表</div>
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>社区名称</th>
+                        <th>所在区域</th>
+                        <th>地址</th>
+                        <th>登记时间</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in communities %}
+                    <tr>
+                        <td style="font-weight:500;">{{ c.name }}</td>
+                        <td>{{ c.district or '-' }}</td>
+                        <td>{{ c.address or '-' }}</td>
+                        <td style="color:rgba(255,255,255,0.5);font-size:13px;">{{ c.created_at or '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% if not communities %}
+                    <tr><td colspan="4" style="text-align:center;padding:40px;color:rgba(255,255,255,0.4);">暂无社区数据</td></tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function switchTab(el, tab) {
+    document.querySelectorAll('.inst-tab').forEach(function(t){ t.classList.remove('active'); });
+    document.querySelectorAll('.tab-content').forEach(function(c){ c.classList.remove('active'); });
+    el.classList.add('active');
+    document.getElementById('tab-' + tab).classList.add('active');
+}
+</script>
+{% endblock %}

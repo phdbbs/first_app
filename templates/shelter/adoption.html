@@ -1,0 +1,252 @@
+{% extends "shelter/base.html" %}
+
+{% block title %}领养管理 - TNR管理系统{% endblock %}
+{% block page_title %}领养管理{% endblock %}
+
+{% block content %}
+<div class="tab-bar">
+    <div class="tab-item active" onclick="switchTab('adoption', 'pending')">待领养列表</div>
+    <div class="tab-item" onclick="switchTab('adoption', 'adopted')">已领养列表</div>
+    <div class="tab-item" onclick="switchTab('adoption', 'checkins')">打卡审核</div>
+    <div class="tab-item" onclick="switchTab('adoption', 'blacklist')">黑名单管理</div>
+</div>
+
+<div id="adoption_pending" class="tab-content active">
+    <section class="section">
+        <div class="section-header">
+            <h3 class="section-title">待领养动物列表</h3>
+        </div>
+        {% if pending_pets %}
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>宠物编号</th>
+                        <th>所在医院</th>
+                        <th>绝育</th>
+                        <th>疫苗</th>
+                        <th>驱虫</th>
+                        <th>芯片</th>
+                        <th>领养人</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pet in pending_pets %}
+                    <tr>
+                        <td style="font-weight: 600; color: #c05621;">{{ pet.pet_code }}</td>
+                        <td>{{ pet.hospital_name or '-' }}</td>
+                        <td>
+                            {% if pet.neutered %}
+                            <span class="badge badge-success">✅ 已绝育</span>
+                            {% else %}
+                            <span class="badge badge-secondary">❌ 未绝育</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if pet.vaccinated %}
+                            <span class="badge badge-success">✅ 已疫苗</span>
+                            {% else %}
+                            <span class="badge badge-secondary">❌ 未疫苗</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if pet.dewormed %}
+                            <span class="badge badge-success">✅ 已驱虫</span>
+                            {% else %}
+                            <span class="badge badge-secondary">❌ 未驱虫</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if pet.chipped %}
+                            <span class="badge badge-success">✅ 已芯片</span>
+                            {% else %}
+                            <span class="badge badge-secondary">❌ 未芯片</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <form method="POST" action="{{ url_for('shelter_adoption') }}" style="display: flex; gap: 8px; align-items: center;">
+                                <input type="hidden" name="action" value="approve">
+                                <input type="hidden" name="pet_id" value="{{ pet.id }}">
+                                <select name="adopter_id" class="form-select" style="padding: 6px 10px; font-size: 13px; min-width: 120px;">
+                                    <option value="">选择领养人</option>
+                                    {% for adopter in adopters %}
+                                    <option value="{{ adopter.id }}">{{ adopter.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn-green btn-sm">通过</button>
+                            </form>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('pet_archive', pet_id=pet.id) }}" class="btn btn-secondary btn-sm">档案</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">👤</div>
+            <div class="empty-text">暂无待领养动物</div>
+        </div>
+        {% endif %}
+    </section>
+</div>
+
+<div id="adoption_adopted" class="tab-content">
+    <section class="section">
+        <div class="section-header">
+            <h3 class="section-title">已领养动物列表</h3>
+        </div>
+        {% if adopted_pets %}
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>宠物编号</th>
+                        <th>领养人</th>
+                        <th>联系电话</th>
+                        <th>领养日期</th>
+                        <th>状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pet in adopted_pets %}
+                    <tr>
+                        <td style="font-weight: 600; color: #c05621;">{{ pet.pet_code }}</td>
+                        <td>{{ pet.adopter_name or '-' }}</td>
+                        <td>{{ pet.adopter_phone or '-' }}</td>
+                        <td>{{ pet.adoption_date|dt('%Y-%m-%d') if pet.adoption_date else '-' }}</td>
+                        <td><span class="badge badge-success">已领养</span></td>
+                        <td>
+                            <a href="{{ url_for('pet_archive', pet_id=pet.id) }}" class="btn btn-secondary btn-sm">档案</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">🏠</div>
+            <div class="empty-text">暂无已领养记录</div>
+        </div>
+        {% endif %}
+    </section>
+</div>
+
+<div id="adoption_checkins" class="tab-content">
+    <section class="section">
+        <div class="section-header">
+            <h3 class="section-title">领养打卡审核</h3>
+        </div>
+        {% if checkins %}
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>宠物编号</th>
+                        <th>领养人</th>
+                        <th>打卡月份</th>
+                        <th>打卡内容</th>
+                        <th>状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for checkin in checkins %}
+                    <tr>
+                        <td style="font-weight: 600; color: #c05621;">{{ checkin.pet_code }}</td>
+                        <td>{{ checkin.adopter_name }}</td>
+                        <td>{{ checkin.month }}</td>
+                        <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ checkin.content }}">{{ checkin.content }}</td>
+                        <td>
+                            {% if checkin.status == 'pending' %}
+                            <span class="badge badge-warning">待审核</span>
+                            {% elif checkin.status == 'approved' %}
+                            <span class="badge badge-success">已通过</span>
+                            {% elif checkin.status == 'rejected' %}
+                            <span class="badge badge-danger">已拒绝</span>
+                            {% else %}
+                            <span class="badge badge-secondary">{{ checkin.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if checkin.status == 'pending' %}
+                            <div style="display: flex; gap: 6px;">
+                                <form method="POST" action="{{ url_for('shelter_adoption') }}" style="display: inline;">
+                                    <input type="hidden" name="action" value="approve_checkin">
+                                    <input type="hidden" name="checkin_id" value="{{ checkin.id }}">
+                                    <button type="submit" class="btn btn-green btn-sm">通过</button>
+                                </form>
+                                <form method="POST" action="{{ url_for('shelter_adoption') }}" style="display: inline;">
+                                    <input type="hidden" name="action" value="reject_checkin">
+                                    <input type="hidden" name="checkin_id" value="{{ checkin.id }}">
+                                    <button type="submit" class="btn btn-red btn-sm">拒绝</button>
+                                </form>
+                            </div>
+                            {% else %}
+                            <span style="color: #a0aec0; font-size: 13px;">已处理</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📅</div>
+            <div class="empty-text">暂无待审核打卡</div>
+        </div>
+        {% endif %}
+    </section>
+</div>
+
+<div id="adoption_blacklist" class="tab-content">
+    <section class="section">
+        <div class="section-header">
+            <h3 class="section-title">黑名单管理</h3>
+        </div>
+        {% if blacklist %}
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>姓名</th>
+                        <th>联系电话</th>
+                        <th>加入原因</th>
+                        <th>加入时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in blacklist %}
+                    <tr>
+                        <td>{{ item.name }}</td>
+                        <td>{{ item.phone }}</td>
+                        <td>{{ item.reason or '-' }}</td>
+                        <td>{{ item.created_at|dt('%Y-%m-%d') if item.created_at else '-' }}</td>
+                        <td>
+                            <form method="POST" action="{{ url_for('shelter_adoption') }}" style="display: inline;">
+                                <input type="hidden" name="action" value="remove_blacklist">
+                                <input type="hidden" name="blacklist_id" value="{{ item.id }}">
+                                <button type="submit" class="btn btn-secondary btn-sm" onclick="return confirm('确定要移出黑名单吗？')">移出</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📋</div>
+            <div class="empty-text">黑名单为空</div>
+        </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

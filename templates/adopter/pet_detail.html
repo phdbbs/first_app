@@ -1,0 +1,266 @@
+{% extends "adopter/base.html" %}
+{% block title %}{{ pet['pet_code'] }} - 宠物详情{% endblock %}
+
+{% block header %}
+<a href="javascript:history.back()" class="header-back">←</a>
+<div class="header-title">宠物详情</div>
+<div class="header-right"></div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .pet-hero {
+        background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+        border-radius: 20px;
+        padding: 24px;
+        text-align: center;
+        margin-bottom: 12px;
+        position: relative;
+        overflow: hidden;
+    }
+    .pet-hero.dog {
+        background: linear-gradient(135deg, #4dd0e1 0%, #80deea 100%);
+    }
+    .pet-hero-emoji {
+        font-size: 72px;
+        margin-bottom: 8px;
+        filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
+    }
+    .pet-hero-code {
+        font-size: 18px;
+        font-weight: 700;
+        color: #fff;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+    .pet-hero-status {
+        display: inline-block;
+        margin-top: 8px;
+        padding: 4px 14px;
+        background: rgba(255,255,255,0.3);
+        border-radius: 20px;
+        font-size: 12px;
+        color: #fff;
+        backdrop-filter: blur(4px);
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid #f8f0f2;
+    }
+    .info-row:last-child {
+        border-bottom: none;
+    }
+    .info-label {
+        font-size: 14px;
+        color: #999;
+    }
+    .info-value {
+        font-size: 14px;
+        color: #333;
+        font-weight: 500;
+        text-align: right;
+        max-width: 60%;
+    }
+
+    .status-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+    }
+
+    .process-guide {
+        background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
+        border-radius: 16px;
+        padding: 16px;
+        margin-bottom: 12px;
+        border: 1px solid rgba(255, 152, 0, 0.15);
+    }
+    .guide-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: #ef6c00;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .guide-text {
+        font-size: 13px;
+        color: #795548;
+        line-height: 1.7;
+    }
+
+    .timeline {
+        position: relative;
+        padding-left: 24px;
+    }
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 6px;
+        top: 4px;
+        bottom: 4px;
+        width: 2px;
+        background: linear-gradient(180deg, #ff9a9e, #fecfef);
+        border-radius: 1px;
+    }
+    .timeline-item {
+        position: relative;
+        padding-bottom: 16px;
+    }
+    .timeline-item:last-child {
+        padding-bottom: 0;
+    }
+    .timeline-dot {
+        position: absolute;
+        left: -22px;
+        top: 4px;
+        width: 12px;
+        height: 12px;
+        background: #ff9a9e;
+        border-radius: 50%;
+        border: 2px solid #fff;
+        box-shadow: 0 0 0 2px #ff9a9e;
+    }
+    .timeline-date {
+        font-size: 12px;
+        color: #999;
+        margin-bottom: 4px;
+    }
+    .timeline-content {
+        font-size: 13px;
+        color: #333;
+        line-height: 1.6;
+    }
+    .timeline-tags {
+        display: flex;
+        gap: 4px;
+        flex-wrap: wrap;
+        margin-top: 6px;
+    }
+
+    .contact-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+        padding: 14px;
+        background: linear-gradient(135deg, #ff9a9e, #fecfef);
+        color: #fff;
+        border-radius: 25px;
+        font-size: 16px;
+        font-weight: 600;
+        margin-top: 8px;
+        box-shadow: 0 4px 12px rgba(255, 154, 158, 0.35);
+        transition: all 0.2s;
+    }
+    .contact-btn:active {
+        transform: scale(0.97);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="pet-hero {% if pet['species'] == 'dog' %}dog{% endif %}">
+    <div class="pet-hero-emoji">{{ '🐶' if pet['species'] == 'dog' else '🐱' }}</div>
+    <div class="pet-hero-code">{{ pet['pet_code'] }}</div>
+    <div class="pet-hero-status">{{ '待领养' if pet['status'] == 'pending_adoption' else PET_STATUS.get(pet['status'], pet['status']) }}</div>
+</div>
+
+<div class="card">
+    <div class="section-title">🐾 基本信息</div>
+    <div class="info-row">
+        <span class="info-label">物种</span>
+        <span class="info-value">{{ '狗狗' if pet['species'] == 'dog' else '猫咪' }}</span>
+    </div>
+    {% if pet['gender'] %}
+    <div class="info-row">
+        <span class="info-label">性别</span>
+        <span class="info-value">{{ pet['gender'] }}</span>
+    </div>
+    {% endif %}
+    {% if pet['age'] %}
+    <div class="info-row">
+        <span class="info-label">年龄</span>
+        <span class="info-value">{{ pet['age'] }}</span>
+    </div>
+    {% endif %}
+    {% if pet['color'] %}
+    <div class="info-row">
+        <span class="info-label">毛色</span>
+        <span class="info-value">{{ pet['color'] }}</span>
+    </div>
+    {% endif %}
+    {% if pet['description'] %}
+    <div class="info-row">
+        <span class="info-label">描述</span>
+        <span class="info-value">{{ pet['description'] }}</span>
+    </div>
+    {% endif %}
+    <div class="status-badges">
+        {% if pet['neutered'] %}<span class="tag tag-green">✂️ 已绝育</span>{% else %}<span class="tag tag-gray">未绝育</span>{% endif %}
+        {% if pet['vaccinated'] %}<span class="tag tag-blue">💉 已疫苗</span>{% else %}<span class="tag tag-gray">未疫苗</span>{% endif %}
+        {% if pet['dewormed'] %}<span class="tag tag-cyan">🛡️ 已驱虫</span>{% else %}<span class="tag tag-gray">未驱虫</span>{% endif %}
+        {% if pet['chipped'] %}
+            <span class="tag tag-orange">📡 已芯片</span>
+            {% if pet['chip_no'] %}<span class="tag tag-gray">{{ pet['chip_no'] }}</span>{% endif %}
+        {% else %}<span class="tag tag-gray">未芯片</span>{% endif %}
+    </div>
+</div>
+
+<div class="card">
+    <div class="section-title">🏥 所在医院</div>
+    <div class="info-row">
+        <span class="info-label">医院名称</span>
+        <span class="info-value">{{ pet['hospital_name'] or '待定' }}</span>
+    </div>
+    {% if pet['hospital_phone'] %}
+    <div class="info-row">
+        <span class="info-label">联系电话</span>
+        <span class="info-value"><a href="tel:{{ pet['hospital_phone'] }}" style="color:#ff9a9e;">{{ pet['hospital_phone'] }}</a></span>
+    </div>
+    {% endif %}
+    {% if pet['hospital_phone'] %}
+    <a href="tel:{{ pet['hospital_phone'] }}" class="contact-btn">📞 联系医院咨询领养</a>
+    {% endif %}
+</div>
+
+<div class="process-guide">
+    <div class="guide-title">⚠️ 领养须知</div>
+    <div class="guide-text">
+        本系统暂不支持在线预约领养。如您有意向领养这只小动物，请直接致电上方医院电话进行线下联系。<br>
+        领养流程：线下看宠 → 提交资质材料 → 工作人员审核 → 签署领养协议 → 开通领养人账号 → 完成领宠。<br>
+        领养后请按时每月进行回访打卡，感谢您给流浪动物一个温暖的家！❤️
+    </div>
+</div>
+
+{% if treatments %}
+<div class="card">
+    <div class="section-title">💊 诊疗记录</div>
+    <div class="timeline">
+        {% for t in treatments %}
+        <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="timeline-date">{{ t['treated_at'] }}</div>
+            <div class="timeline-content">
+                {% if t['completed'] %}<strong>诊疗完成</strong>{% else %}诊疗中{% endif %}
+                {% if t['notes'] %}<br>{{ t['notes'] }}{% endif %}
+                <div class="timeline-tags">
+                    {% if t['neuter_done'] %}<span class="tag tag-green">绝育</span>{% endif %}
+                    {% if t['vaccine_done'] %}<span class="tag tag-blue">疫苗</span>{% endif %}
+                    {% if t['dewormer_done'] %}<span class="tag tag-cyan">驱虫</span>{% endif %}
+                    {% if t['chip_done'] %}<span class="tag tag-orange">芯片</span>{% endif %}
+                </div>
+                {% if t['chip_no'] %}<div style="font-size:12px;color:#999;margin-top:4px;">芯片号: {{ t['chip_no'] }}</div>{% endif %}
+                {% if t['neuter_record'] %}<div style="font-size:12px;color:#666;margin-top:4px;">{{ t['neuter_record'] }}</div>{% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

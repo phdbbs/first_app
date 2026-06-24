@@ -1,0 +1,171 @@
+{% extends "government/base.html" %}
+{% set nav_active = 'material' %}
+{% block title %}物料监管{% endblock %}
+
+{% block extra_css %}
+<style>
+    .mat-shelter-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    .mat-card {
+        background: rgba(255,255,255,0.05);
+        backdrop-filter: blur(12px);
+        border-radius: 16px;
+        padding: 24px;
+        border: 1px solid rgba(255,255,255,0.1);
+        text-align: center;
+        transition: all 0.3s;
+    }
+    .mat-card:hover { transform: translateY(-3px); border-color: rgba(0,210,255,0.3); }
+    .mat-card-icon { font-size: 36px; margin-bottom: 10px; }
+    .mat-card-name { font-size: 14px; color: rgba(255,255,255,0.6); margin-bottom: 8px; }
+    .mat-card-qty { font-size: 36px; font-weight: 700; }
+    .mat-card-unit { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 4px; }
+    .mat-card.alert { border-color: rgba(229,57,53,0.4); }
+    .mat-card.alert .mat-card-qty { color: #ff6b6b; }
+
+    .hos-inv-table td.inv-cell { text-align: center; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .low-stock { color: #ff6b6b !important; }
+    .ok-stock { color: #00ff88; }
+    .table-wrap { overflow-x: auto; }
+    .action-badge {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+    .action-purchase { background: rgba(0,255,136,0.15); color: #00ff88; }
+    .action-consume { background: rgba(255,149,0,0.15); color: #ff9500; }
+    .action-distribute { background: rgba(0,210,255,0.15); color: #00d2ff; }
+    .action-receive { background: rgba(167,139,250,0.15); color: #a78bfa; }
+    @media (max-width: 768px) {
+        .mat-shelter-grid { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-title">
+    <span class="page-title-icon">📦</span>
+    物料监管
+</div>
+
+<div class="section-title" style="margin-bottom:16px;"><span>🏛️</span> 市级捕捉站库存总览</div>
+<div class="mat-shelter-grid">
+    {% set shelter_v = inv_shelter.vaccine or 0 %}
+    {% set shelter_c = inv_shelter.chip or 0 %}
+    {% set shelter_d = inv_shelter.dewormer or 0 %}
+    <div class="mat-card {% if shelter_v < 20 %}alert{% endif %}">
+        <div class="mat-card-icon">💉</div>
+        <div class="mat-card-name">疫苗</div>
+        <div class="mat-card-qty {% if shelter_v >= 20 %}val-blue{% endif %}">{{ shelter_v }}</div>
+        <div class="mat-card-unit">支 · 安全库存 20</div>
+    </div>
+    <div class="mat-card {% if shelter_c < 50 %}alert{% endif %}">
+        <div class="mat-card-icon">🔖</div>
+        <div class="mat-card-name">芯片</div>
+        <div class="mat-card-qty {% if shelter_c >= 50 %}val-green{% endif %}">{{ shelter_c }}</div>
+        <div class="mat-card-unit">个 · 安全库存 50</div>
+    </div>
+    <div class="mat-card {% if shelter_d < 20 %}alert{% endif %}">
+        <div class="mat-card-icon">💊</div>
+        <div class="mat-card-name">驱虫药</div>
+        <div class="mat-card-qty {% if shelter_d >= 20 %}val-orange{% endif %}">{{ shelter_d }}</div>
+        <div class="mat-card-unit">支 · 安全库存 20</div>
+    </div>
+</div>
+
+<div class="glass-card">
+    <div class="section-title"><span>🏥</span> 各医院物料库存</div>
+    <div class="table-wrap">
+        <table class="data-table hos-inv-table">
+            <thead>
+                <tr>
+                    <th>医院名称</th>
+                    <th>所在区域</th>
+                    <th style="text-align:center;">💉 疫苗（支）</th>
+                    <th style="text-align:center;">🔖 芯片（个）</th>
+                    <th style="text-align:center;">💊 驱虫药（支）</th>
+                    <th>库存状态</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in hospital_inv %}
+                {% set h = item.hospital %}
+                {% set inv = item.inventory %}
+                {% set v = inv.vaccine or 0 %}
+                {% set c = inv.chip or 0 %}
+                {% set d = inv.dewormer or 0 %}
+                {% set has_alert = (v < 10) or (c < 10) or (d < 10) %}
+                <tr>
+                    <td style="font-weight:500;">{{ h.name }}</td>
+                    <td>{{ h.district or '-' }}</td>
+                    <td class="inv-cell {% if v < 10 %}low-stock{% else %}ok-stock{% endif %}">{{ v }}{% if v < 10 %} ⚠️{% endif %}</td>
+                    <td class="inv-cell {% if c < 10 %}low-stock{% else %}ok-stock{% endif %}">{{ c }}{% if c < 10 %} ⚠️{% endif %}</td>
+                    <td class="inv-cell {% if d < 10 %}low-stock{% else %}ok-stock{% endif %}">{{ d }}{% if d < 10 %} ⚠️{% endif %}</td>
+                    <td>
+                        {% if has_alert %}
+                        <span class="status-badge status-euthanized">库存预警</span>
+                        {% else %}
+                        <span class="status-badge status-adopted">正常</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+                {% if not hospital_inv %}
+                <tr><td colspan="6" style="text-align:center;padding:40px;color:rgba(255,255,255,0.4);">暂无医院数据</td></tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="glass-card">
+    <div class="section-title"><span>📋</span> 物料出入库台账</div>
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>时间</th>
+                    <th>物料类型</th>
+                    <th>操作类型</th>
+                    <th>数量</th>
+                    <th>原因/备注</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for l in ledger %}
+                <tr>
+                    <td style="color:rgba(255,255,255,0.5);font-size:13px;white-space:nowrap;">{{ l.created_at }}</td>
+                    <td>{{ MATERIAL_TYPES.get(l.type, l.type) }}</td>
+                    <td>
+                        {% if l.action == 'purchase' %}
+                        <span class="action-badge action-purchase">采购入库</span>
+                        {% elif l.action == 'consume' %}
+                        <span class="action-badge action-consume">消耗使用</span>
+                        {% elif l.action == 'distribute' %}
+                        <span class="action-badge action-distribute">调拨下发</span>
+                        {% elif l.action == 'receive' %}
+                        <span class="action-badge action-receive">接收领用</span>
+                        {% else %}
+                        <span class="action-badge" style="background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);">{{ l.action }}</span>
+                        {% endif %}
+                    </td>
+                    <td style="font-weight:600;">
+                        {% if l.action in ['purchase', 'receive'] %}+{% else %}-{% endif %}{{ l.quantity }}
+                    </td>
+                    <td style="color:rgba(255,255,255,0.6);font-size:13px;">{{ l.reason or '-' }}</td>
+                </tr>
+                {% endfor %}
+                {% if not ledger %}
+                <tr><td colspan="5" style="text-align:center;padding:40px;color:rgba(255,255,255,0.4);">暂无台账记录</td></tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

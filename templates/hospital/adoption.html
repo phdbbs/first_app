@@ -1,0 +1,163 @@
+{% extends "hospital/base.html" %}
+
+{% block title %}领养维护 - 宠物医院端 - TNR管理系统{% endblock %}
+{% block page_title %}📝 领养维护{% endblock %}
+
+{% block content %}
+<div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));">
+    <div class="stat-card purple">
+        <div class="stat-header">
+            <span class="stat-label">待资料维护</span>
+            <div class="stat-icon icon-purple">📝</div>
+        </div>
+        <div class="stat-value">{{ treated_pets|selectattr('status','equalto','treated')|list|length }}</div>
+        <div class="stat-trend">诊疗完成待上架</div>
+    </div>
+    <div class="stat-card blue">
+        <div class="stat-header">
+            <span class="stat-label">已上架待领养</span>
+            <div class="stat-icon icon-blue">🏠</div>
+        </div>
+        <div class="stat-value">{{ treated_pets|selectattr('status','equalto','pending_adoption')|list|length }}</div>
+        <div class="stat-trend">领养大厅展示中</div>
+    </div>
+    <div class="stat-card green">
+        <div class="stat-header">
+            <span class="stat-label">已成功领养</span>
+            <div class="stat-icon icon-green">❤️</div>
+        </div>
+        <div class="stat-value">{{ adopted_pets|length }}</div>
+        <div class="stat-trend">已领出</div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="section-header">
+        <h3 class="section-title">待维护 / 待上架宠物 ({{ treated_pets|length }})</h3>
+    </div>
+
+    {% if treated_pets %}
+        {% for p in treated_pets %}
+        <div class="pet-card">
+            <div class="pet-card-header">
+                <div>
+                    <span class="pet-code">{{ p.pet_code }}</span>
+                    {% if p.status == 'pending_adoption' %}
+                    <span class="badge badge-blue" style="margin-left:8px;">🏠 已上架</span>
+                    {% else %}
+                    <span class="badge badge-orange" style="margin-left:8px;">📝 待维护</span>
+                    {% endif %}
+                </div>
+                <span style="font-size:13px;color:#a0aec0;">诊疗时间：{{ p.treatment_date or '-' }}</span>
+            </div>
+            <div class="pet-info-grid" style="margin-bottom:16px;">
+                <div class="info-item">
+                    <span class="info-label">种类：</span>
+                    <span class="info-value">{% if p.species == 'cat' %}🐱 猫{% else %}🐶 狗{% endif %}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">性别：</span>
+                    <span class="info-value">{{ p.gender or '-' }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">年龄：</span>
+                    <span class="info-value">{{ p.age or '-' }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">毛色：</span>
+                    <span class="info-value">{{ p.color or '-' }}</span>
+                </div>
+            </div>
+            <form method="POST" action="{{ url_for('hospital_adoption') }}">
+                <input type="hidden" name="pet_id" value="{{ p.id }}">
+                <input type="hidden" name="action" value="update">
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:14px;">
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label">宠物昵称</label>
+                        <input type="text" name="name" class="form-input" placeholder="给宠物起个名字" value="{{ p.adoption_desc.split(' ')[0] if p.adoption_desc else '' }}">
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label">性别</label>
+                        <select name="gender" class="form-select">
+                            <option value="">-- 选择 --</option>
+                            <option value="公" {% if p.gender == '公' %}selected{% endif %}>公</option>
+                            <option value="母" {% if p.gender == '母' %}selected{% endif %}>母</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label">年龄</label>
+                        <input type="text" name="age" class="form-input" placeholder="如：1岁、8月" value="{{ p.age or '' }}">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">宠物简介（领养大厅展示）</label>
+                    <textarea name="description" class="form-textarea" placeholder="描述宠物性格、特点、健康状况、适合家庭等...">{{ p.adoption_desc or p.description or '' }}</textarea>
+                </div>
+                <div class="pet-actions">
+                    <button type="submit" class="btn btn-primary">
+                        {% if p.status == 'pending_adoption' %}💾 更新资料{% else %}📢 保存并上架领养大厅{% endif %}
+                    </button>
+                    <a href="{{ url_for('pet_archive', pet_id=p.id) }}" class="btn btn-secondary">📋 一宠一档</a>
+                </div>
+            </form>
+
+            {% if p.status == 'pending_adoption' %}
+            <div style="margin-top:14px;padding-top:14px;border-top:1px dashed #e2e8f0;">
+                <form method="POST" action="{{ url_for('hospital_adoption') }}" onsubmit="return confirm('确认该宠物已被领养领出？此操作将更新宠物状态为已领养。');">
+                    <input type="hidden" name="pet_id" value="{{ p.id }}">
+                    <input type="hidden" name="action" value="confirm_adopted">
+                    <button type="submit" class="btn btn-success btn-sm">✅ 确认领养领出</button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">🎉</div>
+        <div class="empty-text">暂无待维护宠物，所有诊疗完成的动物都已上架！</div>
+    </div>
+    {% endif %}
+</div>
+
+<div class="card">
+    <div class="section-header">
+        <h3 class="section-title">已领养领出记录 ({{ adopted_pets|length }})</h3>
+    </div>
+    {% if adopted_pets %}
+    <div style="overflow-x:auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>宠物编号</th>
+                    <th>种类</th>
+                    <th>性别/年龄</th>
+                    <th>简介</th>
+                    <th>领养人</th>
+                    <th>领养日期</th>
+                    <th>档案</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in adopted_pets %}
+                <tr>
+                    <td style="font-weight:600;color:#11998e;">{{ p.pet_code }}</td>
+                    <td>{% if p.species == 'cat' %}🐱{% else %}🐶{% endif %}</td>
+                    <td>{{ p.gender or '-' }} / {{ p.age or '-' }}</td>
+                    <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;color:#718096;">{{ p.adoption_desc or '-' }}</td>
+                    <td>{{ p.adopter_name or '-' }}</td>
+                    <td style="color:#a0aec0;font-size:13px;">{{ p.adoption_date or '-' }}</td>
+                    <td><a href="{{ url_for('pet_archive', pet_id=p.id) }}" class="btn btn-secondary btn-sm">📋</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">❤️</div>
+        <div class="empty-text">暂无领养领出记录</div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,170 @@
+{% extends "adopter/base.html" %}
+{% set active_tab = 'adopter_checkin' %}
+{% block title %}回访打卡{% endblock %}
+
+{% block extra_css %}
+<style>
+    .checkin-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 20px 16px;
+        margin-bottom: 12px;
+        box-shadow: 0 2px 12px rgba(255, 154, 158, 0.08);
+    }
+    .checkin-card-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .pet-select option {
+        font-size: 15px;
+    }
+
+    .history-item {
+        background: #fff;
+        border-radius: 16px;
+        padding: 16px;
+        margin-bottom: 10px;
+        box-shadow: 0 2px 8px rgba(255, 154, 158, 0.06);
+    }
+    .history-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 8px;
+    }
+    .history-month {
+        font-size: 15px;
+        font-weight: 600;
+        color: #333;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .history-date {
+        font-size: 12px;
+        color: #999;
+        margin-top: 4px;
+    }
+    .history-content {
+        font-size: 13px;
+        color: #666;
+        line-height: 1.6;
+        padding: 10px 12px;
+        background: #fef9f9;
+        border-radius: 10px;
+        margin-bottom: 8px;
+    }
+    .history-note {
+        font-size: 12px;
+        color: #999;
+        padding: 8px 12px;
+        background: #f5f5f5;
+        border-radius: 8px;
+        margin-top: 8px;
+    }
+    .history-note.rejected {
+        background: #fff0f0;
+        color: #e53935;
+    }
+    .history-note.approved {
+        background: #f0fff4;
+        color: #38a169;
+    }
+
+    .no-pets-notice {
+        text-align: center;
+        padding: 24px;
+        background: #fff8e1;
+        border-radius: 12px;
+        color: #ef6c00;
+        font-size: 14px;
+        margin-bottom: 12px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="checkin-card">
+    <div class="checkin-card-title">📝 本月回访打卡</div>
+    {% if my_pets %}
+    <form method="POST" action="{{ url_for('adopter_checkin') }}">
+        <div class="form-group">
+            <label class="form-label">选择宠物</label>
+            <select name="pet_id" class="form-input form-select pet-select" required>
+                <option value="">请选择宠物</option>
+                {% for pet in my_pets %}
+                <option value="{{ pet['id'] }}">{{ '🐶' if pet['species'] == 'dog' else '🐱' }} {{ pet['pet_code'] }} - {{ pet['adoption_desc'] or pet['description'] or '' }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label class="form-label">打卡月份</label>
+            <input type="month" name="month" id="checkin-month" class="form-input" required>
+        </div>
+        <div class="form-group">
+            <label class="form-label">回访内容</label>
+            <textarea name="content" class="form-input form-textarea" placeholder="请分享毛孩子最近的生活状态、健康情况等..." required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">提交打卡</button>
+    </form>
+    {% else %}
+    <div class="no-pets-notice">
+        <p>您还没有领养的宠物，无法打卡</p>
+        <a href="{{ url_for('adopter_hall') }}" style="color:#ff9a9e;font-weight:500;margin-top:8px;display:inline-block;">去领养大厅看看 →</a>
+    </div>
+    {% endif %}
+</div>
+
+<div class="checkin-card-title" style="padding:0 4px;">📋 打卡记录</div>
+{% if checkins %}
+    {% for c in checkins %}
+    <div class="history-item">
+        <div class="history-header">
+            <div class="history-month">
+                📅 {{ c['month'] }}
+                <span style="font-size:12px;font-weight:400;color:#999;">{{ c['pet_code'] }}</span>
+            </div>
+            {% if c['status'] == 'pending' %}
+            <span class="tag tag-orange">待审核</span>
+            {% elif c['status'] == 'approved' %}
+            <span class="tag tag-green">已通过</span>
+            {% elif c['status'] == 'rejected' %}
+            <span class="tag tag-red">未通过</span>
+            {% endif %}
+        </div>
+        <div class="history-content">{{ c['content'] }}</div>
+        <div class="history-date">提交时间: {{ c['created_at'] }}</div>
+        {% if c['review_note'] %}
+        <div class="history-note {% if c['status'] == 'approved' %}approved{% elif c['status'] == 'rejected' %}rejected{% endif %}">
+            {% if c['status'] == 'approved' %}✅{% elif c['status'] == 'rejected' %}❌{% else %}💬{% endif %}
+            审核备注: {{ c['review_note'] }}
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+{% else %}
+<div class="empty-state" style="padding:24px;">
+    <div class="empty-icon">📅</div>
+    <div class="empty-text">暂无打卡记录</div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    var monthInput = document.getElementById('checkin-month');
+    if (monthInput && !monthInput.value) {
+        var now = new Date();
+        var y = now.getFullYear();
+        var m = String(now.getMonth() + 1).padStart(2, '0');
+        monthInput.value = y + '-' + m;
+    }
+})();
+</script>
+{% endblock %}

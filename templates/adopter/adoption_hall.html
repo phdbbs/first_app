@@ -1,0 +1,221 @@
+{% extends "adopter/base.html" %}
+{% set active_tab = 'adopter_hall' %}
+{% block title %}领养大厅{% endblock %}
+
+{% block extra_css %}
+<style>
+    .process-notice {
+        background: linear-gradient(135deg, #fff5f7 0%, #fce4ec 100%);
+        border-radius: 16px;
+        padding: 16px;
+        margin-bottom: 12px;
+        border: 1px solid rgba(255, 154, 158, 0.15);
+    }
+    .process-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: #ff6b81;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .process-steps {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .process-step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        flex: 1;
+    }
+    .step-icon {
+        width: 36px;
+        height: 36px;
+        background: linear-gradient(135deg, #ff9a9e, #fecfef);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        color: #fff;
+        font-weight: 600;
+    }
+    .step-label {
+        font-size: 11px;
+        color: #666;
+        text-align: center;
+    }
+    .step-arrow {
+        color: #ff9a9e;
+        font-size: 14px;
+        margin: 0 2px;
+        margin-top: -16px;
+    }
+
+    .filter-tabs {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+        overflow-x: auto;
+        padding-bottom: 4px;
+        -webkit-overflow-scrolling: touch;
+    }
+    .filter-tabs::-webkit-scrollbar { display: none; }
+    .filter-tab {
+        flex-shrink: 0;
+        padding: 8px 18px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 500;
+        background: #fff;
+        color: #666;
+        border: 1.5px solid #f0e0e4;
+        transition: all 0.2s;
+    }
+    .filter-tab.active {
+        background: linear-gradient(135deg, #ff9a9e, #fecfef);
+        color: #fff;
+        border-color: transparent;
+        box-shadow: 0 2px 8px rgba(255, 154, 158, 0.3);
+    }
+
+    .pet-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+    .pet-card {
+        background: #fff;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 2px 12px rgba(255, 154, 158, 0.08);
+        transition: transform 0.2s;
+    }
+    .pet-card:active {
+        transform: scale(0.97);
+    }
+    .pet-avatar {
+        height: 120px;
+        background: linear-gradient(135deg, #fff5f7 0%, #fce4ec 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 56px;
+        position: relative;
+    }
+    .pet-avatar.dog {
+        background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%);
+    }
+    .pet-code-badge {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        background: rgba(0,0,0,0.4);
+        color: #fff;
+        font-size: 10px;
+        padding: 2px 8px;
+        border-radius: 10px;
+        backdrop-filter: blur(4px);
+    }
+    .pet-info {
+        padding: 10px 12px 12px;
+    }
+    .pet-desc {
+        font-size: 13px;
+        color: #333;
+        font-weight: 500;
+        margin-bottom: 6px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .pet-tags {
+        display: flex;
+        gap: 4px;
+        flex-wrap: wrap;
+        margin-bottom: 6px;
+    }
+    .pet-hospital {
+        font-size: 11px;
+        color: #999;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="process-notice">
+    <div class="process-title">📋 领养流程</div>
+    <div class="process-steps">
+        <div class="process-step">
+            <div class="step-icon">1</div>
+            <div class="step-label">浏览选宠</div>
+        </div>
+        <div class="step-arrow">→</div>
+        <div class="process-step">
+            <div class="step-icon">2</div>
+            <div class="step-label">线下联系</div>
+        </div>
+        <div class="step-arrow">→</div>
+        <div class="process-step">
+            <div class="step-icon">3</div>
+            <div class="step-label">资质审核</div>
+        </div>
+        <div class="step-arrow">→</div>
+        <div class="process-step">
+            <div class="step-icon">4</div>
+            <div class="step-label">签协议</div>
+        </div>
+        <div class="step-arrow">→</div>
+        <div class="process-step">
+            <div class="step-icon">5</div>
+            <div class="step-label">开通账号</div>
+        </div>
+    </div>
+</div>
+
+<div class="filter-tabs">
+    <a href="{{ url_for('adopter_hall') }}" class="filter-tab {% if not species %}active{% endif %}">全部</a>
+    <a href="{{ url_for('adopter_hall', species='cat') }}" class="filter-tab {% if species == 'cat' %}active{% endif %}">🐱 猫咪</a>
+    <a href="{{ url_for('adopter_hall', species='dog') }}" class="filter-tab {% if species == 'dog' %}active{% endif %}">🐶 狗狗</a>
+    <a href="{{ url_for('adopter_hall') }}?neutered=1" class="filter-tab">✂️ 已绝育</a>
+    <a href="{{ url_for('adopter_hall') }}?vaccinated=1" class="filter-tab">💉 已疫苗</a>
+</div>
+
+{% if pets %}
+<div class="pet-grid">
+    {% for pet in pets %}
+    <a href="{{ url_for('adopter_pet_detail', pet_id=pet['id']) }}" class="pet-card">
+        <div class="pet-avatar {% if pet['species'] == 'dog' %}dog{% endif %}">
+            {{ '🐶' if pet['species'] == 'dog' else '🐱' }}
+            <span class="pet-code-badge">{{ pet['pet_code'] }}</span>
+        </div>
+        <div class="pet-info">
+            <div class="pet-desc">{{ pet['description'] or '等待领养的小可爱' }}</div>
+            <div class="pet-tags">
+                {% if pet['gender'] %}<span class="tag tag-pink">{{ pet['gender'] }}</span>{% endif %}
+                {% if pet['age'] %}<span class="tag tag-cyan">{{ pet['age'] }}</span>{% endif %}
+                {% if pet['neutered'] %}<span class="tag tag-green">已绝育</span>{% endif %}
+                {% if pet['vaccinated'] %}<span class="tag tag-blue">已疫苗</span>{% endif %}
+            </div>
+            <div class="pet-hospital">🏥 {{ pet['hospital_name'] or '待定医院' }}</div>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <div class="empty-icon">🐾</div>
+    <div class="empty-text">暂无待领养的小动物</div>
+</div>
+{% endif %}
+{% endblock %}

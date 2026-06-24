@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>{% block title %}领养人中心{% endblock %} - TNR流浪动物管理</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fdfbfb 100%);
+            min-height: 100vh;
+            color: #333;
+            -webkit-tap-highlight-color: transparent;
+        }
+        a { text-decoration: none; color: inherit; }
+        button { font-family: inherit; cursor: pointer; border: none; outline: none; }
+        input, textarea, select { font-family: inherit; outline: none; }
+
+        .app-container {
+            max-width: 750px;
+            margin: 0 auto;
+            min-height: 100vh;
+            background: linear-gradient(180deg, #fff5f7 0%, #fef9f9 100%);
+            position: relative;
+            padding-bottom: 80px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            padding: 16px 16px 12px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 12px rgba(255, 154, 158, 0.2);
+        }
+        .header-back {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,0.3);
+            border-radius: 50%;
+            font-size: 18px;
+            color: #fff;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .header-back:active { background: rgba(255,255,255,0.5); }
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #fff;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        .header-logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
+        }
+        .header-logo-icon {
+            width: 36px;
+            height: 36px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        .header-right { width: 36px; }
+
+        .content {
+            padding: 12px 16px;
+        }
+
+        .tab-bar {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 750px;
+            background: #fff;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 6px 0 env(safe-area-inset-bottom, 8px);
+            box-shadow: 0 -2px 16px rgba(255, 154, 158, 0.12);
+            border-top: 1px solid rgba(255, 154, 158, 0.1);
+            z-index: 200;
+        }
+        .tab-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            padding: 4px 0;
+            color: #999;
+            font-size: 11px;
+            transition: color 0.2s;
+            position: relative;
+        }
+        .tab-item.active {
+            color: #ff9a9e;
+        }
+        .tab-icon {
+            font-size: 22px;
+            line-height: 1;
+        }
+        .tab-badge {
+            position: absolute;
+            top: 0;
+            right: calc(50% - 18px);
+            min-width: 16px;
+            height: 16px;
+            background: #ff4757;
+            color: #fff;
+            font-size: 10px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+            font-weight: 600;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 12px rgba(255, 154, 158, 0.08);
+        }
+
+        .flash-messages {
+            margin-bottom: 12px;
+        }
+        .flash-msg {
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .flash-error {
+            background: #fff0f0;
+            border: 1px solid #ffcdd2;
+            color: #e53935;
+        }
+        .flash-success {
+            background: #f0fff4;
+            border: 1px solid #c6f6d5;
+            color: #38a169;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.2s;
+            min-height: 44px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(255, 154, 158, 0.35);
+        }
+        .btn-primary:active {
+            transform: scale(0.97);
+            box-shadow: 0 2px 6px rgba(255, 154, 158, 0.3);
+        }
+        .btn-block {
+            width: 100%;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        .tag-pink { background: #ffe0e6; color: #ff6b81; }
+        .tag-cyan { background: #e0f7fa; color: #00acc1; }
+        .tag-green { background: #e8f5e9; color: #43a047; }
+        .tag-orange { background: #fff3e0; color: #ef6c00; }
+        .tag-gray { background: #f5f5f5; color: #999; }
+        .tag-blue { background: #e3f2fd; color: #1976d2; }
+        .tag-red { background: #ffebee; color: #e53935; }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-label {
+            display: block;
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1.5px solid #f0e0e4;
+            border-radius: 12px;
+            font-size: 15px;
+            background: #fff;
+            color: #333;
+            transition: border-color 0.2s;
+        }
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            border-color: #ff9a9e;
+        }
+        .form-textarea {
+            resize: none;
+            min-height: 100px;
+        }
+        .form-input::placeholder, .form-textarea::placeholder {
+            color: #ccc;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+        .empty-text {
+            font-size: 14px;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="app-container">
+        <header class="header">
+            {% block header %}
+            <div class="header-logo">
+                <span class="header-logo-icon">🐾</span>
+                <span>TNR领养</span>
+            </div>
+            <div class="header-right"></div>
+            {% endblock %}
+        </header>
+
+        <main class="content">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                    <div class="flash-msg flash-{{ category }}">
+                        {% if category == 'success' %}✅{% else %}⚠️{% endif %}
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </main>
+
+        <nav class="tab-bar">
+            {% set active_tab = active_tab|default('') %}
+            <a href="{{ url_for('adopter_hall') }}" class="tab-item {% if active_tab == 'adopter_hall' %}active{% endif %}">
+                <span class="tab-icon">🏠</span>
+                <span>领养大厅</span>
+            </a>
+            <a href="{{ url_for('adopter_my') }}" class="tab-item {% if active_tab == 'adopter_my' %}active{% endif %}">
+                <span class="tab-icon">❤️</span>
+                <span>我的领养</span>
+            </a>
+            <a href="{{ url_for('adopter_checkin') }}" class="tab-item {% if active_tab == 'adopter_checkin' %}active{% endif %}">
+                <span class="tab-icon">📅</span>
+                <span>回访打卡</span>
+            </a>
+            <a href="{{ url_for('adopter_messages') }}" class="tab-item {% if active_tab == 'adopter_messages' %}active{% endif %}">
+                <span class="tab-icon">💬</span>
+                <span>消息中心</span>
+                {% if unread and unread > 0 %}
+                <span class="tab-badge">{{ unread if unread <= 99 else '99+' }}</span>
+                {% endif %}
+            </a>
+            <a href="{{ url_for('adopter_profile') }}" class="tab-item {% if active_tab == 'adopter_profile' %}active{% endif %}">
+                <span class="tab-icon">👤</span>
+                <span>个人中心</span>
+            </a>
+        </nav>
+    </div>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

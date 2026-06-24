@@ -1,0 +1,136 @@
+{% extends "shelter/base.html" %}
+
+{% block title %}新增捕捉 - TNR管理系统{% endblock %}
+{% block page_title %}新增捕捉登记{% endblock %}
+
+{% block content %}
+<form method="POST" action="{{ url_for('shelter_add') }}">
+    <div class="form-section">
+        <div class="form-section-header">
+            <span class="form-section-icon">🏢</span>
+            <span class="form-section-title">小区物业信息</span>
+        </div>
+        <div class="form-section-body">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">
+                        <span class="required">*</span> 物业名称
+                    </label>
+                    <input type="text" name="property_name" class="form-input" placeholder="请输入物业公司名称" required value="{{ request.form.get('property_name', '') }}">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">
+                        <span class="required">*</span> 所在小区
+                    </label>
+                    <select name="community_id" class="form-select" required>
+                        <option value="">请选择小区</option>
+                        {% for community in communities %}
+                        <option value="{{ community.id }}" {% if request.form.get('community_id')|string == community.id|string %}selected{% endif %}>{{ community.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-group full-width">
+                    <label class="form-label">
+                        <span class="required">*</span> 详细地址
+                    </label>
+                    <input type="text" name="address" class="form-input" placeholder="请输入详细地址" required value="{{ request.form.get('address', '') }}">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">
+                        <span class="required">*</span> 交接人姓名
+                    </label>
+                    <input type="text" name="contact_person" class="form-input" placeholder="请输入物业交接人姓名" required value="{{ request.form.get('contact_person', '') }}">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">
+                        <span class="required">*</span> 联系电话
+                    </label>
+                    <input type="tel" name="contact_phone" class="form-input" placeholder="请输入手机号码" pattern="[0-9]{11}" required value="{{ request.form.get('contact_phone', '') }}">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-section">
+        <div class="form-section-header">
+            <span class="form-section-icon">🐱</span>
+            <span class="form-section-title">捕捉动物信息</span>
+        </div>
+        <div class="form-section-body">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">
+                        <span class="required">*</span> 捕捉数量
+                    </label>
+                    <input type="number" name="pet_count" id="petCount" class="form-input" min="1" max="100" placeholder="输入捕捉数量" required value="{{ request.form.get('pet_count', '1') }}" oninput="generatePetIds()">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">
+                        <span class="required">*</span> 动物种类
+                    </label>
+                    <select name="species" class="form-select" required>
+                        <option value="cat" {% if request.form.get('species') == 'cat' %}selected{% endif %}>猫咪</option>
+                        <option value="dog" {% if request.form.get('species') == 'dog' %}selected{% endif %}>狗狗</option>
+                    </select>
+                </div>
+                
+                <div class="form-group full-width">
+                    <label class="form-label">自动生成宠物编号预览</label>
+                    <div class="pet-id-list" id="petIdList">
+                        <span style="color: #a0aec0; font-size: 14px;">请输入捕捉数量后自动生成编号</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-section">
+        <div class="form-section-header">
+            <span class="form-section-icon">✍️</span>
+            <span class="form-section-title">提交登记</span>
+        </div>
+        <div class="form-section-body">
+            <p style="color: #718096; margin-bottom: 20px;">请确认以上信息填写无误后提交，提交后将自动生成宠物编号和捕捉记录。</p>
+            <div class="submit-section">
+                <a href="{{ url_for('shelter_dashboard') }}" class="btn btn-secondary">取消</a>
+                <button type="submit" class="btn btn-primary">✅ 提交登记</button>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function generatePetIds() {
+        const count = parseInt(document.getElementById('petCount').value);
+        const petIdList = document.getElementById('petIdList');
+        
+        if (!count || count < 1 || count > 100) {
+            petIdList.innerHTML = '<span style="color: #fc8181; font-size: 14px;">请输入有效的数量（1-100）</span>';
+            return;
+        }
+        
+        const now = new Date();
+        const dateStr = now.getFullYear().toString().substr(-2) + 
+                       (now.getMonth() + 1).toString().padStart(2, '0') + 
+                       now.getDate().toString().padStart(2, '0');
+        
+        let html = '';
+        for (let i = 1; i <= count; i++) {
+            const petId = `TNR${dateStr}${i.toString().padStart(3, '0')}`;
+            html += `<span class="pet-id-tag">${petId}</span>`;
+        }
+        petIdList.innerHTML = html;
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        generatePetIds();
+    });
+</script>
+{% endblock %}

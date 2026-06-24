@@ -1,0 +1,202 @@
+{% extends "hospital/base.html" %}
+
+{% block title %}诊疗操作 - 宠物医院端 - TNR管理系统{% endblock %}
+{% block page_title %}🩺 诊疗操作{% endblock %}
+
+{% block content %}
+{% set low_stock = (inventory.vaccine < 1) or (inventory.chip < 1) or (inventory.dewormer < 1) %}
+{% if low_stock %}
+<div class="alert-box">
+    <div class="alert-icon">⚠️</div>
+    <div class="alert-content">
+        <div class="alert-title">物料库存不足</div>
+        <div class="alert-desc">
+            {% if inventory.vaccine < 1 %}疫苗库存不足；{% endif %}
+            {% if inventory.chip < 1 %}芯片库存不足；{% endif %}
+            {% if inventory.dewormer < 1 %}驱虫药库存不足；{% endif %}
+            请先至物料库存页面申请补充。
+        </div>
+    </div>
+    <a href="{{ url_for('hospital_material') }}" class="btn btn-sm" style="background:#ed8936;color:white;">去补充</a>
+</div>
+{% endif %}
+
+<div class="card">
+    <div class="section-header">
+        <h3 class="section-title">诊疗登记表单</h3>
+        <div style="display:flex;gap:8px;font-size:13px;color:#718096;">
+            <span>疫苗: <b style="color:{% if inventory.vaccine < 10 %}#e53e3e{% else %}#38a169{% endif %}">{{ inventory.vaccine }}</b></span>
+            <span>芯片: <b style="color:{% if inventory.chip < 10 %}#e53e3e{% else %}#38a169{% endif %}">{{ inventory.chip }}</b></span>
+            <span>驱虫: <b style="color:{% if inventory.dewormer < 10 %}#e53e3e{% else %}#38a169{% endif %}">{{ inventory.dewormer }}</b></span>
+        </div>
+    </div>
+
+    {% if pending_pets %}
+    <form method="POST" action="{{ url_for('hospital_treatment') }}" id="treatment-form">
+        <div class="form-group">
+            <label class="form-label">选择待诊疗动物 <span style="color:#e53e3e;">*</span></label>
+            <select name="pet_id" class="form-select" id="pet-select" required onchange="loadPetInfo(this.value)">
+                <option value="">-- 请选择宠物编号 --</option>
+                {% for p in pending_pets %}
+                <option value="{{ p.id }}" data-gender="{{ p.gender or '' }}" data-age="{{ p.age or '' }}" data-species="{{ p.species or '' }}">
+                    {{ p.pet_code }} - {% if p.species == 'cat' %}🐱{% else %}🐶{% endif %} {{ p.gender or '' }} {{ p.age or '' }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div id="pet-info-display" style="display:none;margin-bottom:18px;padding:14px 18px;background:#f0fff4;border-radius:12px;border:1px solid #c6f6d5;">
+            <div style="display:flex;gap:20px;flex-wrap:wrap;font-size:14px;">
+                <span id="pet-species"></span>
+                <span id="pet-gender"></span>
+                <span id="pet-age"></span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">诊疗项目</label>
+            <div class="checkbox-grid">
+                <div class="checkbox-card" id="card-neuter" onclick="toggleCard(this, 'neuter')">
+                    <input type="checkbox" name="neuter_done" id="neuter_done" value="1" onchange="toggleSection('neuter-section', this.checked); toggleCardVisual('card-neuter', this.checked)">
+                    <label for="neuter_done">🔪 绝育手术</label>
+                </div>
+                <div class="checkbox-card" id="card-vaccine" onclick="toggleCard(this, 'vaccine')">
+                    <input type="checkbox" name="vaccine_done" id="vaccine_done" value="1" onchange="toggleCardVisual('card-vaccine', this.checked)">
+                    <label for="vaccine_done">💉 疫苗接种</label>
+                </div>
+                <div class="checkbox-card" id="card-dewormer" onclick="toggleCard(this, 'dewormer')">
+                    <input type="checkbox" name="dewormer_done" id="dewormer_done" value="1" onchange="toggleCardVisual('card-dewormer', this.checked)">
+                    <label for="dewormer_done">💊 驱虫护理</label>
+                </div>
+                <div class="checkbox-card" id="card-chip" onclick="toggleCard(this, 'chip')">
+                    <input type="checkbox" name="chip_done" id="chip_done" value="1" onchange="toggleSection('chip-section', this.checked); toggleCardVisual('card-chip', this.checked)">
+                    <label for="chip_done">📟 芯片植入</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group" id="neuter-section" style="display:none;">
+            <label class="form-label">绝育手术记录</label>
+            <textarea name="neuter_record" class="form-textarea" placeholder="请记录手术过程、麻醉方式、伤口处理、术后注意事项等..."></textarea>
+        </div>
+
+        <div class="form-group" id="chip-section" style="display:none;">
+            <label class="form-label">芯片编号</label>
+            <input type="text" name="chip_no" class="form-input" placeholder="请输入植入芯片编号，如 CHIP000001">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">诊疗备注</label>
+            <textarea name="notes" class="form-textarea" placeholder="其他诊疗情况、健康观察、特殊注意事项等..."></textarea>
+        </div>
+
+        <div class="checkbox-card" style="margin-bottom:20px;" id="card-completed" onclick="toggleCard(this, 'completed')">
+            <input type="checkbox" name="completed" id="completed" value="1" onchange="toggleCardVisual('card-completed', this.checked)">
+            <label for="completed"><b>✅ 诊疗全部完成</b>（勾选后宠物状态将转为"诊疗完成"，物料将自动扣减库存）</label>
+        </div>
+
+        <div style="display:flex;gap:12px;justify-content:flex-end;">
+            <button type="reset" class="btn btn-secondary" onclick="resetForm()">重置</button>
+            <button type="submit" class="btn btn-primary btn-lg">💾 保存诊疗记录</button>
+        </div>
+    </form>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">🩺</div>
+        <div class="empty-text">暂无待诊疗动物，请先在"交接接收"页面接收动物</div>
+        <a href="{{ url_for('hospital_receive') }}" class="btn btn-primary" style="margin-top:16px;">去交接接收</a>
+    </div>
+    {% endif %}
+</div>
+
+<div class="card">
+    <div class="section-header">
+        <h3 class="section-title">已诊疗动物 ({{ treated_pets|length }})</h3>
+    </div>
+    {% if treated_pets %}
+    <div style="overflow-x:auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>宠物编号</th>
+                    <th>性别</th>
+                    <th>年龄</th>
+                    <th>完成项目</th>
+                    <th>芯片号</th>
+                    <th>诊疗时间</th>
+                    <th>档案</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in treated_pets %}
+                <tr>
+                    <td style="font-weight:600;color:#11998e;">{{ p.pet_code }}</td>
+                    <td>{{ p.gender or '-' }}</td>
+                    <td>{{ p.age or '-' }}</td>
+                    <td>
+                        <div style="display:flex;gap:5px;flex-wrap:wrap;">
+                            {% if p.neuter_done %}<span class="badge badge-green">N 绝育</span>{% endif %}
+                            {% if p.vaccine_done %}<span class="badge badge-blue">V 疫苗</span>{% endif %}
+                            {% if p.dewormer_done %}<span class="badge badge-purple">D 驱虫</span>{% endif %}
+                            {% if p.chip_done %}<span class="badge badge-orange">C 芯片</span>{% endif %}
+                        </div>
+                    </td>
+                    <td style="font-size:13px;color:#718096;">{{ p.chip_no or '-' }}</td>
+                    <td style="color:#a0aec0;font-size:13px;">{{ p.treatment_date or '-' }}</td>
+                    <td><a href="{{ url_for('pet_archive', pet_id=p.id) }}" class="btn btn-secondary btn-sm">📋 查看</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">📋</div>
+        <div class="empty-text">暂无已诊疗记录</div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+function toggleCard(cardEl, type) {
+    var cb = cardEl.querySelector('input[type="checkbox"]');
+    if (event.target.tagName !== 'INPUT') {
+        cb.checked = !cb.checked;
+    }
+    toggleCardVisual(cardEl.id, cb.checked);
+    if (type === 'neuter') toggleSection('neuter-section', cb.checked);
+    if (type === 'chip') toggleSection('chip-section', cb.checked);
+}
+
+function toggleCardVisual(cardId, checked) {
+    var el = document.getElementById(cardId);
+    if (el) el.classList.toggle('checked', checked);
+}
+
+function toggleSection(sectionId, show) {
+    var el = document.getElementById(sectionId);
+    if (el) el.style.display = show ? 'block' : 'none';
+}
+
+function loadPetInfo(petId) {
+    var display = document.getElementById('pet-info-display');
+    if (!petId) { display.style.display = 'none'; return; }
+    var sel = document.getElementById('pet-select');
+    var opt = sel.options[sel.selectedIndex];
+    document.getElementById('pet-species').innerHTML = '种类：<b>' + (opt.dataset.species === 'cat' ? '🐱 猫' : opt.dataset.species === 'dog' ? '🐶 狗' : '-') + '</b>';
+    document.getElementById('pet-gender').innerHTML = '性别：<b>' + (opt.dataset.gender || '-') + '</b>';
+    document.getElementById('pet-age').innerHTML = '年龄：<b>' + (opt.dataset.age || '-') + '</b>';
+    display.style.display = 'block';
+}
+
+function resetForm() {
+    setTimeout(function() {
+        ['neuter-section', 'chip-section'].forEach(function(id) {
+            document.getElementById(id).style.display = 'none';
+        });
+        document.querySelectorAll('.checkbox-card').forEach(function(c) { c.classList.remove('checked'); });
+        document.getElementById('pet-info-display').style.display = 'none';
+    }, 10);
+}
+{% endblock %}

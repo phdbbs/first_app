@@ -1,0 +1,333 @@
+{% extends "government/base.html" %}
+{% set nav_active = 'dashboard' %}
+{% block title %}数据大屏{% endblock %}
+
+{% block extra_css %}
+<style>
+    .alert-banner {
+        background: linear-gradient(135deg, rgba(255,149,0,0.15), rgba(255,107,157,0.15));
+        border: 1px solid rgba(255,149,0,0.3);
+        border-radius: 14px;
+        padding: 18px 24px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        backdrop-filter: blur(12px);
+    }
+    .alert-icon { font-size: 30px; }
+    .alert-content { flex: 1; }
+    .alert-title { font-size: 15px; font-weight: 600; color: #ff9500; margin-bottom: 4px; }
+    .alert-desc { font-size: 13px; color: rgba(255,255,255,0.65); }
+    .alert-action {
+        padding: 8px 20px;
+        background: linear-gradient(135deg, #ff9500, #ff6b9d);
+        border: none;
+        border-radius: 8px;
+        color: #fff;
+        font-weight: 600;
+        font-size: 13px;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+    .alert-action:hover { transform: scale(1.05); }
+
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 20px;
+        margin-bottom: 24px;
+    }
+
+    .main-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 20px;
+        margin-bottom: 24px;
+    }
+
+    .chart-area {
+        height: 280px;
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-around;
+        padding: 20px 10px 0;
+        gap: 16px;
+    }
+    .bar-group {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        flex: 1;
+        min-width: 0;
+    }
+    .bar {
+        width: 100%;
+        max-width: 60px;
+        border-radius: 8px 8px 0 0;
+        transition: all 0.3s;
+        position: relative;
+        min-height: 10px;
+    }
+    .bar:hover { opacity: 0.85; transform: scaleY(1.03); }
+    .bar-val {
+        position: absolute;
+        top: -26px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 14px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+    .bar-label {
+        font-size: 12px;
+        color: rgba(255,255,255,0.55);
+        text-align: center;
+        word-break: keep-all;
+    }
+
+    .ranking-list { display: flex; flex-direction: column; gap: 10px; }
+    .ranking-item {
+        display: flex;
+        align-items: center;
+        padding: 14px 16px;
+        background: rgba(255,255,255,0.03);
+        border-radius: 12px;
+        transition: all 0.3s;
+        gap: 14px;
+    }
+    .ranking-item:hover { background: rgba(255,255,255,0.06); }
+    .rank-num {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 15px;
+        flex-shrink: 0;
+    }
+    .rank-1 { background: linear-gradient(135deg, #ffd700, #ffb700); color: #1a1a2e; }
+    .rank-2 { background: linear-gradient(135deg, #e8e8e8, #b0b0b0); color: #1a1a2e; }
+    .rank-3 { background: linear-gradient(135deg, #cd7f32, #b87333); color: #fff; }
+    .rank-n { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.5); }
+    .rank-info { flex: 1; min-width: 0; }
+    .rank-name { font-size: 14px; font-weight: 500; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .rank-meta { font-size: 12px; color: rgba(255,255,255,0.45); }
+    .rank-count { font-size: 18px; font-weight: 700; color: #00d2ff; }
+
+    .pie-wrap { display: flex; align-items: center; gap: 24px; }
+    .pie-chart {
+        width: 180px;
+        height: 180px;
+        border-radius: 50%;
+        position: relative;
+        flex-shrink: 0;
+    }
+    .pie-center {
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        width: 110px; height: 110px;
+        background: #16213e;
+        border-radius: 50%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    .pie-total { font-size: 26px; font-weight: 700; }
+    .pie-label { font-size: 11px; color: rgba(255,255,255,0.5); }
+    .legend { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+    .legend-item { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+    .legend-dot { width: 12px; height: 12px; border-radius: 4px; flex-shrink: 0; }
+    .legend-val { margin-left: auto; font-weight: 600; color: rgba(255,255,255,0.8); }
+
+    .material-overview {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+    }
+    .mat-card {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+    }
+    .mat-icon { font-size: 32px; margin-bottom: 10px; }
+    .mat-name { font-size: 14px; color: rgba(255,255,255,0.6); margin-bottom: 8px; }
+    .mat-qty { font-size: 32px; font-weight: 700; }
+    .mat-unit { font-size: 13px; color: rgba(255,255,255,0.4); margin-top: 4px; }
+
+    @media (max-width: 1400px) {
+        .stats-row { grid-template-columns: repeat(3, 1fr); }
+        .main-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 768px) {
+        .stats-row { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .material-overview { grid-template-columns: 1fr; }
+        .pie-wrap { flex-direction: column; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{% if alerts %}
+<div class="alert-banner">
+    <div class="alert-icon">⚠️</div>
+    <div class="alert-content">
+        <div class="alert-title">库存预警提醒</div>
+        <div class="alert-desc">{{ alerts|join('；') }}</div>
+    </div>
+    <a href="{{ url_for('gov_material') }}" class="alert-action">查看详情</a>
+</div>
+{% endif %}
+
+<div class="page-title">
+    <span class="page-title-icon">📊</span>
+    数据大屏 · 全市TNR业务全景监管
+</div>
+
+<div class="stats-row">
+    <div class="stat-card">
+        <div class="stat-icon">📦</div>
+        <div class="stat-title">累计捕捉总量</div>
+        <div class="stat-value val-blue">{{ stats.total_intake }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">🩺</div>
+        <div class="stat-title">诊疗完成总量</div>
+        <div class="stat-value val-green">{{ stats.adopted + stats.released + stats.euthanized + stats.pending_adoption }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">🏠</div>
+        <div class="stat-title">放养回归总量</div>
+        <div class="stat-value val-orange">{{ stats.released }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">❤️</div>
+        <div class="stat-title">成功领养总量</div>
+        <div class="stat-value val-pink">{{ stats.adopted }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">😢</div>
+        <div class="stat-title">安乐死总量</div>
+        <div class="stat-value val-purple">{{ stats.euthanized }}</div>
+    </div>
+</div>
+
+<div class="main-grid">
+    <div class="glass-card">
+        <div class="section-title">
+            <span>📊</span> 各区县业务量统计
+        </div>
+        <div class="chart-area">
+            {% set max_cnt = namespace(v=1) %}
+            {% for d in districts %}{% if d.cnt > max_cnt.v %}{% set max_cnt.v = d.cnt %}{% endif %}{% endfor %}
+            {% if districts %}
+                {% for d in districts %}
+                {% set pct = (d.cnt / max_cnt.v * 230)|round|int %}
+                {% set colors = ['linear-gradient(180deg,#00d2ff,#3a7bd5)','linear-gradient(180deg,#00ff88,#00cc6a)','linear-gradient(180deg,#ff9500,#ff7b00)','linear-gradient(180deg,#ff6b9d,#ff527b)','linear-gradient(180deg,#c56cf0,#a64dd3)'] %}
+                <div class="bar-group">
+                    <div class="bar" style="height:{{ [pct, 20]|max }}px; background:{{ colors[loop.index0 % 5] }};">
+                        <span class="bar-val">{{ d.cnt }}</span>
+                    </div>
+                    <span class="bar-label">{{ d.district or '未分区' }}</span>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div style="margin:auto;color:rgba(255,255,255,0.4);font-size:14px;">暂无区县数据</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="glass-card">
+        <div class="section-title">
+            <span>🏆</span> 合作医院诊疗排名
+        </div>
+        <div class="ranking-list">
+            {% for h in hospitals|sort(attribute='treating_count', reverse=True) %}
+            {% if loop.index <= 5 %}
+            <div class="ranking-item">
+                <div class="rank-num {% if loop.index==1 %}rank-1{% elif loop.index==2 %}rank-2{% elif loop.index==3 %}rank-3{% else %}rank-n{% endif %}">{{ loop.index }}</div>
+                <div class="rank-info">
+                    <div class="rank-name">{{ h.name }}</div>
+                    <div class="rank-meta">{{ h.district or '-' }}</div>
+                </div>
+                <div class="rank-count">{{ h.treating_count or 0 }}</div>
+            </div>
+            {% endif %}
+            {% endfor %}
+            {% if not hospitals %}
+            <div style="text-align:center;padding:30px;color:rgba(255,255,255,0.4);font-size:13px;">暂无医院数据</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="main-grid">
+    <div class="glass-card">
+        <div class="section-title">
+            <span>🥧</span> 动物状态分布
+        </div>
+        <div class="pie-wrap">
+            {% set total = stats.total_intake or 1 %}
+            {% set d_intake = ((stats.intake + stats.transit) / total * 360)|round|int %}
+            {% set d_treat = (stats.pending_treatment / total * 360)|round|int %}
+            {% set d_adopt = ((stats.pending_adoption + stats.adopted) / total * 360)|round|int %}
+            {% set d_release = (stats.released / total * 360)|round|int %}
+            {% set d_euth = (stats.euthanized / total * 360)|round|int %}
+            {% set deg1 = d_intake %}
+            {% set deg2 = deg1 + d_treat %}
+            {% set deg3 = deg2 + d_adopt %}
+            {% set deg4 = deg3 + d_release %}
+            <div class="pie-chart" style="background: conic-gradient(#00d2ff 0deg {{deg1}}deg, #ff9500 {{deg1}}deg {{deg2}}deg, #ff6b9d {{deg2}}deg {{deg3}}deg, #00ff88 {{deg3}}deg {{deg4}}deg, #c56cf0 {{deg4}}deg 360deg);">
+                <div class="pie-center">
+                    <div class="pie-total">{{ stats.total_intake }}</div>
+                    <div class="pie-label">总计</div>
+                </div>
+            </div>
+            <div class="legend">
+                <div class="legend-item"><div class="legend-dot" style="background:#00d2ff;"></div><span>在途/待转运</span><span class="legend-val">{{ stats.intake + stats.transit }}</span></div>
+                <div class="legend-item"><div class="legend-dot" style="background:#ff9500;"></div><span>诊疗中</span><span class="legend-val">{{ stats.pending_treatment }}</span></div>
+                <div class="legend-item"><div class="legend-dot" style="background:#ff6b9d;"></div><span>待领养/已领养</span><span class="legend-val">{{ stats.pending_adoption + stats.adopted }}</span></div>
+                <div class="legend-item"><div class="legend-dot" style="background:#00ff88;"></div><span>已放归</span><span class="legend-val">{{ stats.released }}</span></div>
+                <div class="legend-item"><div class="legend-dot" style="background:#c56cf0;"></div><span>已安乐死</span><span class="legend-val">{{ stats.euthanized }}</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="glass-card">
+        <div class="section-title">
+            <span>💉</span> 市级捕捉站物料库存
+        </div>
+        <div class="material-overview">
+            <div class="mat-card">
+                <div class="mat-icon">💉</div>
+                <div class="mat-name">疫苗</div>
+                <div class="mat-qty val-blue">{{ inv_shelter.vaccine }}</div>
+                <div class="mat-unit">支</div>
+            </div>
+            <div class="mat-card">
+                <div class="mat-icon">🔖</div>
+                <div class="mat-name">芯片</div>
+                <div class="mat-qty val-green">{{ inv_shelter.chip }}</div>
+                <div class="mat-unit">个</div>
+            </div>
+            <div class="mat-card">
+                <div class="mat-icon">💊</div>
+                <div class="mat-name">驱虫药</div>
+                <div class="mat-qty val-orange">{{ inv_shelter.dewormer }}</div>
+                <div class="mat-unit">支</div>
+            </div>
+        </div>
+        <div style="margin-top:16px;text-align:center;">
+            <a href="{{ url_for('gov_material') }}" class="btn btn-secondary btn-sm">查看完整物料监管 →</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

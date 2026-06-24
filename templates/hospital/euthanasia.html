@@ -1,0 +1,139 @@
+{% extends "hospital/base.html" %}
+
+{% block title %}安乐死 - 宠物医院端 - TNR管理系统{% endblock %}
+{% block page_title %}💔 安乐死登记{% endblock %}
+
+{% block extra_css %}
+.warning-note {
+    background: linear-gradient(135deg, #fff5f5, #fed7d7);
+    border-left: 4px solid #e53e3e;
+    padding: 14px 18px; border-radius: 12px;
+    margin-bottom: 20px; font-size: 14px; color: #c53030;
+    display: flex; align-items: center; gap: 12px;
+}
+{% endblock %}
+
+{% block content %}
+<div class="warning-note">
+    <span style="font-size:24px;">⚠️</span>
+    <div>
+        <b>重要提示：</b>安乐死为不可逆操作，请谨慎确认。仅在动物遭受无法治愈的病痛且严重影响生存质量时使用。操作后宠物将标记为"已安乐死"并移出当前医院。
+    </div>
+</div>
+
+<div class="card">
+    <div class="section-header">
+        <h3 class="section-title">安乐死登记表单</h3>
+    </div>
+
+    {% if pets %}
+    <form method="POST" action="{{ url_for('hospital_euthanasia') }}" onsubmit="return confirmSubmit();">
+        <div class="form-group">
+            <label class="form-label">选择动物 <span style="color:#e53e3e;">*</span></label>
+            <select name="pet_id" class="form-select" id="pet-select" required onchange="updatePetInfo()">
+                <option value="">-- 请选择需要安乐死的宠物 --</option>
+                {% for p in pets %}
+                <option value="{{ p.id }}" data-code="{{ p.pet_code }}" data-species="{{ p.species }}" data-gender="{{ p.gender or '' }}" data-age="{{ p.age or '' }}" data-status="{{ p.status }}">
+                    {{ p.pet_code }} - {% if p.species == 'cat' %}🐱{% else %}🐶{% endif %} {{ p.gender or '' }} {{ p.age or '' }} [{{ p.status|status_label }}]
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div id="pet-info" style="display:none;margin-bottom:18px;padding:14px 18px;background:#f7fafc;border-radius:12px;border:1px solid #e2e8f0;">
+            <div style="font-size:14px;color:#4a5568;line-height:1.8;" id="pet-info-content"></div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">安乐死原因 <span style="color:#e53e3e;">*</span></label>
+            <textarea name="reason" class="form-textarea" required placeholder="请详细说明安乐死原因，如：晚期绝症无法治愈、严重传染病、严重外伤无法恢复等..." style="min-height:120px;border-color:#feb2b2;"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:12px;background:#fff5f5;border-radius:10px;border:2px solid #fed7d7;">
+                <input type="checkbox" id="confirm-check" style="width:20px;height:20px;accent-color:#e53e3e;margin-top:2px;flex-shrink:0;" required>
+                <span style="font-size:14px;color:#c53030;line-height:1.5;">
+                    我已确认该动物符合安乐死条件，此操作不可逆，登记后相关记录将永久存档。
+                </span>
+            </label>
+        </div>
+
+        <div style="display:flex;gap:12px;justify-content:flex-end;">
+            <a href="{{ url_for('hospital_dashboard') }}" class="btn btn-secondary">取消</a>
+            <button type="submit" class="btn btn-danger btn-lg">💔 确认登记安乐死</button>
+        </div>
+    </form>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">🏥</div>
+        <div class="empty-text">当前医院无在院动物可进行安乐死登记</div>
+    </div>
+    {% endif %}
+</div>
+
+<div class="card">
+    <div class="section-header">
+        <h3 class="section-title">安乐死记录档案 ({{ euthanized|length }})</h3>
+    </div>
+    {% if euthanized %}
+    <div style="overflow-x:auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>宠物编号</th>
+                    <th>种类</th>
+                    <th>性别/年龄</th>
+                    <th>安乐死原因</th>
+                    <th>登记时间</th>
+                    <th>档案</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in euthanized %}
+                <tr>
+                    <td style="font-weight:600;color:#718096;">{{ p.pet_code }}</td>
+                    <td>{% if p.species == 'cat' %}🐱{% else %}🐶{% endif %}</td>
+                    <td>{{ p.gender or '-' }} / {{ p.age or '-' }}</td>
+                    <td style="max-width:280px;font-size:13px;color:#718096;line-height:1.5;">{{ p.euthanasia_reason or '-' }}</td>
+                    <td style="color:#a0aec0;font-size:13px;">{{ p.euthanasia_date or '-' }}</td>
+                    <td><a href="{{ url_for('pet_archive', pet_id=p.id) }}" class="btn btn-secondary btn-sm">📋</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">🕊️</div>
+        <div class="empty-text">暂无安乐死记录</div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+function updatePetInfo() {
+    var sel = document.getElementById('pet-select');
+    var infoDiv = document.getElementById('pet-info');
+    if (!sel.value) { infoDiv.style.display = 'none'; return; }
+    var opt = sel.options[sel.selectedIndex];
+    var species = opt.dataset.species === 'cat' ? '🐱 猫' : opt.dataset.species === 'dog' ? '🐶 狗' : '-';
+    document.getElementById('pet-info-content').innerHTML =
+        '<b>选中动物：</b>' + opt.dataset.code +
+        '<br><b>种类：</b>' + species +
+        '<b>性别：</b>' + (opt.dataset.gender || '-') +
+        '<b>年龄：</b>' + (opt.dataset.age || '-') +
+        '<br><b>当前状态：</b>' + opt.dataset.status;
+    infoDiv.style.display = 'block';
+}
+
+function confirmSubmit() {
+    var reason = document.querySelector('textarea[name="reason"]').value.trim();
+    var checked = document.getElementById('confirm-check').checked;
+    var petId = document.getElementById('pet-select').value;
+    if (!petId) { alert('请选择动物'); return false; }
+    if (!reason) { alert('请填写安乐死原因'); return false; }
+    if (!checked) { alert('请勾选确认声明'); return false; }
+    return confirm('⚠️ 您即将对编号 ' + document.getElementById('pet-select').options[document.getElementById('pet-select').selectedIndex].dataset.code + ' 执行安乐死登记。\n\n此操作不可逆，请再次确认！');
+}
+{% endblock %}

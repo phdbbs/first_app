@@ -1,0 +1,123 @@
+{% extends "shelter/base.html" %}
+
+{% block title %}数据报表 - TNR管理系统{% endblock %}
+{% block page_title %}数据报表{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="section-header">
+        <h3 class="section-title">数据统计概览</h3>
+    </div>
+    <div class="stats-grid">
+        <div class="stat-card yellow">
+            <span class="stat-icon">📋</span>
+            <span class="stat-value">{{ stats.total_intake if stats else 0 }}</span>
+            <span class="stat-label">总捕捉数</span>
+        </div>
+        <div class="stat-card purple">
+            <span class="stat-icon">👤</span>
+            <span class="stat-value">{{ stats.adopted if stats else 0 }}</span>
+            <span class="stat-label">已领养</span>
+        </div>
+        <div class="stat-card green">
+            <span class="stat-icon">🌿</span>
+            <span class="stat-value">{{ stats.released if stats else 0 }}</span>
+            <span class="stat-label">已放养</span>
+        </div>
+        <div class="stat-card red">
+            <span class="stat-icon">💔</span>
+            <span class="stat-value">{{ stats.euthanized if stats else 0 }}</span>
+            <span class="stat-label">安乐死</span>
+        </div>
+        <div class="stat-card blue">
+            <span class="stat-icon">⏳</span>
+            <span class="stat-value">{{ stats.pending_adoption if stats else 0 }}</span>
+            <span class="stat-label">待领养</span>
+        </div>
+    </div>
+</section>
+
+<section class="section">
+    <div class="section-header">
+        <h3 class="section-title">宠物档案列表</h3>
+    </div>
+    
+    <form method="GET" action="{{ url_for('shelter_report') }}" class="filter-bar">
+        <input type="text" name="pet_code" class="form-input" placeholder="宠物编号" value="{{ request.args.get('pet_code', '') }}" style="min-width: 120px;">
+        <select name="species" class="form-select">
+            <option value="">全部物种</option>
+            <option value="cat" {% if request.args.get('species') == 'cat' %}selected{% endif %}>猫咪</option>
+            <option value="dog" {% if request.args.get('species') == 'dog' %}selected{% endif %}>狗狗</option>
+        </select>
+        <input type="text" name="community_name" class="form-input" placeholder="所在小区" value="{{ request.args.get('community_name', '') }}" style="min-width: 120px;">
+        <input type="text" name="hospital_name" class="form-input" placeholder="医院名称" value="{{ request.args.get('hospital_name', '') }}" style="min-width: 120px;">
+        <input type="text" name="adopter_name" class="form-input" placeholder="领养人" value="{{ request.args.get('adopter_name', '') }}" style="min-width: 100px;">
+        <select name="status" class="form-select">
+            <option value="">全部状态</option>
+            {% for status_code, status_label in PET_STATUS.items() %}
+            <option value="{{ status_code }}" {% if request.args.get('status') == status_code %}selected{% endif %}>{{ status_label }}</option>
+            {% endfor %}
+        </select>
+        <input type="date" name="intake_date" class="form-input" value="{{ request.args.get('intake_date', '') }}">
+        <button type="submit" class="btn btn-primary btn-sm">🔍 筛选</button>
+        <a href="{{ url_for('shelter_report') }}" class="btn btn-secondary btn-sm">重置</a>
+    </form>
+    
+    {% if pets %}
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>宠物编号</th>
+                    <th>物种</th>
+                    <th>所在小区</th>
+                    <th>医院名称</th>
+                    <th>领养人</th>
+                    <th>状态</th>
+                    <th>捕捉日期</th>
+                    <th>领养日期</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pet in pets %}
+                <tr>
+                    <td style="font-weight: 600; color: #c05621;">{{ pet.pet_code }}</td>
+                    <td>{{ '🐱 猫咪' if pet.species == 'cat' else '🐶 狗狗' }}</td>
+                    <td>{{ pet.community_name or '-' }}</td>
+                    <td>{{ pet.hospital_name or '-' }}</td>
+                    <td>{{ pet.adopter_name or '-' }}</td>
+                    <td>
+                        {% set status_map = {
+                            'intake': ('badge-warning', '待转运'),
+                            'in_transit': ('badge-info', '运输中'),
+                            'at_hospital': ('badge-primary', '在医院'),
+                            'treated': ('badge-success', '已治疗'),
+                            'pending_release': ('badge-info', '待放养'),
+                            'released': ('badge-success', '已放养'),
+                            'pending_adoption': ('badge-primary', '待领养'),
+                            'adopted': ('badge-success', '已领养'),
+                            'owner_returned': ('badge-success', '已领回'),
+                            'euthanized': ('badge-danger', '安乐死')
+                        } %}
+                        {% set badge_class, status_text = status_map.get(pet.status, ('badge-secondary', pet.status)) %}
+                        <span class="badge {{ badge_class }}">{{ PET_STATUS.get(pet.status, pet.status) if PET_STATUS is defined else status_text }}</span>
+                    </td>
+                    <td>{{ pet.intake_date|dt('%Y-%m-%d') if pet.intake_date else '-' }}</td>
+                    <td>{{ pet.adoption_date|dt('%Y-%m-%d') if pet.adoption_date else '-' }}</td>
+                    <td>
+                        <a href="{{ url_for('pet_archive', pet_id=pet.id) }}" class="btn btn-secondary btn-sm">档案</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">📊</div>
+        <div class="empty-text">暂无数据记录</div>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 - 流浪动物 TNR 管理系统</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; color: white; }
+        .login-card { background: rgba(255,255,255,0.08); backdrop-filter: blur(20px); border-radius: 24px; padding: 48px 40px; width: 420px; border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 25px 60px rgba(0,0,0,0.3); }
+        .logo { text-align: center; margin-bottom: 32px; }
+        .logo-icon { width: 80px; height: 80px; background: linear-gradient(135deg, #f6ad55, #ed8936); border-radius: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 40px; margin-bottom: 16px; }
+        .logo h1 { font-size: 22px; font-weight: 700; }
+        .logo p { font-size: 14px; color: rgba(255,255,255,0.6); margin-top: 6px; }
+        .role-switch { display: flex; gap: 8px; margin-bottom: 24px; background: rgba(0,0,0,0.2); border-radius: 12px; padding: 4px; }
+        .role-btn { flex: 1; padding: 10px; text-align: center; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.3s; color: rgba(255,255,255,0.6); text-decoration: none; }
+        .role-btn.active { background: linear-gradient(135deg, #f6ad55, #ed8936); color: white; }
+        .role-btn.hospital.active { background: linear-gradient(135deg, #68d391, #48bb78); }
+        .role-btn.adopter.active { background: linear-gradient(135deg, #22d3ee, #06b6d4); }
+        .role-btn.government.active { background: linear-gradient(135deg, #a78bfa, #8b5cf6); }
+        .form-group { margin-bottom: 20px; }
+        .form-label { display: block; font-size: 14px; margin-bottom: 8px; color: rgba(255,255,255,0.8); }
+        .form-input { width: 100%; padding: 14px 16px; border: 2px solid rgba(255,255,255,0.1); border-radius: 12px; background: rgba(255,255,255,0.05); color: white; font-size: 15px; font-family: inherit; transition: all 0.3s; }
+        .form-input:focus { outline: none; border-color: #f6ad55; background: rgba(255,255,255,0.1); }
+        .form-input::placeholder { color: rgba(255,255,255,0.4); }
+        .btn-login { width: 100%; padding: 14px; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; color: white; transition: all 0.3s; background: linear-gradient(135deg, #f6ad55, #ed8936); box-shadow: 0 8px 25px rgba(237,137,54,0.3); }
+        .btn-login:hover { transform: translateY(-2px); box-shadow: 0 12px 35px rgba(237,137,54,0.4); }
+        .btn-login.hospital-theme { background: linear-gradient(135deg, #68d391, #48bb78); box-shadow: 0 8px 25px rgba(72,187,120,0.3); }
+        .btn-login.adopter-theme { background: linear-gradient(135deg, #22d3ee, #06b6d4); box-shadow: 0 8px 25px rgba(6,182,212,0.3); }
+        .btn-login.gov-theme { background: linear-gradient(135deg, #a78bfa, #8b5cf6); box-shadow: 0 8px 25px rgba(139,92,246,0.3); }
+        .flash-msg { padding: 12px 16px; border-radius: 10px; margin-bottom: 16px; font-size: 14px; }
+        .flash-error { background: rgba(252,129,129,0.2); border: 1px solid rgba(252,129,129,0.3); color: #fc8181; }
+        .flash-success { background: rgba(104,211,145,0.2); border: 1px solid rgba(104,211,145,0.3); color: #68d391; }
+        .footer-link { text-align: center; margin-top: 20px; font-size: 14px; color: rgba(255,255,255,0.5); }
+        .footer-link a { color: #f6ad55; text-decoration: none; }
+        .back-link { display: inline-block; margin-top: 16px; color: rgba(255,255,255,0.5); text-decoration: none; font-size: 14px; }
+        .back-link:hover { color: white; }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <div class="logo">
+            <div class="logo-icon">🐾</div>
+            <h1>TNR 管理系统</h1>
+            <p>流浪动物捕捉绝育放归管理平台</p>
+        </div>
+        <div class="role-switch">
+            <a href="{{ url_for('login', role='shelter') }}" class="role-btn {% if role=='shelter' %}active{% endif %}">🏠 捕捉站</a>
+            <a href="{{ url_for('login', role='hospital') }}" class="role-btn hospital {% if role=='hospital' %}active{% endif %}">🏥 医院</a>
+            <a href="{{ url_for('login', role='adopter') }}" class="role-btn adopter {% if role=='adopter' %}active{% endif %}">👤 领养人</a>
+            <a href="{{ url_for('login', role='government') }}" class="role-btn government {% if role=='government' %}active{% endif %}">📊 监管</a>
+        </div>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="flash-msg flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+        <form method="POST">
+            <input type="hidden" name="role" value="{{ role }}">
+            <div class="form-group">
+                <label class="form-label">用户名</label>
+                <input type="text" name="username" class="form-input" placeholder="请输入用户名" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">密码</label>
+                <input type="password" name="password" class="form-input" placeholder="请输入密码" required>
+            </div>
+            <button type="submit" class="btn-login {% if role=='hospital' %}hospital-theme{% elif role=='adopter' %}adopter-theme{% elif role=='government' %}gov-theme{% endif %}">登 录</button>
+        </form>
+        {% if role == 'adopter' %}
+        <div class="footer-link">还没有账号？<a href="{{ url_for('register') }}">立即注册</a></div>
+        {% endif %}
+        <div style="text-align:center;"><a href="{{ url_for('portal') }}" class="back-link">← 返回选择端口</a></div>
+    </div>
+</body>
+</html>

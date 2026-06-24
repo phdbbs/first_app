@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}宠物医院端 - TNR管理系统{% endblock %}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+            min-height: 100vh;
+            display: flex;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: linear-gradient(180deg, #2d3748 0%, #1a202c 100%);
+            color: white;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 100;
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar-logo-icon {
+            width: 44px; height: 44px;
+            background: linear-gradient(135deg, #68d391, #48bb78);
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-logo-text { display: flex; flex-direction: column; gap: 4px; }
+        .sidebar-logo h1 { font-size: 17px; font-weight: 600; color: white; line-height: 1.2; }
+
+        .hospital-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            background: rgba(104, 211, 145, 0.2);
+            color: #68d391;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+            width: fit-content;
+        }
+
+        .nav-menu { flex: 1; margin-top: 20px; overflow-y: auto; }
+
+        .nav-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 16px; border-radius: 10px; margin-bottom: 6px;
+            cursor: pointer; transition: all 0.3s ease;
+            color: rgba(255,255,255,0.75); text-decoration: none;
+            font-size: 14px;
+        }
+
+        .nav-item:hover { background: rgba(255,255,255,0.08); color: white; }
+        .nav-item.active { background: linear-gradient(135deg, #68d391, #48bb78); color: white; box-shadow: 0 4px 12px rgba(72,187,120,0.3); }
+
+        .nav-icon { font-size: 18px; width: 24px; text-align: center; }
+        .nav-label { font-weight: 500; }
+
+        .nav-divider { height: 1px; background: rgba(255,255,255,0.1); margin: 16px 8px; }
+
+        .user-section { padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1); }
+
+        .user-info {
+            display: flex; align-items: center; gap: 10px;
+            padding: 12px; background: rgba(255,255,255,0.05); border-radius: 10px;
+        }
+
+        .user-avatar {
+            width: 38px; height: 38px;
+            background: linear-gradient(135deg, #68d391, #48bb78);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; font-size: 15px; flex-shrink: 0;
+        }
+
+        .user-details { flex: 1; min-width: 0; }
+        .user-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .user-role { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 2px; }
+
+        .logout-btn {
+            display: flex; align-items: center; justify-content: center;
+            width: 32px; height: 32px; border-radius: 8px;
+            color: rgba(255,255,255,0.5); text-decoration: none;
+            transition: all 0.2s; font-size: 16px;
+        }
+        .logout-btn:hover { background: rgba(255,255,255,0.1); color: #fc8181; }
+
+        .main-content {
+            flex: 1; margin-left: 260px;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            padding: 20px;
+        }
+
+        .header-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 20px;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 14px;
+            padding: 16px 24px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        .page-title-area { display: flex; align-items: center; gap: 12px; }
+        .page-title { font-size: 20px; font-weight: 600; color: #2d3748; }
+
+        .header-right { display: flex; align-items: center; gap: 16px; }
+
+        .current-time {
+            font-size: 14px; color: #718096;
+            padding: 8px 16px; background: #f7fafc;
+            border-radius: 8px; font-variant-numeric: tabular-nums;
+        }
+
+        .flash-messages { margin-bottom: 16px; }
+
+        .flash-msg {
+            padding: 14px 20px; border-radius: 12px; margin-bottom: 10px;
+            font-size: 14px; font-weight: 500;
+            display: flex; align-items: center; gap: 10px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .flash-success { background: #f0fff4; color: #276749; border-left: 4px solid #48bb78; }
+        .flash-error { background: #fff5f5; color: #c53030; border-left: 4px solid #fc8181; }
+        .flash-warning { background: #fffaf0; color: #c05621; border-left: 4px solid #ed8936; }
+
+        .card {
+            background: white; border-radius: 16px; padding: 24px;
+            margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+        }
+
+        .section-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 17px; font-weight: 600; color: #2d3748;
+            display: flex; align-items: center; gap: 10px;
+        }
+
+        .section-title::before {
+            content: ''; width: 4px; height: 18px;
+            background: linear-gradient(180deg, #68d391, #48bb78);
+            border-radius: 2px;
+        }
+
+        .btn {
+            padding: 10px 20px; border: none; border-radius: 10px;
+            font-size: 14px; font-weight: 500; cursor: pointer;
+            transition: all 0.3s ease; font-family: inherit;
+            display: inline-flex; align-items: center; gap: 6px;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            color: white; box-shadow: 0 4px 12px rgba(17,153,142,0.3);
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(17,153,142,0.4); }
+
+        .btn-success {
+            background: linear-gradient(135deg, #68d391, #48bb78);
+            color: white; box-shadow: 0 4px 12px rgba(72,187,120,0.3);
+        }
+        .btn-success:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(72,187,120,0.4); }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #fc8181, #e53e3e);
+            color: white; box-shadow: 0 4px 12px rgba(229,62,62,0.25);
+        }
+        .btn-danger:hover { transform: translateY(-2px); }
+
+        .btn-secondary {
+            background: #edf2f7; color: #4a5568;
+        }
+        .btn-secondary:hover { background: #e2e8f0; }
+
+        .btn-sm { padding: 7px 14px; font-size: 13px; border-radius: 8px; }
+        .btn-lg { padding: 14px 28px; font-size: 15px; border-radius: 12px; }
+
+        table { width: 100%; border-collapse: separate; border-spacing: 0; }
+        th {
+            background: #f7fafc; padding: 12px 16px; text-align: left;
+            font-size: 13px; color: #718096; font-weight: 600;
+            border-bottom: 2px solid #edf2f7;
+        }
+        th:first-child { border-radius: 10px 0 0 0; }
+        th:last-child { border-radius: 0 10px 0 0; }
+        td {
+            padding: 14px 16px; border-bottom: 1px solid #f0f4f8;
+            font-size: 14px; color: #2d3748;
+        }
+        tr:hover td { background: #f0fff4; }
+        tr:last-child td { border-bottom: none; }
+
+        .form-group { margin-bottom: 18px; }
+
+        .form-label {
+            display: block; font-size: 14px; font-weight: 500;
+            color: #4a5568; margin-bottom: 8px;
+        }
+
+        .form-input, .form-textarea, .form-select {
+            width: 100%; padding: 11px 14px;
+            border: 2px solid #e2e8f0; border-radius: 10px;
+            font-size: 14px; font-family: inherit;
+            transition: all 0.2s; background: white;
+        }
+
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            outline: none; border-color: #48bb78;
+            box-shadow: 0 0 0 3px rgba(72,187,120,0.12);
+        }
+
+        .form-textarea { min-height: 100px; resize: vertical; }
+
+        .badge {
+            display: inline-block; padding: 4px 12px;
+            border-radius: 20px; font-size: 12px; font-weight: 500;
+        }
+        .badge-green { background: #f0fff4; color: #38a169; }
+        .badge-blue { background: #ebf8ff; color: #3182ce; }
+        .badge-orange { background: #fffaf0; color: #dd6b20; }
+        .badge-red { background: #fff5f5; color: #e53e3e; }
+        .badge-purple { background: #faf5ff; color: #805ad5; }
+        .badge-gray { background: #edf2f7; color: #718096; }
+
+        .checkbox-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px;
+        }
+
+        .checkbox-card {
+            display: flex; align-items: center; gap: 10px;
+            padding: 14px; border: 2px solid #e2e8f0; border-radius: 12px;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .checkbox-card:hover { border-color: #a0aec0; background: #f7fafc; }
+        .checkbox-card.checked { border-color: #48bb78; background: #f0fff4; }
+
+        .checkbox-card input[type="checkbox"] {
+            width: 18px; height: 18px; accent-color: #48bb78; cursor: pointer; flex-shrink: 0;
+        }
+
+        .checkbox-card label { cursor: pointer; font-size: 14px; font-weight: 500; color: #2d3748; margin: 0; }
+
+        .alert-box {
+            background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+            border-left: 4px solid #ed8936;
+            padding: 16px 20px; border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex; align-items: center; gap: 14px;
+        }
+
+        .alert-icon { font-size: 28px; flex-shrink: 0; }
+        .alert-content { flex: 1; }
+        .alert-title { font-size: 15px; font-weight: 600; color: #c05621; margin-bottom: 4px; }
+        .alert-desc { font-size: 13px; color: #9c4221; line-height: 1.5; }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px; margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white; border-radius: 16px; padding: 22px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+            transition: all 0.3s ease; position: relative; overflow: hidden;
+        }
+        .stat-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+        }
+        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+
+        .stat-card.blue::before { background: linear-gradient(90deg, #4299e1, #63b3ed); }
+        .stat-card.orange::before { background: linear-gradient(90deg, #ed8936, #f6ad55); }
+        .stat-card.purple::before { background: linear-gradient(90deg, #9f7aea, #b794f4); }
+        .stat-card.red::before { background: linear-gradient(90deg, #e53e3e, #fc8181); }
+        .stat-card.green::before { background: linear-gradient(90deg, #48bb78, #68d391); }
+
+        .stat-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+        .stat-label { font-size: 14px; color: #718096; font-weight: 500; }
+        .stat-icon {
+            width: 44px; height: 44px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px;
+        }
+        .icon-blue { background: #ebf8ff; }
+        .icon-orange { background: #fffaf0; }
+        .icon-purple { background: #faf5ff; }
+        .icon-red { background: #fff5f5; }
+        .icon-green { background: #f0fff4; }
+
+        .stat-value { font-size: 32px; font-weight: 700; color: #2d3748; margin-bottom: 4px; }
+        .stat-trend { font-size: 12px; color: #a0aec0; }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 14px;
+        }
+
+        .action-btn {
+            display: flex; flex-direction: column; align-items: center;
+            padding: 22px 16px;
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            color: white; border-radius: 14px;
+            text-decoration: none; transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(17,153,142,0.25);
+        }
+        .action-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(17,153,142,0.35); }
+        .action-icon { font-size: 30px; margin-bottom: 10px; }
+        .action-label { font-size: 14px; font-weight: 500; }
+
+        .task-list { display: flex; flex-direction: column; gap: 10px; }
+
+        .task-item {
+            display: flex; align-items: center; padding: 14px 16px;
+            background: #f7fafc; border-radius: 12px;
+            transition: all 0.2s; border-left: 4px solid transparent;
+        }
+        .task-item:hover { background: #f0fff4; border-left-color: #48bb78; }
+
+        .task-priority { width: 10px; height: 10px; border-radius: 50%; margin-right: 12px; flex-shrink: 0; }
+        .priority-high { background: #e53e3e; }
+        .priority-medium { background: #ed8936; }
+        .priority-low { background: #48bb78; }
+
+        .task-content { flex: 1; min-width: 0; }
+        .task-name { font-size: 14px; color: #2d3748; font-weight: 500; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .task-desc { font-size: 12px; color: #a0aec0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .task-time { font-size: 12px; color: #cbd5e0; margin-right: 12px; flex-shrink: 0; }
+
+        .pet-card {
+            border: 2px solid #e2e8f0; border-radius: 14px;
+            padding: 20px; margin-bottom: 14px;
+            transition: all 0.2s;
+        }
+        .pet-card:hover { border-color: #48bb78; box-shadow: 0 4px 15px rgba(72,187,120,0.12); }
+
+        .pet-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; flex-wrap: wrap; gap: 10px; }
+        .pet-code { font-size: 16px; font-weight: 600; color: #11998e; }
+        .pet-info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-bottom: 14px; }
+        .info-item { display: flex; gap: 6px; font-size: 13px; }
+        .info-label { color: #a0aec0; min-width: 60px; }
+        .info-value { color: #4a5568; font-weight: 500; }
+
+        .pet-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+        .empty-state { text-align: center; padding: 40px 20px; color: #a0aec0; }
+        .empty-icon { font-size: 48px; margin-bottom: 12px; }
+        .empty-text { font-size: 14px; }
+
+        @media (max-width: 1024px) {
+            .sidebar { width: 220px; padding: 18px; }
+            .main-content { margin-left: 220px; }
+        }
+
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            .sidebar {
+                width: 100%; position: relative; min-height: auto;
+                padding: 16px;
+            }
+            .nav-menu { display: none; }
+            .user-section { display: none; }
+            .sidebar-logo { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+            .main-content { margin-left: 0; padding: 12px; }
+            .header-bar { flex-direction: column; gap: 10px; padding: 14px 16px; }
+            .stats-grid, .quick-actions { grid-template-columns: repeat(2, 1fr); }
+            .pet-info-grid { grid-template-columns: 1fr; }
+            .pet-actions { flex-direction: column; }
+            .pet-actions .btn { width: 100%; justify-content: center; }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <div class="sidebar-logo-icon">🏥</div>
+            <div class="sidebar-logo-text">
+                <h1>TNR管理系统</h1>
+                <span class="hospital-badge">宠物医院端</span>
+            </div>
+        </div>
+        <nav class="nav-menu">
+            <a href="{{ url_for('hospital_dashboard') }}" class="nav-item {% if request.endpoint == 'hospital_dashboard' %}active{% endif %}">
+                <span class="nav-icon">🏠</span><span class="nav-label">首页看板</span>
+            </a>
+            <a href="{{ url_for('hospital_receive') }}" class="nav-item {% if request.endpoint == 'hospital_receive' %}active{% endif %}">
+                <span class="nav-icon">📥</span><span class="nav-label">交接接收</span>
+            </a>
+            <div class="nav-divider"></div>
+            <a href="{{ url_for('hospital_treatment') }}" class="nav-item {% if request.endpoint == 'hospital_treatment' %}active{% endif %}">
+                <span class="nav-icon">🩺</span><span class="nav-label">诊疗操作</span>
+            </a>
+            <a href="{{ url_for('hospital_material') }}" class="nav-item {% if request.endpoint == 'hospital_material' %}active{% endif %}">
+                <span class="nav-icon">💉</span><span class="nav-label">物料库存</span>
+            </a>
+            <a href="{{ url_for('hospital_adoption') }}" class="nav-item {% if request.endpoint == 'hospital_adoption' %}active{% endif %}">
+                <span class="nav-icon">📝</span><span class="nav-label">领养维护</span>
+            </a>
+            <div class="nav-divider"></div>
+            <a href="{{ url_for('hospital_euthanasia') }}" class="nav-item {% if request.endpoint == 'hospital_euthanasia' %}active{% endif %}">
+                <span class="nav-icon">💔</span><span class="nav-label">安乐死</span>
+            </a>
+            <a href="{{ url_for('hospital_treatment') }}" class="nav-item">
+                <span class="nav-icon">📋</span><span class="nav-label">一宠一档</span>
+            </a>
+        </nav>
+        <div class="user-section">
+            <div class="user-info">
+                <div class="user-avatar">医</div>
+                <div class="user-details">
+                    <div class="user-name">{{ session.get('name', '医院用户') }}</div>
+                    <div class="user-role">宠物医院</div>
+                </div>
+                <a href="{{ url_for('logout') }}" class="logout-btn" title="退出登录">⏻</a>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="header-bar">
+            <div class="page-title-area">
+                <h2 class="page-title">{% block page_title %}首页看板{% endblock %}</h2>
+            </div>
+            <div class="header-right">
+                <div class="current-time" id="currentTime"></div>
+            </div>
+        </div>
+
+        <div class="flash-messages">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash-msg flash-{{ category if category in ['success','error','warning'] else 'success' }}">
+                            <span>{% if category == 'error' %}❌{% elif category == 'warning' %}⚠️{% else %}✅{% endif %}</span>
+                            <span>{{ message }}</span>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <script>
+        function updateTime() {
+            const now = new Date();
+            const el = document.getElementById('currentTime');
+            if (el) {
+                el.textContent = now.toLocaleString('zh-CN', {
+                    year: 'numeric', month: '2-digit', day: '2-digit',
+                    hour: '2-digit', minute: '2-digit', second: '2-digit'
+                });
+            }
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        {% block extra_js %}{% endblock %}
+    </script>
+</body>
+</html>

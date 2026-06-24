@@ -1,0 +1,117 @@
+{% extends "shelter/base.html" %}
+
+{% block title %}转运管理 - TNR管理系统{% endblock %}
+{% block page_title %}转运交接管理{% endblock %}
+
+{% block content %}
+<div class="form-section">
+    <div class="form-section-header">
+        <span class="form-section-icon">🚚</span>
+        <span class="form-section-title">新建转运批次</span>
+    </div>
+    <div class="form-section-body">
+        <form method="POST" action="{{ url_for('shelter_transfer') }}">
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label class="form-label">
+                    <span class="required">*</span> 接收医院
+                </label>
+                <select name="hospital_id" class="form-select" required>
+                    <option value="">请选择接收医院</option>
+                    {% for hospital in hospitals %}
+                    <option value="{{ hospital.id }}">{{ hospital.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label class="form-label">
+                    <span class="required">*</span> 选择待转运动物
+                    <span style="color: #a0aec0; font-weight: normal; font-size: 13px;">（可多选）</span>
+                </label>
+                {% if intake_pets %}
+                <div class="checkbox-group">
+                    {% for pet in intake_pets %}
+                    <div class="checkbox-item">
+                        <input type="checkbox" name="pet_ids" value="{{ pet.id }}" id="pet_{{ pet.id }}">
+                        <label for="pet_{{ pet.id }}">
+                            <strong style="color: #c05621;">{{ pet.pet_code }}</strong>
+                            <span style="margin: 0 8px; color: #a0aec0;">|</span>
+                            {{ '🐱 猫咪' if pet.species == 'cat' else '🐶 狗狗' }}
+                            <span style="margin: 0 8px; color: #a0aec0;">|</span>
+                            {{ pet.community_name }}
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state" style="padding: 20px;">
+                    <div class="empty-text">暂无待转运动物</div>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="submit-section">
+                <a href="{{ url_for('shelter_dashboard') }}" class="btn btn-secondary">取消</a>
+                <button type="submit" class="btn btn-pink" style="background: linear-gradient(135deg, #fc8181, #f56565); color: white; box-shadow: 0 4px 15px rgba(252,129,129,0.3);">
+                    🚚 提交转运
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<section class="section">
+    <div class="section-header">
+        <h3 class="section-title">转运记录列表</h3>
+    </div>
+    {% if transfers %}
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>批次号</th>
+                    <th>宠物编号</th>
+                    <th>接收医院</th>
+                    <th>状态</th>
+                    <th>拒收原因</th>
+                    <th>创建时间</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for transfer in transfers %}
+                <tr>
+                    <td style="font-weight: 600;">{{ transfer.batch_no }}</td>
+                    <td style="font-weight: 600; color: #c05621;">{{ transfer.pet_code }}</td>
+                    <td>{{ transfer.hospital_name }}</td>
+                    <td>
+                        {% if transfer.status == 'pending' %}
+                        <span class="badge badge-warning">待接收</span>
+                        {% elif transfer.status == 'received' %}
+                        <span class="badge badge-success">已接收</span>
+                        {% elif transfer.status == 'rejected' %}
+                        <span class="badge badge-danger">已拒收</span>
+                        {% elif transfer.status == 'in_treatment' %}
+                        <span class="badge badge-info">治疗中</span>
+                        {% else %}
+                        <span class="badge badge-secondary">{{ transfer.status }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ transfer.reject_reason or '-' }}</td>
+                    <td>{{ transfer.created_at|dt('%Y-%m-%d %H:%M') if transfer.created_at else '-' }}</td>
+                    <td>
+                        <a href="{{ url_for('pet_archive', pet_id=transfer.pet_id) }}" class="btn btn-secondary btn-sm">查看档案</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">🚚</div>
+        <div class="empty-text">暂无转运记录</div>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

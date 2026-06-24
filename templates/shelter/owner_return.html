@@ -1,0 +1,99 @@
+{% extends "shelter/base.html" %}
+
+{% block title %}主人领回 - TNR管理系统{% endblock %}
+{% block page_title %}主人领回登记{% endblock %}
+
+{% block content %}
+<div class="form-section">
+    <div class="form-section-header">
+        <span class="form-section-icon">🏡</span>
+        <span class="form-section-title">主人领回信息</span>
+    </div>
+    <div class="form-section-body">
+        <form method="POST" action="{{ url_for('shelter_owner_return') }}">
+            <div class="form-grid">
+                <div class="form-group full-width">
+                    <label class="form-label">
+                        <span class="required">*</span> 选择宠物
+                    </label>
+                    <select name="pet_id" class="form-select" required>
+                        <option value="">请选择要领回的宠物</option>
+                        {% for pet in intake_pets %}
+                        <option value="{{ pet.id }}" {% if request.form.get('pet_id')|string == pet.id|string %}selected{% endif %}>
+                            {{ pet.pet_code }} - {{ pet.community_name }} ({{ '猫咪' if pet.species == 'cat' else '狗狗' }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">
+                        <span class="required">*</span> 主人姓名
+                    </label>
+                    <input type="text" name="owner_name" class="form-input" placeholder="请输入主人姓名" required value="{{ request.form.get('owner_name', '') }}">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">
+                        <span class="required">*</span> 联系电话
+                    </label>
+                    <input type="tel" name="owner_phone" class="form-input" placeholder="请输入主人手机号码" pattern="[0-9]{11}" required value="{{ request.form.get('owner_phone', '') }}">
+                </div>
+                
+                <div class="form-group full-width">
+                    <label class="form-label">备注说明</label>
+                    <textarea name="note" class="form-textarea" placeholder="请输入备注信息（如认领凭证、特殊情况说明等）">{{ request.form.get('note', '') }}</textarea>
+                </div>
+            </div>
+            
+            <div class="submit-section">
+                <a href="{{ url_for('shelter_dashboard') }}" class="btn btn-secondary">取消</a>
+                <button type="submit" class="btn btn-green">✅ 确认领回</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<section class="section">
+    <div class="section-header">
+        <h3 class="section-title">最近领回记录</h3>
+    </div>
+    {% if returned_pets %}
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>宠物编号</th>
+                    <th>所在小区</th>
+                    <th>主人姓名</th>
+                    <th>联系电话</th>
+                    <th>领回日期</th>
+                    <th>备注</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in returned_pets %}
+                <tr>
+                    <td style="font-weight: 600; color: #c05621;">{{ record.pet_code }}</td>
+                    <td>{{ record.community_name }}</td>
+                    <td>{{ record.owner_name }}</td>
+                    <td>{{ record.owner_phone }}</td>
+                    <td>{{ record.return_date|dt('%Y-%m-%d') if record.return_date else '-' }}</td>
+                    <td>{{ record.note or '-' }}</td>
+                    <td>
+                        <a href="{{ url_for('pet_archive', pet_id=record.pet_id) }}" class="btn btn-secondary btn-sm">查看档案</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">🏡</div>
+        <div class="empty-text">暂无领回记录</div>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

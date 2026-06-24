@@ -1,0 +1,193 @@
+{% extends "adopter/base.html" %}
+{% set active_tab = 'adopter_profile' %}
+{% block title %}个人中心{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-header {
+        background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+        border-radius: 20px;
+        padding: 24px;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        box-shadow: 0 4px 16px rgba(255, 154, 158, 0.25);
+    }
+    .profile-avatar {
+        width: 64px;
+        height: 64px;
+        background: rgba(255,255,255,0.35);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+        flex-shrink: 0;
+        backdrop-filter: blur(4px);
+    }
+    .profile-name {
+        font-size: 20px;
+        font-weight: 700;
+        color: #fff;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+    .profile-role {
+        display: inline-block;
+        margin-top: 6px;
+        padding: 3px 10px;
+        background: rgba(255,255,255,0.3);
+        border-radius: 12px;
+        font-size: 12px;
+        color: #fff;
+        backdrop-filter: blur(4px);
+    }
+    .profile-phone {
+        font-size: 13px;
+        color: rgba(255,255,255,0.85);
+        margin-top: 4px;
+    }
+
+    .profile-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 20px 16px;
+        margin-bottom: 12px;
+        box-shadow: 0 2px 12px rgba(255, 154, 158, 0.08);
+    }
+    .profile-card-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: 80px 1fr;
+        gap: 12px 0;
+        align-items: center;
+    }
+    .info-grid-label {
+        font-size: 14px;
+        color: #999;
+    }
+    .info-grid-value {
+        font-size: 14px;
+        color: #333;
+        font-weight: 500;
+    }
+
+    .menu-list {
+        background: #fff;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 2px 12px rgba(255, 154, 158, 0.08);
+        margin-bottom: 12px;
+    }
+    .menu-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px;
+        border-bottom: 1px solid #f8f0f2;
+        transition: background 0.2s;
+    }
+    .menu-item:last-child {
+        border-bottom: none;
+    }
+    .menu-item:active {
+        background: #fff5f7;
+    }
+    .menu-item-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 15px;
+        color: #333;
+    }
+    .menu-icon {
+        font-size: 20px;
+        width: 28px;
+        text-align: center;
+    }
+    .menu-arrow {
+        color: #ccc;
+        font-size: 14px;
+    }
+
+    .logout-btn {
+        width: 100%;
+        padding: 14px;
+        background: #fff;
+        border-radius: 16px;
+        font-size: 15px;
+        font-weight: 500;
+        color: #e53935;
+        box-shadow: 0 2px 12px rgba(255, 154, 158, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all 0.2s;
+    }
+    .logout-btn:active {
+        background: #fff5f5;
+        transform: scale(0.98);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-header">
+    <div class="profile-avatar">👤</div>
+    <div>
+        <div class="profile-name">{{ user['name'] }}</div>
+        <div class="profile-role">
+            {{ role_config.get(user['role'], {}).get('icon', '👤') }}
+            {{ role_config.get(user['role'], {}).get('name', '领养人') }}
+        </div>
+        {% if user['phone'] %}
+        <div class="profile-phone">📱 {{ user['phone'] }}</div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="profile-card">
+    <div class="profile-card-title">✏️ 编辑资料</div>
+    <form method="POST" action="{{ url_for('adopter_profile') }}">
+        <div class="form-group">
+            <label class="form-label">姓名</label>
+            <input type="text" name="name" class="form-input" value="{{ user['name'] }}" placeholder="请输入姓名" required>
+        </div>
+        <div class="form-group">
+            <label class="form-label">手机号</label>
+            <input type="tel" name="phone" class="form-input" value="{{ user['phone'] or '' }}" placeholder="请输入手机号">
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">保存修改</button>
+    </form>
+</div>
+
+<div class="profile-card">
+    <div class="profile-card-title">📋 账户信息</div>
+    <div class="info-grid">
+        <span class="info-grid-label">用户名</span>
+        <span class="info-grid-value">{{ user['username'] }}</span>
+        <span class="info-grid-label">角色</span>
+        <span class="info-grid-value">{{ role_config.get(user['role'], {}).get('name', '领养人') }}</span>
+        <span class="info-grid-label">注册时间</span>
+        <span class="info-grid-value">{{ user['created_at'] }}</span>
+        {% if user['is_blacklisted'] %}
+        <span class="info-grid-label" style="color:#e53935;">状态</span>
+        <span class="info-grid-value" style="color:#e53935;">⚠️ 黑名单</span>
+        {% endif %}
+    </div>
+</div>
+
+<a href="{{ url_for('logout') }}" class="logout-btn" onclick="return confirm('确定要退出登录吗？')">
+    🚪 退出登录
+</a>
+{% endblock %}

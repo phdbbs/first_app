@@ -1,0 +1,96 @@
+{% extends "government/base.html" %}
+{% set nav_active = 'ledger' %}
+{% block title %}台账中心{% endblock %}
+
+{% block extra_css %}
+<style>
+    .ledger-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 14px;
+        margin-bottom: 24px;
+    }
+    .ledger-stat {
+        background: rgba(255,255,255,0.05);
+        border-radius: 12px;
+        padding: 16px;
+        text-align: center;
+        border: 1px solid rgba(255,255,255,0.08);
+    }
+    .ledger-stat-val { font-size: 26px; font-weight: 700; }
+    .ledger-stat-label { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 4px; }
+    .table-wrap { overflow-x: auto; }
+    .date-cell { font-size: 12px; color: rgba(255,255,255,0.5); white-space: nowrap; }
+    .date-cell.has-date { color: rgba(255,255,255,0.75); }
+    .species-cell { font-size: 18px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-title">
+    <span class="page-title-icon">📑</span>
+    台账中心 · 全量动物档案台账
+</div>
+
+{% set ns = namespace(total=0, adopted=0, released=0, euth=0, intake=0) %}
+{% for p in pets %}
+    {% set ns.total = ns.total + 1 %}
+    {% if p.status == 'adopted' %}{% set ns.adopted = ns.adopted + 1 %}{% endif %}
+    {% if p.status == 'released' %}{% set ns.released = ns.released + 1 %}{% endif %}
+    {% if p.status == 'euthanized' %}{% set ns.euth = ns.euth + 1 %}{% endif %}
+    {% if p.status in ['intake','transit','pending_treatment','treating','treated','pending_adoption','pending_release'] %}{% set ns.intake = ns.intake + 1 %}{% endif %}
+{% endfor %}
+
+<div class="ledger-stats">
+    <div class="ledger-stat"><div class="ledger-stat-val val-blue">{{ ns.total }}</div><div class="ledger-stat-label">累计记录</div></div>
+    <div class="ledger-stat"><div class="ledger-stat-val" style="color:#00d2ff;">{{ ns.intake }}</div><div class="ledger-stat-label">流程中</div></div>
+    <div class="ledger-stat"><div class="ledger-stat-val val-pink">{{ ns.adopted }}</div><div class="ledger-stat-label">已领养</div></div>
+    <div class="ledger-stat"><div class="ledger-stat-val val-green">{{ ns.released }}</div><div class="ledger-stat-label">已放归</div></div>
+    <div class="ledger-stat"><div class="ledger-stat-val val-red">{{ ns.euth }}</div><div class="ledger-stat-label">已安乐死</div></div>
+</div>
+
+<div class="glass-card">
+    <div class="section-title"><span>📋</span> 动物全生命周期台账（共 {{ pets|length }} 条记录）</div>
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>宠物编号</th>
+                    <th>类型</th>
+                    <th>来源社区</th>
+                    <th>所在机构</th>
+                    <th>领养人</th>
+                    <th>当前状态</th>
+                    <th>收容日期</th>
+                    <th>领养日期</th>
+                    <th>放归日期</th>
+                    <th>安乐死日期</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in pets %}
+                <tr>
+                    <td style="font-family:monospace;font-weight:600;color:#00d2ff;white-space:nowrap;">{{ p.pet_code }}</td>
+                    <td class="species-cell">{% if p.species == 'dog' %}🐕{% else %}🐱{% endif %}</td>
+                    <td>{{ p.community_name or '-' }}</td>
+                    <td>{{ p.hospital_name or '捕捉站' }}</td>
+                    <td>{{ p.adopter_name or '-' }}</td>
+                    <td><span class="status-badge status-{{ p.status }}">{{ PET_STATUS[p.status] }}</span></td>
+                    <td class="date-cell has-date">{{ p.intake_date[:10] if p.intake_date else '-' }}</td>
+                    <td class="date-cell {% if p.adoption_date %}has-date{% endif %}">{{ p.adoption_date[:10] if p.adoption_date else '-' }}</td>
+                    <td class="date-cell {% if p.release_date %}has-date{% endif %}">{{ p.release_date[:10] if p.release_date else '-' }}</td>
+                    <td class="date-cell {% if p.euthanasia_date %}has-date{% endif %}">{{ p.euthanasia_date[:10] if p.euthanasia_date else '-' }}</td>
+                    <td>
+                        <a href="{{ url_for('pet_archive', pet_id=p.id) }}" class="btn btn-secondary btn-sm">📋 查看档案</a>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% if not pets %}
+                <tr><td colspan="11" style="text-align:center;padding:60px;color:rgba(255,255,255,0.4);">暂无台账记录</td></tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
