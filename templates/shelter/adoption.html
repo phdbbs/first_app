@@ -5,9 +5,11 @@
 
 {% block content %}
 <div class="tab-bar">
-    <div class="tab-item active" onclick="switchTab('adoption', 'pending')">待领养列表</div>
-    <div class="tab-item" onclick="switchTab('adoption', 'adopted')">已领养列表</div>
-    <div class="tab-item" onclick="switchTab('adoption', 'checkins')">打卡审核</div>
+    <div class="tab-item active" onclick="switchTab('adoption', 'pending')">待领养宠物</div>
+    <div class="tab-item" onclick="switchTab('adoption', 'applications')">领养申请审核</div>
+    <div class="tab-item" onclick="switchTab('adoption', 'pickup')">待领取 ({{ pickup_pets|length }})</div>
+    <div class="tab-item" onclick="switchTab('adoption', 'adopted')">已领养宠物</div>
+    <div class="tab-item" onclick="switchTab('adoption', 'checkins')">回访打卡审核</div>
     <div class="tab-item" onclick="switchTab('adoption', 'blacklist')">黑名单管理</div>
 </div>
 
@@ -94,6 +96,109 @@
     </section>
 </div>
 
+<div id="adoption_applications" class="tab-content">
+    <section class="section">
+        <div class="section-header">
+            <h3 class="section-title">领养申请审核</h3>
+        </div>
+        {% if applications %}
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>宠物编号</th>
+                        <th>领养人</th>
+                        <th>领养原因</th>
+                        <th>养宠经验</th>
+                        <th>居住环境</th>
+                        <th>申请时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for app in applications %}
+                    <tr>
+                        <td style="font-weight: 600; color: #c05621;">{{ app.pet_code }}</td>
+                        <td>
+                            <div style="font-weight: 500;">{{ app.adopter_name }}</div>
+                            <div style="font-size: 12px; color: #718096;">{{ app.adopter_phone }}</div>
+                        </td>
+                        <td style="max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ app.reason }}">{{ app.reason or '-' }}</td>
+                        <td style="max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ app.experience }}">{{ app.experience or '-' }}</td>
+                        <td style="max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ app.housing }}">{{ app.housing or '-' }}</td>
+                        <td>{{ app.created_at|dt if app.created_at else '-' }}</td>
+                        <td>
+                            <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-start;">
+                                <form method="POST" action="{{ url_for('shelter_adoption') }}" style="display: inline;">
+                                    <input type="hidden" name="action" value="approve_application">
+                                    <input type="hidden" name="application_id" value="{{ app.id }}">
+                                    <button type="submit" class="btn btn-green btn-sm" onclick="return confirm('确定通过该领养申请？')">通过</button>
+                                </form>
+                                <form method="POST" action="{{ url_for('shelter_adoption') }}" style="display: flex; flex-direction: column; gap: 4px;">
+                                    <input type="hidden" name="action" value="reject_application">
+                                    <input type="hidden" name="application_id" value="{{ app.id }}">
+                                    <textarea name="reject_note" placeholder="驳回原因" rows="2" style="font-size: 12px; padding: 4px 8px; width: 160px; border: 1px solid #e2e8f0; border-radius: 4px; resize: vertical;"></textarea>
+                                    <button type="submit" class="btn btn-red btn-sm" onclick="return confirm('确定驳回该领养申请？')">驳回</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📋</div>
+            <div class="empty-text">暂无待审核领养申请</div>
+        </div>
+        {% endif %}
+    </section>
+</div>
+
+<div id="adoption_pickup" class="tab-content">
+    <section class="section">
+        <div class="section-header">
+            <h3 class="section-title">待领养人领取</h3>
+        </div>
+        {% if pickup_pets %}
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>宠物编号</th>
+                        <th>毛色</th>
+                        <th>领养人</th>
+                        <th>联系电话</th>
+                        <th>所在医院</th>
+                        <th>审核通过时间</th>
+                        <th>档案</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in pickup_pets %}
+                    <tr>
+                        <td style="font-weight:600;color:#ed8936;">{{ p.pet_code }}</td>
+                        <td>{{ p.color }}</td>
+                        <td><strong>{{ p.adopter_name }}</strong></td>
+                        <td>{{ p.adopter_phone }}</td>
+                        <td>{{ p.hospital_name or '-' }}</td>
+                        <td style="font-size:13px;color:#a0aec0;">{{ p.adoption_date|dt }}</td>
+                        <td><a href="{{ url_for('pet_archive', pet_id=p.id) }}" class="btn btn-secondary btn-sm">查看</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">🏠</div>
+            <div class="empty-text">暂无待领取宠物</div>
+        </div>
+        {% endif %}
+    </section>
+</div>
+
 <div id="adoption_adopted" class="tab-content">
     <section class="section">
         <div class="section-header">
@@ -140,7 +245,7 @@
 <div id="adoption_checkins" class="tab-content">
     <section class="section">
         <div class="section-header">
-            <h3 class="section-title">领养打卡审核</h3>
+            <h3 class="section-title">回访打卡审核</h3>
         </div>
         {% if checkins %}
         <div style="overflow-x: auto;">
@@ -168,25 +273,22 @@
                             {% elif checkin.status == 'approved' %}
                             <span class="badge badge-success">已通过</span>
                             {% elif checkin.status == 'rejected' %}
-                            <span class="badge badge-danger">已拒绝</span>
+                            <span class="badge badge-danger">已驳回</span>
                             {% else %}
                             <span class="badge badge-secondary">{{ checkin.status }}</span>
                             {% endif %}
                         </td>
                         <td>
                             {% if checkin.status == 'pending' %}
-                            <div style="display: flex; gap: 6px;">
-                                <form method="POST" action="{{ url_for('shelter_adoption') }}" style="display: inline;">
-                                    <input type="hidden" name="action" value="approve_checkin">
-                                    <input type="hidden" name="checkin_id" value="{{ checkin.id }}">
-                                    <button type="submit" class="btn btn-green btn-sm">通过</button>
-                                </form>
-                                <form method="POST" action="{{ url_for('shelter_adoption') }}" style="display: inline;">
-                                    <input type="hidden" name="action" value="reject_checkin">
-                                    <input type="hidden" name="checkin_id" value="{{ checkin.id }}">
-                                    <button type="submit" class="btn btn-red btn-sm">拒绝</button>
-                                </form>
-                            </div>
+                            <form method="POST" action="{{ url_for('shelter_adoption') }}" style="display: flex; flex-direction: column; gap: 6px; align-items: flex-start;">
+                                <input type="hidden" name="action" value="review_checkin">
+                                <input type="hidden" name="checkin_id" value="{{ checkin.id }}">
+                                <textarea name="note" placeholder="审核备注（可选）" rows="2" style="font-size: 12px; padding: 4px 8px; width: 180px; border: 1px solid #e2e8f0; border-radius: 4px; resize: vertical;"></textarea>
+                                <div style="display: flex; gap: 6px;">
+                                    <button type="submit" name="result" value="approved" class="btn btn-green btn-sm">通过</button>
+                                    <button type="submit" name="result" value="rejected" class="btn btn-red btn-sm">驳回</button>
+                                </div>
+                            </form>
                             {% else %}
                             <span style="color: #a0aec0; font-size: 13px;">已处理</span>
                             {% endif %}
@@ -223,17 +325,17 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for item in blacklist %}
+                    {% for user in blacklist %}
                     <tr>
-                        <td>{{ item.name }}</td>
-                        <td>{{ item.phone }}</td>
-                        <td>{{ item.reason or '-' }}</td>
-                        <td>{{ item.created_at|dt('%Y-%m-%d') if item.created_at else '-' }}</td>
+                        <td>{{ user.name }}</td>
+                        <td>{{ user.phone or '-' }}</td>
+                        <td>{{ user.reason or '-' }}</td>
+                        <td>{{ user.created_at|dt('%Y-%m-%d') if user.created_at else '-' }}</td>
                         <td>
                             <form method="POST" action="{{ url_for('shelter_adoption') }}" style="display: inline;">
-                                <input type="hidden" name="action" value="remove_blacklist">
-                                <input type="hidden" name="blacklist_id" value="{{ item.id }}">
-                                <button type="submit" class="btn btn-secondary btn-sm" onclick="return confirm('确定要移出黑名单吗？')">移出</button>
+                                <input type="hidden" name="action" value="unblacklist">
+                                <input type="hidden" name="user_id" value="{{ user.id }}">
+                                <button type="submit" class="btn btn-secondary btn-sm" onclick="return confirm('确定要移出黑名单吗？')">移出黑名单</button>
                             </form>
                         </td>
                     </tr>

@@ -1,0 +1,161 @@
+{% extends "adopter/base.html" %}
+{% block title %}申请领养 - {{ pet['pet_code'] }}{% endblock %}
+
+{% block header %}
+<a href="javascript:history.back()" class="header-back">←</a>
+<div class="header-title">申请领养</div>
+<div class="header-right"></div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .apply-pet-card {
+        background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+        border-radius: 16px;
+        padding: 16px;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+    .apply-pet-card.dog {
+        background: linear-gradient(135deg, #4dd0e1 0%, #80deea 100%);
+    }
+    .apply-pet-emoji {
+        width: 60px;
+        height: 60px;
+        background: rgba(255,255,255,0.3);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 36px;
+        flex-shrink: 0;
+    }
+    .apply-pet-info {
+        flex: 1;
+        min-width: 0;
+    }
+    .apply-pet-code {
+        font-size: 16px;
+        font-weight: 700;
+        color: #fff;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        margin-bottom: 4px;
+    }
+    .apply-pet-meta {
+        font-size: 12px;
+        color: rgba(255,255,255,0.9);
+        line-height: 1.6;
+    }
+    .apply-pet-desc {
+        font-size: 12px;
+        color: rgba(255,255,255,0.85);
+        margin-top: 2px;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 1;
+        -webkit-box-orient: vertical;
+    }
+
+    .already-applied {
+        text-align: center;
+        padding: 48px 20px;
+    }
+    .already-applied-icon {
+        font-size: 56px;
+        margin-bottom: 16px;
+    }
+    .already-applied-text {
+        font-size: 16px;
+        color: #666;
+        font-weight: 500;
+        margin-bottom: 8px;
+    }
+    .already-applied-hint {
+        font-size: 13px;
+        color: #999;
+        line-height: 1.6;
+        margin-bottom: 24px;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 10px 24px;
+        border-radius: 20px;
+        font-size: 14px;
+        color: #ff9a9e;
+        background: #fff;
+        border: 1.5px solid #ffcdd2;
+        font-weight: 500;
+        margin-top: 12px;
+        transition: all 0.2s;
+    }
+    .back-link:active {
+        transform: scale(0.97);
+        background: #fff5f7;
+    }
+
+    .form-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 8px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="apply-pet-card {% if pet['species'] == 'dog' %}dog{% endif %}">
+    <div class="apply-pet-emoji">{{ '🐶' if pet['species'] == 'dog' else '🐱' }}</div>
+    <div class="apply-pet-info">
+        <div class="apply-pet-code">{{ pet['pet_code'] }}</div>
+        <div class="apply-pet-meta">
+            {{ '狗狗' if pet['species'] == 'dog' else '猫咪' }}
+            {% if pet['gender'] %} · {{ pet['gender'] }}{% endif %}
+            {% if pet['age'] %} · {{ pet['age'] }}{% endif %}
+            {% if pet['color'] %} · {{ pet['color'] }}{% endif %}
+        </div>
+        {% if pet['description'] %}
+        <div class="apply-pet-desc">{{ pet['description'] }}</div>
+        {% endif %}
+    </div>
+</div>
+
+{% if already_applied %}
+<div class="card">
+    <div class="already-applied">
+        <div class="already-applied-icon">⏳</div>
+        <div class="already-applied-text">您已提交过申请，请等待审核</div>
+        <div class="already-applied-hint">工作人员会尽快审核您的申请，审核结果将通过消息中心通知您。</div>
+        <a href="{{ url_for('adopter_my') }}" class="btn btn-primary" style="margin-bottom: 8px;">查看我的申请</a>
+        <a href="{{ url_for('adopter_pet_detail', pet_id=pet['id']) }}" class="back-link">返回宠物详情</a>
+    </div>
+</div>
+{% else %}
+<div class="card">
+    <div class="section-title">📝 领养申请</div>
+    <form method="post" action="{{ url_for('adopter_apply', pet_id=pet['id']) }}">
+        <div class="form-group">
+            <label class="form-label">领养理由 <span style="color:#ff6b81;">*</span></label>
+            <textarea name="reason" class="form-textarea" placeholder="请说明您为什么想要领养这只小动物，以及您对领养的期待..." required></textarea>
+        </div>
+        <div class="form-group">
+            <label class="form-label">养宠经验 <span style="color:#ff6b81;">*</span></label>
+            <textarea name="experience" class="form-textarea" placeholder="请描述您以往的养宠经历，包括养过什么动物、养了多久等..."></textarea>
+        </div>
+        <div class="form-group">
+            <label class="form-label">居住环境 <span style="color:#ff6b81;">*</span></label>
+            <textarea name="housing" class="form-textarea" placeholder="请描述您的居住情况，如：自有住房/租房、面积、是否有封闭阳台/院子、家人是否同意等..." required></textarea>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-block" style="font-size:16px;padding:14px;">提交申请</button>
+            <a href="{{ url_for('adopter_pet_detail', pet_id=pet['id']) }}" class="back-link" style="width:100%;">返回</a>
+        </div>
+    </form>
+</div>
+{% endif %}
+{% endblock %}

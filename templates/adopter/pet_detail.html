@@ -161,6 +161,55 @@
     .contact-btn:active {
         transform: scale(0.97);
     }
+
+    .apply-section {
+        margin-bottom: 12px;
+    }
+    .apply-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        width: 100%;
+        padding: 18px;
+        background: linear-gradient(135deg, #ff6b81, #ff9a9e);
+        color: #fff;
+        border-radius: 30px;
+        font-size: 18px;
+        font-weight: 700;
+        box-shadow: 0 6px 20px rgba(255, 107, 129, 0.4);
+        transition: all 0.2s;
+        letter-spacing: 2px;
+    }
+    .apply-btn:active {
+        transform: scale(0.97);
+        box-shadow: 0 3px 10px rgba(255, 107, 129, 0.3);
+    }
+    .apply-btn-icon {
+        font-size: 22px;
+    }
+
+    .status-notice {
+        background: linear-gradient(135deg, #f5f5f5 0%, #eeeeee 100%);
+        border-radius: 16px;
+        padding: 16px;
+        margin-bottom: 12px;
+        border: 1px solid rgba(0, 0, 0, 0.06);
+    }
+    .status-notice-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: #757575;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .status-notice-text {
+        font-size: 13px;
+        color: #999;
+        line-height: 1.7;
+    }
 </style>
 {% endblock %}
 
@@ -224,19 +273,29 @@
         <span class="info-value"><a href="tel:{{ pet['hospital_phone'] }}" style="color:#ff9a9e;">{{ pet['hospital_phone'] }}</a></span>
     </div>
     {% endif %}
-    {% if pet['hospital_phone'] %}
+    {% if pet['hospital_phone'] and pet['status'] != 'pending_adoption' %}
     <a href="tel:{{ pet['hospital_phone'] }}" class="contact-btn">📞 联系医院咨询领养</a>
     {% endif %}
 </div>
 
-<div class="process-guide">
-    <div class="guide-title">⚠️ 领养须知</div>
-    <div class="guide-text">
-        本系统暂不支持在线预约领养。如您有意向领养这只小动物，请直接致电上方医院电话进行线下联系。<br>
+{% if pet['status'] == 'pending_adoption' %}
+<div class="apply-section">
+    <a href="{{ url_for('adopter_apply', pet_id=pet['id']) }}" class="apply-btn">
+        <span class="apply-btn-icon">❤️</span>
+        <span>我要申请领养</span>
+    </a>
+</div>
+{% else %}
+<div class="status-notice">
+    <div class="status-notice-title">ℹ️ 领养提示</div>
+    <div class="status-notice-text">
+        该宠物当前状态为「{{ PET_STATUS.get(pet['status'], pet['status']) }}」，暂不开放在线领养申请。<br>
+        {% if pet['hospital_phone'] %}如需了解更多信息，可致电上方医院电话咨询。<br>{% endif %}
         领养流程：线下看宠 → 提交资质材料 → 工作人员审核 → 签署领养协议 → 开通领养人账号 → 完成领宠。<br>
         领养后请按时每月进行回访打卡，感谢您给流浪动物一个温暖的家！❤️
     </div>
 </div>
+{% endif %}
 
 {% if treatments %}
 <div class="card">

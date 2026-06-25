@@ -53,12 +53,13 @@ ROLE_CONFIG = {
 }
 
 PET_STATUS = {
-    'intake': '在途',
+    'intake': '在站',
     'transit': '转运中',
     'pending_treatment': '待诊疗',
     'treating': '诊疗中',
     'treated': '诊疗完成',
     'pending_adoption': '待领养',
+    'pending_pickup': '待领取',
     'adopted': '已领养',
     'pending_release': '待放归',
     'released': '已放归',
@@ -297,6 +298,23 @@ def init_db():
             ip TEXT,
             created_at TEXT DEFAULT (datetime('now','localtime'))
         );
+
+        CREATE TABLE IF NOT EXISTS adoption_applications (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            pet_id INTEGER NOT NULL,
+            adopter_id INTEGER NOT NULL,
+            reason TEXT,
+            experience TEXT,
+            housing TEXT,
+            status TEXT DEFAULT 'pending',
+            review_note TEXT,
+            reviewed_by INTEGER,
+            reviewed_at TEXT,
+            created_at TEXT DEFAULT (datetime('now','localtime')),
+            FOREIGN KEY (pet_id) REFERENCES pets(id),
+            FOREIGN KEY (adopter_id) REFERENCES users(id),
+            FOREIGN KEY (reviewed_by) REFERENCES users(id)
+        );
     ''')
 
     cursor.execute("SELECT COUNT(*) FROM users")
@@ -442,13 +460,18 @@ def get_counts():
     counts = {}
     counts['total_intake'] = db.execute("SELECT COUNT(*) FROM pets").fetchone()[0]
     counts['intake'] = db.execute("SELECT COUNT(*) FROM pets WHERE status='intake'").fetchone()[0]
+    counts['transit'] = db.execute("SELECT COUNT(*) FROM transfers WHERE status='pending'").fetchone()[0]
     counts['pending_treatment'] = db.execute("SELECT COUNT(*) FROM pets WHERE status IN ('pending_treatment','treating')").fetchone()[0]
+    counts['treated'] = db.execute("SELECT COUNT(*) FROM pets WHERE status='treated'").fetchone()[0]
     counts['pending_adoption'] = db.execute("SELECT COUNT(*) FROM pets WHERE status='pending_adoption'").fetchone()[0]
+    counts['pending_pickup'] = db.execute("SELECT COUNT(*) FROM pets WHERE status='pending_pickup'").fetchone()[0]
     counts['adopted'] = db.execute("SELECT COUNT(*) FROM pets WHERE status='adopted'").fetchone()[0]
+    counts['pending_release'] = db.execute("SELECT COUNT(*) FROM pets WHERE status='pending_release'").fetchone()[0]
     counts['released'] = db.execute("SELECT COUNT(*) FROM pets WHERE status='released'").fetchone()[0]
     counts['euthanized'] = db.execute("SELECT COUNT(*) FROM pets WHERE status='euthanized'").fetchone()[0]
-    counts['transit'] = db.execute("SELECT COUNT(*) FROM transfers WHERE status='pending'").fetchone()[0]
+    counts['returned'] = db.execute("SELECT COUNT(*) FROM pets WHERE status='returned'").fetchone()[0]
     counts['pending_dist'] = db.execute("SELECT COUNT(*) FROM material_distributions WHERE status='pending'").fetchone()[0]
+    counts['pending_applications'] = db.execute("SELECT COUNT(*) FROM adoption_applications WHERE status='pending'").fetchone()[0]
     counts['hospitals'] = db.execute("SELECT COUNT(*) FROM institutions WHERE type='hospital' AND status=1").fetchone()[0]
     counts['adopters'] = db.execute("SELECT COUNT(*) FROM users WHERE role='adopter' AND is_blacklisted=0").fetchone()[0]
     return counts
@@ -489,6 +512,7 @@ def login():
             session['name'] = user['name']
             session['role'] = user['role']
             session['org_id'] = user['org_id']
+            session['is_blacklisted'] = bool(user['is_blacklisted'])
             log_action('login', f'用户{user["name"]}登录')
             if role == 'shelter':
                 return redirect(url_for('shelter_dashboard'))
@@ -555,6 +579,10 @@ def shelter_dashboard():
         tasks.append({'priority': 'high', 'name': f'{stats["intake"]}只新收容动物待转运', 'desc': '请尽快安排转运至医院', 'time': '待处理', 'badge': '紧急'})
     if stats['transit'] > 0:
         tasks.append({'priority': 'high', 'name': f'{stats["transit"]}个转运单待医院确认', 'desc': '等待医院接收确认', 'time': '待处理', 'badge': '紧急'})
+    if stats['pending_release'] > 0:
+        tasks.append({'priority': 'medium', 'name': f'{stats["pending_release"]}只动物待放归', 'desc': '请安排放归至原社区', 'time': '待处理', 'badge': '普通'})
+    if stats['pending_applications'] > 0:
+        tasks.append({'priority': 'high', 'name': f'{stats["pending_applications"]}份领养申请待审核', 'desc': '请及时审核领养申请', 'time': '待处理', 'badge': '紧急'})
     low_stock = sum(1 for v in shelter_inv.values() if v < 20)
     if low_stock > 0:
         tasks.append({'priority': 'medium', 'name': f'{low_stock}种物料库存不足', 'desc': '请及时采购补充', 'time': '待处理', 'badge': '普通'})
@@ -720,22 +748,51 @@ def shelter_adoption():
     db = get_db()
     if request.method == 'POST':
         action = request.form.get('action', '')
-        if action == 'approve':
-            adopter_id = request.form.get('adopter_id')
-            pet_id = request.form.get('pet_id')
-            db.execute("UPDATE pets SET status='adopted', adopter_id=?, adoption_date=datetime('now','localtime') WHERE id=?",
-                       (adopter_id, pet_id))
-            db.execute("INSERT INTO messages (user_id, title, content, type) VALUES (?, '领养审核通过', '您的领养申请已审核通过，请前往医院领宠', 'adoption')",
-                       (adopter_id,))
-            log_action('adoption_approve', f'宠物{pet_id}领养通过，领养人{adopter_id}')
-            db.commit()
-            flash('领养审核通过，已开通领养人端口', 'success')
+        if action == 'approve_application':
+            app_id = request.form.get('application_id')
+            app_data = db.execute("SELECT * FROM adoption_applications WHERE id=?", (app_id,)).fetchone()
+            if app_data:
+                db.execute("UPDATE adoption_applications SET status='approved', reviewed_by=?, reviewed_at=datetime('now','localtime') WHERE id=?",
+                           (session['user_id'], app_id))
+                db.execute("UPDATE pets SET status='pending_pickup', adopter_id=?, adoption_date=datetime('now','localtime') WHERE id=?",
+                           (app_data['adopter_id'], app_data['pet_id']))
+                db.execute("UPDATE adoption_applications SET status='rejected', reviewed_by=?, reviewed_at=datetime('now','localtime'), review_note='该宠物已被其他申请人领养' WHERE pet_id=? AND id!=? AND status='pending'",
+                           (session['user_id'], app_data['pet_id'], app_id))
+                db.execute("INSERT INTO messages (user_id, title, content, type) VALUES (?, '领养申请审核通过', '您的领养申请已审核通过，请前往对应医院完成领宠手续', 'adoption')",
+                           (app_data['adopter_id'],))
+                rejected = db.execute("SELECT adopter_id FROM adoption_applications WHERE pet_id=? AND id!=? AND status='rejected' AND reviewed_at IS NOT NULL",
+                                     (app_data['pet_id'], app_id)).fetchall()
+                for r in rejected:
+                    db.execute("INSERT INTO messages (user_id, title, content, type) VALUES (?, '领养申请未通过', '很抱歉，您申请领养的宠物已被其他申请人领养', 'adoption')",
+                               (r['adopter_id'],))
+                log_action('adoption_approve', f'领养申请{app_id}通过，宠物{app_data["pet_id"]}分配给领养人{app_data["adopter_id"]}')
+                db.commit()
+                flash('领养申请已通过，已通知领养人前往医院领宠', 'success')
+        elif action == 'reject_application':
+            app_id = request.form.get('application_id')
+            note = request.form.get('reject_note', '')
+            app_data = db.execute("SELECT * FROM adoption_applications WHERE id=?", (app_id,)).fetchone()
+            if app_data:
+                db.execute("UPDATE adoption_applications SET status='rejected', reviewed_by=?, reviewed_at=datetime('now','localtime'), review_note=? WHERE id=?",
+                           (session['user_id'], note, app_id))
+                db.execute("INSERT INTO messages (user_id, title, content, type) VALUES (?, '领养申请未通过', ?, 'adoption')",
+                           (app_data['adopter_id'], note or '很抱歉，您的领养申请未通过审核'))
+                log_action('adoption_reject', f'领养申请{app_id}被驳回')
+                db.commit()
+                flash('已驳回申请', 'success')
         elif action == 'blacklist':
             user_id = request.form.get('user_id')
             db.execute("UPDATE users SET is_blacklisted=1 WHERE id=?", (user_id,))
+            session['is_blacklisted'] = True
             log_action('blacklist_add', f'用户{user_id}加入黑名单')
             db.commit()
             flash('已加入黑名单', 'success')
+        elif action == 'unblacklist':
+            user_id = request.form.get('user_id')
+            db.execute("UPDATE users SET is_blacklisted=0 WHERE id=?", (user_id,))
+            log_action('blacklist_remove', f'用户{user_id}移出黑名单')
+            db.commit()
+            flash('已移出黑名单', 'success')
         elif action == 'review_checkin':
             checkin_id = request.form.get('checkin_id')
             result = request.form.get('result', 'approved')
@@ -746,17 +803,25 @@ def shelter_adoption():
             if result == 'rejected':
                 db.execute("INSERT INTO messages (user_id, title, content, type) VALUES (?, '打卡审核未通过', ?, 'checkin')",
                            (c['adopter_id'], note or '您的打卡未通过，请按要求重新打卡'))
+            else:
+                db.execute("INSERT INTO messages (user_id, title, content, type) VALUES (?, '打卡审核通过', '您的回访打卡已审核通过，感谢您的照顾！', 'checkin')",
+                           (c['adopter_id'],))
             db.commit()
             flash('打卡审核完成', 'success')
         return redirect(url_for('shelter_adoption'))
 
     pending_pets = db.execute("SELECT p.*, i.name as hospital_name FROM pets p LEFT JOIN institutions i ON p.current_hospital_id=i.id WHERE p.status='pending_adoption' ORDER BY p.treatment_date DESC").fetchall()
+    pickup_pets = db.execute("SELECT p.*, u.name as adopter_name, u.phone as adopter_phone, i.name as hospital_name FROM pets p JOIN users u ON p.adopter_id=u.id LEFT JOIN institutions i ON p.current_hospital_id=i.id WHERE p.status='pending_pickup' ORDER BY p.adoption_date DESC").fetchall()
     adopters = db.execute("SELECT * FROM users WHERE role='adopter' ORDER BY created_at DESC").fetchall()
     adopted_pets = db.execute("SELECT p.*, u.name as adopter_name, u.phone as adopter_phone, i.name as hospital_name FROM pets p JOIN users u ON p.adopter_id=u.id LEFT JOIN institutions i ON p.current_hospital_id=i.id WHERE p.status='adopted' ORDER BY p.adoption_date DESC").fetchall()
     checkins = db.execute("SELECT c.*, p.pet_code, u.name as adopter_name FROM checkins c JOIN pets p ON c.pet_id=p.id JOIN users u ON c.adopter_id=u.id ORDER BY c.created_at DESC LIMIT 30").fetchall()
     blacklist = db.execute("SELECT * FROM users WHERE is_blacklisted=1").fetchall()
-    return render_template('shelter/adoption.html', pending_pets=pending_pets, adopters=adopters,
-                           adopted_pets=adopted_pets, checkins=checkins, blacklist=blacklist, role_config=ROLE_CONFIG)
+    applications = db.execute('''SELECT a.*, p.pet_code, u.name as adopter_name, u.phone as adopter_phone
+        FROM adoption_applications a JOIN pets p ON a.pet_id=p.id JOIN users u ON a.adopter_id=u.id
+        WHERE a.status='pending' ORDER BY a.created_at DESC''').fetchall()
+    return render_template('shelter/adoption.html', pending_pets=pending_pets, pickup_pets=pickup_pets, adopters=adopters,
+                           adopted_pets=adopted_pets, checkins=checkins, blacklist=blacklist,
+                           applications=applications, role_config=ROLE_CONFIG)
 
 @app.route('/shelter/report')
 @role_required(['shelter'])
@@ -798,6 +863,7 @@ def hospital_dashboard():
     pending_material = db.execute("SELECT COUNT(*) FROM material_distributions WHERE to_hospital_id=? AND status='pending'", (org_id,)).fetchone()[0]
     pending_treat = db.execute("SELECT COUNT(*) FROM pets WHERE current_hospital_id=? AND status IN ('pending_treatment','treating')", (org_id,)).fetchone()[0]
     pending_adoption = db.execute("SELECT COUNT(*) FROM pets WHERE current_hospital_id=? AND status='treated'", (org_id,)).fetchone()[0]
+    pending_pickup = db.execute("SELECT COUNT(*) FROM pets WHERE current_hospital_id=? AND status='pending_pickup'", (org_id,)).fetchone()[0]
     alerts = []
     if inventory.get('vaccine', 0) < 10:
         alerts.append(f"疫苗库存预警: 当前{inventory['vaccine']}支，请及时向捕捉站申请")
@@ -810,10 +876,14 @@ def hospital_dashboard():
     treat_pets = db.execute("SELECT p.* FROM pets p WHERE p.current_hospital_id=? AND p.status IN ('pending_treatment','treating') LIMIT 5", (org_id,)).fetchall()
     for p in treat_pets:
         tasks.append({'priority': 'high', 'name': f'宠物{p["pet_code"]}待诊疗', 'desc': '需完成绝育/疫苗/驱虫/芯片', 'time': p['intake_date'], 'badge': '紧急'})
+    pickup_list = db.execute("SELECT p.*, u.name as adopter_name FROM pets p JOIN users u ON p.adopter_id=u.id WHERE p.current_hospital_id=? AND p.status='pending_pickup' LIMIT 5", (org_id,)).fetchall()
+    for p in pickup_list:
+        tasks.append({'priority': 'medium', 'name': f'宠物{p["pet_code"]}待领出', 'desc': f'领养人{p["adopter_name"]}待领走', 'time': p['adoption_date'], 'badge': '待办'})
     stats = {
         'pending_receive': pending_receive,
         'pending_treat': pending_treat,
         'pending_adoption': pending_adoption,
+        'pending_pickup': pending_pickup,
         'pending_material': pending_material,
         'alerts_count': len(alerts),
     }
@@ -895,19 +965,24 @@ def hospital_treatment():
 
         if completed:
             db.execute("UPDATE pets SET status='treated', treatment_date=datetime('now','localtime') WHERE id=?", (pet_id,))
+
+            def consume_material(mat_type, chip_val=None):
+                row = db.execute("SELECT id, quantity FROM materials WHERE owner_id=? AND type=? AND quantity>0 ORDER BY id LIMIT 1", (org_id, mat_type)).fetchone()
+                if row:
+                    db.execute("UPDATE materials SET quantity=quantity-1 WHERE id=?", (row['id'],))
+                    ledger_chip = chip_val if mat_type == 'chip' else None
+                    reason = f'诊疗消耗-{MATERIAL_TYPES[mat_type]}'
+                    db.execute('''INSERT INTO material_ledger (material_id, type, action, quantity, from_location, chip_no, reason, operator_id, operator_role)
+                        VALUES (?, ?, 'consume', 1, 'hospital', ?, ?, ?, 'hospital')''',
+                        (row['id'], mat_type, ledger_chip, reason, session['user_id']))
+
             if vaccine_done:
-                db.execute("UPDATE materials SET quantity=quantity-1 WHERE owner_id=? AND type='vaccine' AND quantity>0 LIMIT 1", (org_id,))
-                db.execute('''INSERT INTO material_ledger (type, action, quantity, from_location, reason, operator_id, operator_role)
-                    VALUES ('vaccine', 'consume', 1, 'hospital', '诊疗消耗-疫苗', ?, 'hospital')''', (session['user_id'],))
+                consume_material('vaccine')
             if dewormer_done:
-                db.execute("UPDATE materials SET quantity=quantity-1 WHERE owner_id=? AND type='dewormer' AND quantity>0 LIMIT 1", (org_id,))
-                db.execute('''INSERT INTO material_ledger (type, action, quantity, from_location, reason, operator_id, operator_role)
-                    VALUES ('dewormer', 'consume', 1, 'hospital', '诊疗消耗-驱虫药', ?, 'hospital')''', (session['user_id'],))
+                consume_material('dewormer')
             if chip_done:
-                db.execute("UPDATE materials SET quantity=quantity-1 WHERE owner_id=? AND type='chip' AND quantity>0 LIMIT 1", (org_id,))
-                db.execute('''INSERT INTO material_ledger (type, action, quantity, from_location, chip_no, reason, operator_id, operator_role)
-                    VALUES ('chip', 'consume', 1, 'hospital', ?, '诊疗消耗-芯片植入', ?, 'hospital')''', (chip_no, session['user_id'],))
-            log_action('treatment_complete', f'宠物{pet_id}诊疗完成')
+                consume_material('chip', chip_no)
+            log_action('treatment_complete', f'宠物{pet_id}诊疗完成，已上架领养大厅')
         else:
             db.execute("UPDATE pets SET status='treating' WHERE id=? AND status='pending_treatment'", (pet_id,))
             log_action('treatment_update', f'宠物{pet_id}诊疗更新')
@@ -933,11 +1008,13 @@ def hospital_material():
             dist = db.execute("SELECT * FROM material_distributions WHERE id=?", (dist_id,)).fetchone()
             db.execute("UPDATE material_distributions SET status='received', received_at=datetime('now','localtime') WHERE id=?", (dist_id,))
             db.execute('''INSERT INTO materials (type, batch_no, chip_start, chip_end, quantity, unit, location, owner_id, purchase_date)
-                VALUES (?, ?, ?, ?, ?, '支' if ? != 'chip' else '个', 'hospital', ?, date('now','localtime'))''',
+                VALUES (?, ?, ?, ?, ?, ?, 'hospital', ?, date('now','localtime'))''',
                 (dist['material_type'], dist['batch_no'], dist['chip_start'], dist['chip_end'], dist['quantity'],
-                 dist['material_type'], org_id))
-            db.execute("UPDATE materials SET quantity=quantity-? WHERE owner_id=1 AND type=? AND quantity>=? ORDER BY id LIMIT 1",
-                       (dist['quantity'], dist['material_type'], dist['quantity']))
+                 '个' if dist['material_type'] == 'chip' else '支', org_id))
+            mat_row = db.execute("SELECT id FROM materials WHERE owner_id=1 AND type=? AND quantity>=? ORDER BY id LIMIT 1",
+                                (dist['material_type'], dist['quantity'])).fetchone()
+            if mat_row:
+                db.execute("UPDATE materials SET quantity=quantity-? WHERE id=?", (dist['quantity'], mat_row['id']))
             db.execute('''INSERT INTO material_ledger (type, action, quantity, from_location, to_location, from_owner_id, to_owner_id, reason, operator_id, operator_role)
                 VALUES (?, 'distribute_receive', ?, 'shelter', 'hospital', 1, ?, '下发接收', ?, 'hospital')''',
                 (dist['material_type'], dist['quantity'], org_id, session['user_id']))
@@ -971,21 +1048,29 @@ def hospital_adoption():
         age = request.form.get('age', '')
         action = request.form.get('action', 'update')
         if action == 'update':
-            db.execute("UPDATE pets SET adoption_desc=?, gender=?, age=? WHERE id=?", (desc, gender, age, pet_id))
+            desc = request.form.get('description', '')
+            db.execute("UPDATE pets SET adoption_desc=?, gender=COALESCE(?, gender), age=COALESCE(?, age) WHERE id=?", (desc, gender or None, age or None, pet_id))
             db.execute("UPDATE pets SET status='pending_adoption' WHERE id=? AND status='treated'", (pet_id,))
             log_action('adoption_update', f'宠物{pet_id}资料更新上架领养大厅')
             db.commit()
             flash('领养资料已更新并上架领养大厅', 'success')
         elif action == 'confirm_adopted':
-            db.execute("UPDATE pets SET status='adopted', adoption_date=datetime('now','localtime') WHERE id=?", (pet_id,))
+            pet = db.execute("SELECT adopter_id FROM pets WHERE id=?", (pet_id,)).fetchone()
+            if not pet or not pet['adopter_id']:
+                flash('该宠物尚未分配领养人，无法确认领出', 'error')
+                return redirect(url_for('hospital_adoption'))
+            db.execute("UPDATE pets SET status='adopted', adoption_date=COALESCE(adoption_date, datetime('now','localtime')) WHERE id=?", (pet_id,))
+            db.execute("INSERT INTO messages (user_id, title, content, type) VALUES (?, '领养领出确认', '您已完成领宠手续，欢迎毛孩子回家！请记得按时回访打卡。', 'adoption')",
+                       (pet['adopter_id'],))
             log_action('adoption_confirm', f'宠物{pet_id}领养领出确认')
             db.commit()
             flash('领养领出已确认', 'success')
         return redirect(url_for('hospital_adoption'))
 
-    treated_pets = db.execute("SELECT * FROM pets WHERE current_hospital_id=? AND status IN ('treated','pending_adoption') ORDER BY p.treatment_date DESC" if False else "SELECT * FROM pets WHERE current_hospital_id=? AND status IN ('treated','pending_adoption') ORDER BY treatment_date DESC", (org_id,)).fetchall()
+    treated_pets = db.execute("SELECT * FROM pets WHERE current_hospital_id=? AND status IN ('treated','pending_adoption') ORDER BY treatment_date DESC", (org_id,)).fetchall()
+    pickup_pets = db.execute("SELECT p.*, u.name as adopter_name, u.phone as adopter_phone FROM pets p JOIN users u ON p.adopter_id=u.id WHERE p.current_hospital_id=? AND p.status='pending_pickup' ORDER BY p.adoption_date DESC", (org_id,)).fetchall()
     adopted_pets = db.execute("SELECT p.*, u.name as adopter_name FROM pets p LEFT JOIN users u ON p.adopter_id=u.id WHERE p.current_hospital_id=? AND p.status='adopted' ORDER BY p.adoption_date DESC LIMIT 20", (org_id,)).fetchall()
-    return render_template('hospital/adoption.html', treated_pets=treated_pets, adopted_pets=adopted_pets,
+    return render_template('hospital/adoption.html', treated_pets=treated_pets, pickup_pets=pickup_pets, adopted_pets=adopted_pets,
                            role_config=ROLE_CONFIG)
 
 @app.route('/hospital/euthanasia', methods=['GET', 'POST'])
@@ -1021,6 +1106,38 @@ def adopter_hall():
     return render_template('adopter/adoption_hall.html', pets=pets, unread=unread, species=species,
                            role_config=ROLE_CONFIG)
 
+@app.route('/adopter/apply/<int:pet_id>', methods=['GET', 'POST'])
+@role_required(['adopter'])
+def adopter_apply(pet_id):
+    db = get_db()
+    pet = db.execute("SELECT * FROM pets WHERE id=? AND status='pending_adoption'", (pet_id,)).fetchone()
+    if not pet:
+        flash('该宠物不可申请领养', 'error')
+        return redirect(url_for('adopter_hall'))
+    existing = db.execute("SELECT * FROM adoption_applications WHERE pet_id=? AND adopter_id=? AND status='pending'",
+                          (pet_id, session['user_id'])).fetchone()
+    if request.method == 'POST':
+        if existing:
+            flash('您已提交过申请，请勿重复提交', 'error')
+            return redirect(url_for('adopter_pet_detail', pet_id=pet_id))
+        if session.get('is_blacklisted'):
+            flash('您已被列入黑名单，无法申请领养', 'error')
+            return redirect(url_for('adopter_hall'))
+        reason = request.form.get('reason', '')
+        experience = request.form.get('experience', '')
+        housing = request.form.get('housing', '')
+        db.execute('''INSERT INTO adoption_applications (pet_id, adopter_id, reason, experience, housing)
+            VALUES (?, ?, ?, ?, ?)''', (pet_id, session['user_id'], reason, experience, housing))
+        db.execute("INSERT INTO messages (user_id, title, content, type) VALUES (?, '领养申请提交成功', '您的领养申请已提交，请等待工作人员审核', 'system')",
+                   (session['user_id'],))
+        log_action('adoption_apply', f'申请领养宠物{pet_id}')
+        db.commit()
+        flash('领养申请已提交，请等待审核', 'success')
+        return redirect(url_for('adopter_my'))
+    already_applied = existing is not None
+    return render_template('adopter/apply.html', pet=pet, already_applied=already_applied,
+                           PET_STATUS=PET_STATUS, role_config=ROLE_CONFIG)
+
 @app.route('/adopter/pet/<int:pet_id>')
 @role_required(['adopter'])
 def adopter_pet_detail(pet_id):
@@ -1034,8 +1151,11 @@ def adopter_pet_detail(pet_id):
 @role_required(['adopter'])
 def adopter_my():
     db = get_db()
-    my_pets = db.execute("SELECT p.*, i.name as hospital_name FROM pets p LEFT JOIN institutions i ON p.current_hospital_id=i.id WHERE p.adopter_id=? ORDER BY p.adoption_date DESC", (session['user_id'],)).fetchall()
-    return render_template('adopter/my_adoption.html', my_pets=my_pets, PET_STATUS=PET_STATUS, role_config=ROLE_CONFIG)
+    my_pets = db.execute("SELECT p.*, i.name as hospital_name, i.contact_phone as hospital_phone FROM pets p LEFT JOIN institutions i ON p.current_hospital_id=i.id WHERE p.adopter_id=? AND p.status IN ('adopted','pending_pickup') ORDER BY p.adoption_date DESC", (session['user_id'],)).fetchall()
+    applications = db.execute('''SELECT a.*, p.pet_code, p.species, p.color FROM adoption_applications a
+        JOIN pets p ON a.pet_id=p.id WHERE a.adopter_id=? ORDER BY a.created_at DESC''', (session['user_id'],)).fetchall()
+    return render_template('adopter/my_adoption.html', my_pets=my_pets, applications=applications,
+                           PET_STATUS=PET_STATUS, role_config=ROLE_CONFIG)
 
 @app.route('/adopter/checkin', methods=['GET', 'POST'])
 @role_required(['adopter'])

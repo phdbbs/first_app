@@ -70,7 +70,17 @@
         <div class="stat-card blue">
             <span class="stat-icon">👤</span>
             <span class="stat-value">{{ stats.pending_adoption if stats else 0 }}</span>
-            <span class="stat-label">待领养审核</span>
+            <span class="stat-label">待领养宠物</span>
+        </div>
+        <div class="stat-card purple">
+            <span class="stat-icon">📝</span>
+            <span class="stat-value">{{ stats.pending_applications if stats else 0 }}</span>
+            <span class="stat-label">待审核申请</span>
+        </div>
+        <div class="stat-card orange">
+            <span class="stat-icon">⏳</span>
+            <span class="stat-value">{{ stats.pending_pickup if stats else 0 }}</span>
+            <span class="stat-label">待领取宠物</span>
         </div>
         <div class="stat-card red">
             <span class="stat-icon">⚠️</span>

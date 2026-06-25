@@ -21,6 +21,14 @@
         <div class="stat-value">{{ treated_pets|selectattr('status','equalto','pending_adoption')|list|length }}</div>
         <div class="stat-trend">领养大厅展示中</div>
     </div>
+    <div class="stat-card orange">
+        <div class="stat-header">
+            <span class="stat-label">待领取</span>
+            <div class="stat-icon icon-orange">⏳</div>
+        </div>
+        <div class="stat-value">{{ pickup_pets|length }}</div>
+        <div class="stat-trend">等待领养人到院领走</div>
+    </div>
     <div class="stat-card green">
         <div class="stat-header">
             <span class="stat-label">已成功领养</span>
@@ -116,6 +124,53 @@
     <div class="empty-state">
         <div class="empty-icon">🎉</div>
         <div class="empty-text">暂无待维护宠物，所有诊疗完成的动物都已上架！</div>
+    </div>
+    {% endif %}
+</div>
+
+<div class="card">
+    <div class="section-header">
+        <h3 class="section-title">⏳ 待领养人领取 ({{ pickup_pets|length }})</h3>
+    </div>
+    {% if pickup_pets %}
+    <div style="overflow-x:auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>宠物编号</th>
+                    <th>种类</th>
+                    <th>毛色/特征</th>
+                    <th>领养人</th>
+                    <th>联系电话</th>
+                    <th>审核通过时间</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in pickup_pets %}
+                <tr>
+                    <td style="font-weight:600;color:#ed8936;">{{ p.pet_code }}</td>
+                    <td>{% if p.species == 'cat' %}🐱 猫{% else %}🐶 狗{% endif %}</td>
+                    <td>{{ p.color or '-' }}</td>
+                    <td><strong>{{ p.adopter_name }}</strong></td>
+                    <td>{{ p.adopter_phone or '-' }}</td>
+                    <td style="color:#a0aec0;font-size:13px;">{{ p.adoption_date or '-' }}</td>
+                    <td>
+                        <form method="POST" action="{{ url_for('hospital_adoption') }}" onsubmit="return confirm('确认领养人已领走宠物？');" style="display:inline;">
+                            <input type="hidden" name="pet_id" value="{{ p.id }}">
+                            <input type="hidden" name="action" value="confirm_adopted">
+                            <button type="submit" class="btn btn-success btn-sm">✅ 确认领出</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">🏠</div>
+        <div class="empty-text">暂无待领取宠物</div>
     </div>
     {% endif %}
 </div>
