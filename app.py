@@ -26,6 +26,9 @@ app = Flask(__name__)
 app.secret_key = 'tnr-secret-key-2025'
 app.config['DATABASE'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'tnr.db')
 app.config['TEMPLATES_AUTO_RELOAD'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['PERMANENT_SESSION_LIFETIME'] = 86400
 
 @app.template_filter('dt')
 def format_dt(value, fmt='%Y-%m-%d %H:%M'):
