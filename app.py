@@ -326,84 +326,13 @@ def init_db():
             ('hospital', '仁爱宠物医院', '海淀区', '海淀区中关村大街45号', '张医生', '13800000003'),
             ('hospital', '博爱宠物医院', '东城区', '东城区东单北大街18号', '刘医生', '13800000004');
 
-            INSERT INTO communities (name, district, address, property_name, contact_person, contact_phone) VALUES
-            ('阳光花园小区', '朝阳区', '朝阳区阳光路1号', '阳光物业', '张经理', '13800000010'),
-            ('幸福里社区', '海淀区', '海淀区幸福路22号', '幸福物业', '王经理', '13800000011'),
-            ('和谐家园', '东城区', '东城区和谐巷5号', '和谐物业', '李经理', '13800000012');
-
             INSERT INTO users (username, password, role, name, phone, org_id) VALUES
-            ('admin', 'admin123', 'shelter', '管理员', '13800000001', 1),
-            ('aixin', 'aixin123', 'hospital', '爱心医院', '13800000002', 2),
-            ('renai', 'renai123', 'hospital', '仁爱医院', '13800000003', 3),
-            ('boai', 'boai123', 'hospital', '博爱医院', '13800000004', 4),
+            ('admin', 'admin123', 'shelter', '王站长', '13800000001', 1),
+            ('aixin', 'aixin123', 'hospital', '李医生', '13800000002', 2),
+            ('renai', 'renai123', 'hospital', '张医生', '13800000003', 3),
+            ('boai', 'boai123', 'hospital', '刘医生', '13800000004', 4),
             ('gov', 'gov123', 'government', '市级管理员', '13800000000', NULL);
         ''')
-
-        cursor.executescript('''
-            INSERT INTO materials (type, batch_no, quantity, unit, supplier, purchase_date, location, owner_id) VALUES
-            ('vaccine', 'V20250101', 200, '支', '某生物制药', '2025-01-01', 'shelter', 1),
-            ('chip', 'C20250101', 500, '个', '某科技公司', '2025-01-01', 'shelter', 1),
-            ('dewormer', 'D20250101', 300, '支', '某药企', '2025-01-01', 'shelter', 1);
-
-            INSERT INTO material_ledger (type, action, quantity, from_location, to_location, reason, operator_id, operator_role) VALUES
-            ('vaccine', 'purchase', 200, NULL, 'shelter', '期初采购入库', 1, 'shelter'),
-            ('chip', 'purchase', 500, NULL, 'shelter', '期初采购入库', 1, 'shelter'),
-            ('dewormer', 'purchase', 300, NULL, 'shelter', '期初采购入库', 1, 'shelter');
-        ''')
-
-        pets_data = [
-            ('TNR20250001', 'B202501001', 'cat', '母', '2岁', '橘色', '温顺橘猫', 'pending_treatment', 1, '阳光物业', '张经理', '13800000010', '朝阳区阳光路1号', 2, 1, '2025-01-10 09:00:00'),
-            ('TNR20250002', 'B202501001', 'cat', '公', '1岁', '白色', '活泼白猫', 'pending_treatment', 1, '阳光物业', '张经理', '13800000010', '朝阳区阳光路1号', 2, 1, '2025-01-10 09:00:00'),
-            ('TNR20250003', 'B202501002', 'dog', '公', '3岁', '黄色', '忠诚田园犬', 'pending_treatment', 2, '幸福物业', '王经理', '13800000011', '海淀区幸福路22号', 3, 1, '2025-01-11 10:00:00'),
-            ('TNR20250004', 'B202501003', 'cat', '母', '1.5岁', '三花', '三花妹妹', 'pending_adoption', 3, '和谐物业', '李经理', '13800000012', '东城区和谐巷5号', 4, 1, '2025-01-08 14:00:00'),
-            ('TNR20250005', 'B202501003', 'cat', '公', '2岁', '狸花', '健康狸花', 'pending_adoption', 3, '和谐物业', '李经理', '13800000012', '东城区和谐巷5号', 4, 1, '2025-01-08 14:00:00'),
-            ('TNR20250006', 'B202501001', 'cat', '母', '8月', '纯白', '雪球小奶猫', 'pending_adoption', 1, '阳光物业', '张经理', '13800000010', '朝阳区阳光路1号', 2, 1, '2025-01-05 08:00:00'),
-            ('TNR20250007', 'B202501002', 'dog', '公', '1岁', '棕色', '泰迪豆豆', 'pending_adoption', 2, '幸福物业', '王经理', '13800000011', '海淀区幸福路22号', 3, 1, '2025-01-06 11:00:00'),
-            ('TNR20250008', 'B202501004', 'cat', '公', '3岁', '黑色', '黑猫警长', 'intake', 1, '阳光物业', '张经理', '138******10', '朝阳区阳光路1号', None, 1, '2025-01-15 09:30:00'),
-        ]
-        for p in pets_data:
-            cursor.execute('''INSERT INTO pets (pet_code, batch_no, species, gender, age, color, description, status,
-                community_id, property_name, property_contact, property_phone, address, current_hospital_id, intake_user_id, intake_date)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', p)
-
-        cursor.execute("UPDATE pets SET neutered=1, vaccinated=1, dewormed=1, chipped=1, chip_no='CHIP000001', treatment_date='2025-01-12 15:00:00' WHERE id=4")
-        cursor.execute("UPDATE pets SET neutered=1, vaccinated=1, dewormed=1, chipped=1, chip_no='CHIP000002', treatment_date='2025-01-12 16:00:00' WHERE id=5")
-        cursor.execute("UPDATE pets SET neutered=1, vaccinated=1, dewormed=1, chipped=1, chip_no='CHIP000003', treatment_date='2025-01-09 10:00:00' WHERE id=6")
-        cursor.execute("UPDATE pets SET neutered=1, vaccinated=1, dewormed=1, chipped=1, chip_no='CHIP000004', treatment_date='2025-01-10 14:00:00' WHERE id=7")
-
-        treatments_seed = [
-            (1, 2, 0, '', 0, 0, 0, '', '', 1, '2025-01-11 09:00:00', 0),
-            (2, 2, 0, '', 0, 0, 0, '', '', 1, '2025-01-11 09:00:00', 0),
-            (3, 3, 0, '', 0, 0, 0, '', '', 1, '2025-01-12 10:00:00', 0),
-            (4, 4, 1, '母猫绝育手术成功，恢复良好', 1, 1, 1, 'CHIP000001', '全部完成', 2, '2025-01-12 15:00:00', 1),
-            (5, 4, 1, '公猫绝育手术成功', 1, 1, 1, 'CHIP000002', '全部完成', 2, '2025-01-12 16:00:00', 1),
-            (6, 2, 1, '母猫绝育，年纪小恢复快', 1, 1, 1, 'CHIP000003', '全部完成', 2, '2025-01-09 10:00:00', 1),
-            (7, 3, 1, '公犬绝育', 1, 1, 1, 'CHIP000004', '全部完成', 3, '2025-01-10 14:00:00', 1),
-        ]
-        for t in treatments_seed:
-            cursor.execute('''INSERT INTO treatments (pet_id, hospital_id, neuter_done, neuter_record, vaccine_done,
-                dewormer_done, chip_done, chip_no, notes, treated_by, treated_at, completed)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', t)
-
-        adopter_users = [
-            ('adopter1', '123456', 'adopter', '李女士', '139******01', None),
-            ('adopter2', '123456', 'adopter', '王先生', '139******02', None),
-        ]
-        for u in adopter_users:
-            cursor.execute("INSERT OR IGNORE INTO users (username, password, role, name, phone, org_id) VALUES (?, ?, ?, ?, ?, ?)", u)
-
-        cursor.execute("UPDATE pets SET adopter_id=(SELECT id FROM users WHERE username='adopter1'), adoption_date='2025-01-13 10:00:00', status='adopted', adoption_desc='温顺亲人' WHERE id=6")
-        cursor.execute("UPDATE pets SET adopter_id=(SELECT id FROM users WHERE username='adopter2'), adoption_date='2025-01-14 14:00:00', status='adopted', adoption_desc='聪明听话' WHERE id=7")
-
-        cursor.execute("INSERT INTO checkins (pet_id, adopter_id, month, photo, content, status, review_note, reviewed_by, created_at) VALUES (6, (SELECT id FROM users WHERE username='adopter1'), '2025-01', NULL, '雪球适应得很好，很活泼', 'approved', '情况良好', 1, '2025-01-20 10:00:00')")
-
-        transfers_seed = [
-            ('TR20250115001', 1, 2, 8, 'pending', None, None, 1, '2025-01-15 09:30:00', None),
-        ]
-        for tr in transfers_seed:
-            cursor.execute('''INSERT INTO transfers (batch_no, from_org_id, to_hospital_id, pet_id, status, reject_reason, photo, created_by, created_at, received_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', tr)
-
         conn.commit()
     conn.close()
 
