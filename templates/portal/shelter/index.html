@@ -1,0 +1,60 @@
+{% extends 'portal/shelter_base.html' %}
+
+{% block title %}收容所端 · 首页看板{% endblock %}
+
+{% block nav_dashboard %}active{% endblock %}
+
+{% block page_title %}收容所端 · 首页看板{% endblock %}
+
+{% block content %}
+<div class="stat-grid">
+  <div class="stat-card">
+    <div class="stat-card-icon">🏠</div>
+    <div>
+      <div class="stat-card-value">0</div>
+      <div class="stat-card-label">在收动物</div>
+    </div>
+  </div>
+  <div class="stat-card green">
+    <div class="stat-card-icon">🚚</div>
+    <div>
+      <div class="stat-card-value">0</div>
+      <div class="stat-card-label">待转运</div>
+    </div>
+  </div>
+  <div class="stat-card gold">
+    <div class="stat-card-icon">📦</div>
+    <div>
+      <div class="stat-card-value">0</div>
+      <div class="stat-card-label">物料库存</div>
+    </div>
+  </div>
+  <div class="stat-card blue">
+    <div class="stat-card-icon">✅</div>
+    <div>
+      <div class="stat-card-value">0</div>
+      <div class="stat-card-label">本月领养</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">
+      <span class="card-title-bar"></span>
+      欢迎使用
+    </div>
+  </div>
+  <div class="card-body">
+    <div class="table-empty">
+      <div class="table-empty-icon">🐾</div>
+      <div class="table-empty-text">
+        <strong style="font-size:var(--fs-lg);color:var(--ink);display:block;margin-bottom:var(--sp-2);">收容所端 - 欢迎使用</strong>
+        此处为收容所端首页看板占位页面，后续将接入真实业务数据。
+        <br>
+        当前用户：{{ user.username|default:"未登录" }} · 角色：{{ user.get_role_display|default:"访客" }}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,1360 @@
+{% extends 'portal/hospital_base.html' %}
+{% load static %}
+
+{% block title %}宠物医院端 · 流浪动物TNR管理系统{% endblock %}
+
+{% block nav_dashboard %}active{% endblock %}
+
+{% block extra_head %}
+<style>
+  .photo-placeholder{width:48px;height:48px;border-radius:var(--r-md);background:var(--rice-warm);display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--ink-light);flex-shrink:0}
+  .treatment-item-card{border:2px solid var(--border-light);border-radius:var(--r-lg);padding:var(--sp-4);cursor:pointer;transition:all var(--t-base);background:var(--white)}
+  .treatment-item-card.checked{border-color:var(--cinnabar);background:var(--cinnabar-light)}
+  .treatment-item-header{display:flex;align-items:center;gap:var(--sp-3)}
+  .treatment-item-icon{width:36px;height:36px;border-radius:var(--r-md);background:var(--rice-warm);display:flex;align-items:center;justify-content:center;font-size:18px}
+  .treatment-item-card.checked .treatment-item-icon{background:var(--cinnabar);color:#fff}
+  .treatment-item-body{margin-top:var(--sp-3);padding-top:var(--sp-3);border-top:1px solid var(--border-faint)}
+  .todo-item{display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-3) var(--sp-4);border-radius:var(--r-md);cursor:pointer;transition:background var(--t-fast);border-bottom:1px solid var(--border-faint)}
+  .todo-item:hover{background:var(--rice-light)}
+  .todo-item:last-child{border-bottom:none}
+  .todo-item-icon{width:32px;height:32px;border-radius:var(--r-md);background:var(--cinnabar-light);color:var(--cinnabar);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+  .todo-item-content{flex:1;min-width:0}
+  .todo-item-title{font-size:var(--fs-md);font-weight:500;color:var(--ink-text)}
+  .todo-item-desc{font-size:var(--fs-sm);color:var(--ink-muted)}
+  .quick-action{display:flex;flex-direction:column;align-items:center;gap:var(--sp-2);padding:var(--sp-5);border-radius:var(--r-lg);border:1px solid var(--border-light);cursor:pointer;transition:all var(--t-base);background:var(--white);text-align:center}
+  .quick-action:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:var(--cinnabar)}
+  .quick-action-icon{width:44px;height:44px;border-radius:var(--r-lg);background:var(--cinnabar-light);color:var(--cinnabar);display:flex;align-items:center;justify-content:center;font-size:22px}
+  .quick-action-label{font-size:var(--fs-sm);color:var(--ink-text);font-weight:500}
+  .quick-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:var(--sp-3)}
+  .pet-select-item{display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-3);border:2px solid var(--border-light);border-radius:var(--r-md);cursor:pointer;transition:all var(--t-fast)}
+  .pet-select-item:hover{border-color:var(--ink-light)}
+  .pet-select-item.selected{border-color:var(--cinnabar);background:var(--cinnabar-light)}
+  .stock-bar{height:6px;background:var(--rice-warm);border-radius:var(--r-full);overflow:hidden;margin-top:var(--sp-2)}
+  .stock-bar-fill{height:100%;border-radius:var(--r-full);transition:width var(--t-slow)}
+  .detail-section{margin-bottom:var(--sp-5)}
+  .detail-section-title{font-family:var(--font-display);font-size:var(--fs-md);font-weight:600;color:var(--ink);margin-bottom:var(--sp-3);padding-bottom:var(--sp-2);border-bottom:1px solid var(--border-faint);display:flex;align-items:center;gap:var(--sp-2)}
+  .detail-section-title::before{content:'';width:3px;height:14px;background:var(--grad-cinnabar);border-radius:2px}
+  .empty-state{text-align:center;padding:var(--sp-12) var(--sp-6);color:var(--ink-light)}
+  .empty-state-icon{font-size:56px;margin-bottom:var(--sp-4);opacity:0.3}
+  .empty-state-text{font-size:var(--fs-lg);margin-bottom:var(--sp-2)}
+  .empty-state-desc{font-size:var(--fs-sm)}
+  .dashboard-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-5)}
+  @media(max-width:768px){.dashboard-grid{grid-template-columns:1fr}}
+  .photo-placeholder-lg{width:100%;aspect-ratio:1;border-radius:var(--r-lg);background:var(--rice-warm);display:flex;align-items:center;justify-content:center;font-size:32px;color:var(--ink-light);overflow:hidden}
+  .sub-tabs{display:flex;gap:var(--sp-2);margin-bottom:var(--sp-4);border-bottom:1px solid var(--border-light)}
+  .sub-tab{padding:var(--sp-2) var(--sp-4);cursor:pointer;border-bottom:2px solid transparent;font-size:var(--fs-md);color:var(--ink-muted);transition:all var(--t-fast)}
+  .sub-tab:hover{color:var(--ink)}
+  .sub-tab.active{color:var(--cinnabar);border-bottom-color:var(--cinnabar);font-weight:600}
+  .loading-state{text-align:center;padding:var(--sp-8);color:var(--ink-light)}
+</style>
+{% endblock %}
+
+{% block content %}
+<input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+
+<div class="admin-content" id="adminContent">
+  <div class="page-view active" id="page-dashboard"></div>
+  <div class="page-view" id="page-receive"></div>
+  <div class="page-view" id="page-treatment"></div>
+  <div class="page-view" id="page-material"></div>
+  <div class="page-view" id="page-adoption-info"></div>
+  <div class="page-view" id="page-euthanasia"></div>
+  <div class="page-view" id="page-ledger"></div>
+  <div class="page-view" id="page-profile"></div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>window.TNR_USER = {{ user_data|safe }};</script>
+<script src="{% static 'js/tnr-api.js' %}"></script>
+<script>
+/* ====================================================
+   宠物医院端 SPA · 全部业务逻辑（TNR_API 异步调用）
+   ==================================================== */
+
+const Hospital = {
+  titles: {
+    'dashboard': '首页看板',
+    'receive': '动物交接管理',
+    'treatment': '诊疗业务管理',
+    'material': '物料库存管理',
+    'adoption-info': '领养信息维护',
+    'euthanasia': '安乐死处置',
+    'ledger': '单据台账',
+    'profile': '个人中心'
+  },
+
+  state: {
+    currentPage: 'dashboard',
+    receiveTab: 'pending',
+    treatmentTab: 'operate',
+    materialTab: 'pending',
+    ledgerTab: 'transfer',
+    treatmentPetId: null,
+    treatmentData: { items: {}, sterilization: null, vaccine: null, deworming: null, chip: null }
+  },
+
+  /* ========== 初始化 ========== */
+  init() {
+    this.bindSidebarNav();
+    this.navigate('dashboard');
+  },
+
+  bindSidebarNav() {
+    const navItems = document.querySelectorAll('.portal-sidebar-nav .nav-item[data-nav]');
+    navItems.forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.preventDefault();
+        const page = item.dataset.nav;
+        if (page) {
+          navItems.forEach(x => x.classList.remove('active'));
+          item.classList.add('active');
+          this.navigate(page);
+        }
+      });
+    });
+  },
+
+  navigate(pageId) {
+    this.state.currentPage = pageId;
+    document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
+    const page = document.getElementById('page-' + pageId);
+    if (page) {
+      page.classList.add('active');
+      page.innerHTML = '<div class="loading-state">加载中...</div>';
+    }
+    const titleEl = document.querySelector('.portal-topbar-title');
+    if (titleEl) titleEl.textContent = this.titles[pageId] || '';
+    const renderer = this['render_' + pageId.replace(/-/g, '_')];
+    if (renderer) renderer.call(this);
+  },
+
+  navigateTo(pageId) {
+    const el = document.querySelector('.nav-item[data-nav="' + pageId + '"]');
+    if (el) el.click();
+  },
+
+  /* ========== 辅助方法 ========== */
+  currentUser() { return TNR_API.getCurrentUser(); },
+  getHospitalId() { const u = this.currentUser(); return u ? u.institution_id : null; },
+  getHospitalName() { const u = this.currentUser(); return u ? (u.institution_name || u.name) : ''; },
+
+  formatDate(iso) {
+    if (!iso) return '—';
+    const s = String(iso);
+    if (s.length >= 10) return s.substr(0, 10);
+    return s;
+  },
+
+  formatDateTime(iso) {
+    if (!iso) return '—';
+    const s = String(iso);
+    if (s.length >= 16) return s.substr(0, 16).replace('T', ' ');
+    return this.formatDate(iso);
+  },
+
+  parsePetCodes(codes) {
+    if (!codes) return [];
+    if (Array.isArray(codes)) return codes;
+    return String(codes).split(',').map(c => c.trim()).filter(Boolean);
+  },
+
+  escape(s) { return TNR_UI.escape(s); },
+
+  transferStatusBadge(s) {
+    const m = {'pending': ['待接收', 'badge-warning'], 'received': ['已接收', 'badge-success'], 'rejected': ['已驳回', 'badge-danger']};
+    const v = m[s] || [s, 'badge-default'];
+    return '<span class="badge ' + v[1] + '">' + v[0] + '</span>';
+  },
+
+  treatmentStatusBadge(s) {
+    const m = {'completed': ['已完成', 'badge-success'], 'in_progress': ['进行中', 'badge-info']};
+    const v = m[s] || [s, 'badge-default'];
+    return '<span class="badge ' + v[1] + '">' + v[0] + '</span>';
+  },
+
+  /* ========== 1. 首页看板 ========== */
+  async render_dashboard() {
+    try {
+      const [transfers, pets, materials, txns] = await Promise.all([
+        TNR_API.getTransfers(),
+        TNR_API.getHospitalPets(),
+        TNR_API.getMaterials(),
+        TNR_API.getMaterialTransactions()
+      ]);
+
+      const pendRecv = transfers.filter(t => t.status === 'pending').length;
+      const pendTreat = pets.filter(p => p.status === 'in_treatment').length;
+      const stockWarn = materials.filter(m => (m.hospital_stock || 0) <= (m.safety_stock || 0)).length;
+      const pendAdopt = pets.filter(p => p.status === 'pending_adopt').length;
+      const pendingDisp = txns.filter(t => t.type === 'dispatch' && !(t.note || '').includes('[已签收]'));
+
+      const todoItems = [];
+      transfers.filter(t => t.status === 'pending').forEach(t => {
+        todoItems.push({icon: '📥', title: '待接收转运单 ' + (t.ledger_no || ''), desc: '来源：' + (t.from_shelter_name || '') + ' · ' + (t.pet_count || 0) + '只动物', nav: 'receive'});
+      });
+      pets.filter(p => p.status === 'in_treatment').forEach(p => {
+        todoItems.push({icon: '🔬', title: '待诊疗：' + (p.code || ''), desc: (p.name || '') + ' · ' + (p.species || '') + ' · ' + (p.breed || ''), nav: 'treatment'});
+      });
+      pendingDisp.forEach(t => {
+        todoItems.push({icon: '📦', title: '待接收物料：' + (t.material_name || ''), desc: '数量：' + (t.quantity || 0) + (t.unit || ''), nav: 'material'});
+      });
+      pets.filter(p => p.status === 'pending_adopt').forEach(p => {
+        todoItems.push({icon: '🐾', title: '待领养资料维护：' + (p.code || ''), desc: (p.name || '') + ' · 请完善照片和简介', nav: 'adoption-info'});
+      });
+
+      let html = '';
+      html += '<div class="stat-grid">';
+      html += '<div class="stat-card"><div class="stat-card-icon">📥</div><div><div class="stat-card-value">' + pendRecv + '</div><div class="stat-card-label">待接收动物</div></div></div>';
+      html += '<div class="stat-card blue"><div class="stat-card-icon">🔬</div><div><div class="stat-card-value">' + pendTreat + '</div><div class="stat-card-label">待诊疗任务</div></div></div>';
+      html += '<div class="stat-card gold"><div class="stat-card-icon">📦</div><div><div class="stat-card-value">' + stockWarn + '</div><div class="stat-card-label">库存预警</div></div></div>';
+      html += '<div class="stat-card green"><div class="stat-card-icon">🐾</div><div><div class="stat-card-value">' + pendAdopt + '</div><div class="stat-card-label">待领养资料待维护</div></div></div>';
+      html += '</div>';
+
+      html += '<div class="dashboard-grid">';
+      html += '<div class="card"><div class="card-header"><div class="card-title"><span class="card-title-bar"></span>待办任务</div></div><div class="card-body-flush">';
+      if (todoItems.length === 0) {
+        html += '<div class="empty-state" style="padding:var(--sp-8);"><div class="empty-state-icon">✓</div><div class="empty-state-text">暂无待办任务</div></div>';
+      } else {
+        todoItems.forEach(t => {
+          html += '<div class="todo-item" data-todo="' + t.nav + '">';
+          html += '<div class="todo-item-icon">' + t.icon + '</div>';
+          html += '<div class="todo-item-content"><div class="todo-item-title">' + this.escape(t.title) + '</div><div class="todo-item-desc">' + this.escape(t.desc) + '</div></div>';
+          html += '<span style="color:var(--ink-light);font-size:14px;">›</span></div>';
+        });
+      }
+      html += '</div></div>';
+
+      html += '<div class="card"><div class="card-header"><div class="card-title"><span class="card-title-bar"></span>快捷操作</div></div><div class="card-body"><div class="quick-grid">';
+      const actions = [
+        {icon: '📥', label: '动物交接', page: 'receive'},
+        {icon: '🔬', label: '诊疗操作', page: 'treatment'},
+        {icon: '📦', label: '物料管理', page: 'material'},
+        {icon: '🐾', label: '领养维护', page: 'adoption-info'},
+        {icon: '📊', label: '单据台账', page: 'ledger'},
+        {icon: '⚰️', label: '安乐死处置', page: 'euthanasia'}
+      ];
+      actions.forEach(a => {
+        html += '<div class="quick-action" data-quick="' + a.page + '"><div class="quick-action-icon">' + a.icon + '</div><div class="quick-action-label">' + a.label + '</div></div>';
+      });
+      html += '</div></div></div>';
+      html += '</div>';
+
+      html += '<div class="card mt-5"><div class="card-header"><div class="card-title"><span class="card-title-bar"></span>库存概览</div></div><div class="card-body">';
+      html += this.renderStockOverview(materials);
+      html += '</div></div>';
+
+      document.getElementById('page-dashboard').innerHTML = html;
+
+      document.querySelectorAll('[data-todo]').forEach(el => {
+        el.addEventListener('click', () => this.navigateTo(el.dataset.todo));
+      });
+      document.querySelectorAll('[data-quick]').forEach(el => {
+        el.addEventListener('click', () => this.navigateTo(el.dataset.quick));
+      });
+    } catch (e) {
+      document.getElementById('page-dashboard').innerHTML = '<div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-text">加载失败</div><div class="empty-state-desc">' + this.escape(e.message) + '</div></div>';
+    }
+  },
+
+  renderStockOverview(materials) {
+    return materials.map(m => {
+      const stock = m.hospital_stock || 0;
+      const safety = m.safety_stock || 1;
+      const pct = Math.min(100, (stock / (safety * 2)) * 100);
+      const isLow = stock < safety;
+      const color = isLow ? 'var(--rouge)' : (stock < safety * 1.5 ? 'var(--autumn-gold)' : 'var(--bamboo-green)');
+      return '<div style="display:flex;align-items:center;gap:var(--sp-4);padding:var(--sp-3) 0;border-bottom:1px solid var(--border-faint);">' +
+        '<div style="flex:1;"><div style="display:flex;align-items:center;gap:var(--sp-2);margin-bottom:4px;">' +
+        '<span style="font-weight:500;">' + this.escape(m.name) + '</span>' +
+        '<span class="badge ' + (isLow ? 'badge-danger' : 'badge-default') + '">' + TNR_API.getMaterialCategoryText(m.category) + '</span>' +
+        (isLow ? '<span class="badge badge-danger">库存不足</span>' : '') + '</div>' +
+        '<div class="stock-bar"><div class="stock-bar-fill" style="width:' + pct + '%;background:' + color + ';"></div></div></div>' +
+        '<div style="text-align:right;min-width:100px;"><div style="font-family:var(--font-display);font-size:var(--fs-xl);font-weight:700;color:' + color + ';">' + stock +
+        '<span style="font-size:var(--fs-sm);color:var(--ink-muted);font-weight:400;"> / ' + safety + (m.unit || '') + '</span></div>' +
+        '<div style="font-size:var(--fs-xs);color:var(--ink-light);">当前 / 安全库存</div></div></div>';
+    }).join('');
+  },
+
+  /* ========== 2. 动物交接管理 ========== */
+  async render_receive() {
+    try {
+      const transfers = await TNR_API.getTransfers();
+      const pend = transfers.filter(t => t.status === 'pending').length;
+      const recv = transfers.filter(t => t.status === 'received').length;
+      const rej = transfers.filter(t => t.status === 'rejected').length;
+
+      let html = '<div class="tabs">' +
+        '<div class="tab-item ' + (this.state.receiveTab === 'pending' ? 'active' : '') + '" data-rtab="pending">待接收 (' + pend + ')</div>' +
+        '<div class="tab-item ' + (this.state.receiveTab === 'received' ? 'active' : '') + '" data-rtab="received">已接收 (' + recv + ')</div>' +
+        '<div class="tab-item ' + (this.state.receiveTab === 'rejected' ? 'active' : '') + '" data-rtab="rejected">已驳回 (' + rej + ')</div>' +
+        '</div><div id="receiveTabContent"></div>';
+
+      document.getElementById('page-receive').innerHTML = html;
+
+      document.querySelectorAll('#page-receive [data-rtab]').forEach(el => {
+        el.addEventListener('click', () => {
+          this.state.receiveTab = el.dataset.rtab;
+          document.querySelectorAll('#page-receive .tab-item').forEach((t, i) => {
+            t.classList.toggle('active', ['pending','received','rejected'][i] === this.state.receiveTab);
+          });
+          this.renderReceiveTab(transfers);
+        });
+      });
+
+      this.renderReceiveTab(transfers);
+    } catch (e) {
+      document.getElementById('page-receive').innerHTML = '<div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-text">加载失败</div></div>';
+    }
+  },
+
+  async renderReceiveTab(allTransfers) {
+    const transfers = allTransfers.filter(t => t.status === this.state.receiveTab);
+    const c = document.getElementById('receiveTabContent');
+    if (!c) return;
+
+    if (transfers.length === 0) {
+      const labels = {pending: '待接收', received: '已接收', rejected: '已驳回'};
+      c.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-text">暂无数据</div><div class="empty-state-desc">暂无' + (labels[this.state.receiveTab] || '') + '的交接单</div></div>';
+      return;
+    }
+
+    let pets = [];
+    try { pets = await TNR_API.getHospitalPets(); } catch(e) { pets = []; }
+
+    const rows = transfers.map(t => {
+      const codes = this.parsePetCodes(t.pet_codes);
+      const petInfo = codes.map(code => {
+        const p = pets.find(x => x.code === code);
+        if (!p) return '<div style="display:flex;align-items:center;gap:var(--sp-2);padding:4px 0;"><div class="photo-placeholder">🐾</div><div><div style="font-weight:500;">' + this.escape(code) + '</div><div style="font-size:var(--fs-sm);color:var(--ink-muted);">未知</div></div></div>';
+        return '<div style="display:flex;align-items:center;gap:var(--sp-2);padding:4px 0;"><div class="photo-placeholder">🐾</div><div><div style="font-weight:500;">' + this.escape(p.code) + '</div><div style="font-size:var(--fs-sm);color:var(--ink-muted);">' + this.escape(p.name || '') + ' · ' + this.escape(p.species || '') + ' · ' + this.escape(p.breed || '') + ' · ' + this.escape(p.gender || '') + '</div></div></div>';
+      }).join('');
+
+      let actions = '';
+      if (t.status === 'pending') {
+        actions = '<button class="btn btn-success btn-sm" data-receive="' + t.id + '">确认签收</button><button class="btn btn-danger btn-sm" data-reject="' + t.id + '">驳回</button>';
+      } else if (t.status === 'rejected') {
+        actions = '<button class="btn btn-secondary btn-sm" data-view-reject="' + t.id + '">查看驳回理由</button>';
+      }
+
+      return '<tr><td><div style="font-weight:500;">' + this.escape(t.ledger_no || '') + '</div><div style="font-size:var(--fs-xs);color:var(--ink-light);">' + this.formatDateTime(t.created_at) + '</div></td>' +
+        '<td>' + (petInfo || '<span class="text-muted">—</span>') + '</td>' +
+        '<td>' + this.escape(t.from_shelter_name || '') + '</td>' +
+        '<td>' + (t.pet_count || 0) + '</td>' +
+        '<td>' + this.transferStatusBadge(t.status) + '</td>' +
+        '<td><div class="flex gap-2">' + actions + '</div></td></tr>';
+    }).join('');
+
+    c.innerHTML = '<div class="table-wrapper"><table class="data-table"><thead><tr><th>交接单号</th><th>宠物信息</th><th>来源收容所</th><th>数量</th><th>状态</th><th>操作</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+
+    c.querySelectorAll('[data-receive]').forEach(btn => {
+      btn.addEventListener('click', () => this.confirmReceive(btn.dataset.receive));
+    });
+    c.querySelectorAll('[data-reject]').forEach(btn => {
+      btn.addEventListener('click', () => this.rejectTransfer(btn.dataset.reject));
+    });
+    c.querySelectorAll('[data-view-reject]').forEach(btn => {
+      btn.addEventListener('click', () => this.viewRejectReason(btn.dataset.viewReject, allTransfers));
+    });
+  },
+
+  async confirmReceive(transferId) {
+    TNR_UI.confirm('确认签收该转运单？签收后宠物状态将变更为「待诊疗」。', '确认签收').then(async ok => {
+      if (!ok) return;
+      try {
+        const res = await TNR_API.receiveTransfer(transferId);
+        if (res.success) {
+          TNR_UI.toast('签收成功，宠物已进入待诊疗状态', 'success');
+          this.render_receive();
+        } else {
+          TNR_UI.toast(res.message || '签收失败', 'danger');
+        }
+      } catch (e) {
+        TNR_UI.toast(e.message || '操作失败', 'danger');
+      }
+    });
+  },
+
+  rejectTransfer(transferId) {
+    TNR_UI.modal({
+      title: '驳回转运单',
+      body: (bodyEl, closeFn) => {
+        bodyEl.innerHTML = '<div class="form-group"><label class="form-label">驳回理由<span class="req">*</span></label><textarea class="form-textarea" id="rejectReasonInput" placeholder="请填写驳回理由" required></textarea></div>' +
+          '<div style="display:flex;gap:var(--sp-3);justify-content:flex-end;margin-top:var(--sp-4);"><button class="btn btn-secondary" data-close>取消</button><button class="btn btn-danger" id="confirmRejectBtn">确认驳回</button></div>';
+        bodyEl.querySelector('[data-close]').onclick = closeFn;
+        bodyEl.querySelector('#confirmRejectBtn').onclick = async () => {
+          const r = bodyEl.querySelector('#rejectReasonInput').value.trim();
+          if (!r) { TNR_UI.toast('请填写驳回理由', 'warning'); return; }
+          try {
+            const res = await TNR_API.rejectTransfer(transferId, r);
+            if (res.success) {
+              TNR_UI.toast('已驳回该转运单', 'success');
+              closeFn();
+              this.render_receive();
+            } else {
+              TNR_UI.toast(res.message || '驳回失败', 'danger');
+            }
+          } catch (e) {
+            TNR_UI.toast(e.message || '操作失败', 'danger');
+          }
+        };
+      }
+    });
+  },
+
+  viewRejectReason(transferId, transfers) {
+    const t = transfers.find(x => String(x.id) === String(transferId));
+    TNR_UI.modal({
+      title: '驳回理由',
+      body: '<div style="padding:var(--sp-3);background:var(--rouge-light);border-radius:var(--r-md);font-size:var(--fs-md);color:var(--ink-text);line-height:1.8;">' + this.escape(t ? (t.reject_reason || '无') : '无') + '</div>',
+      actions: '<button class="btn btn-primary" data-modal-close>关闭</button>'
+    });
+  },
+
+  /* ========== 3. 诊疗业务管理 ========== */
+  async render_treatment() {
+    const page = document.getElementById('page-treatment');
+    let html = '<div class="sub-tabs">' +
+      '<div class="sub-tab ' + (this.state.treatmentTab === 'operate' ? 'active' : '') + '" data-ttab="operate">诊疗操作</div>' +
+      '<div class="sub-tab ' + (this.state.treatmentTab === 'list' ? 'active' : '') + '" data-ttab="list">诊疗记录</div>' +
+      '</div><div id="treatmentContent"></div>';
+    page.innerHTML = html;
+
+    page.querySelectorAll('[data-ttab]').forEach(el => {
+      el.addEventListener('click', () => {
+        this.state.treatmentTab = el.dataset.ttab;
+        page.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+        this.renderTreatmentContent();
+      });
+    });
+
+    this.renderTreatmentContent();
+  },
+
+  async renderTreatmentContent() {
+    if (this.state.treatmentTab === 'operate') {
+      this.renderTreatmentOperate();
+    } else {
+      this.renderTreatmentList();
+    }
+  },
+
+  async renderTreatmentOperate() {
+    const c = document.getElementById('treatmentContent');
+    if (!c) return;
+    c.innerHTML = '<div class="loading-state">加载中...</div>';
+
+    try {
+      const pets = await TNR_API.getHospitalPets('in_treatment');
+      if (pets.length === 0) {
+        c.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🔬</div><div class="empty-state-text">暂无待诊疗动物</div><div class="empty-state-desc">请先在「动物交接管理」中确认接收转运单</div><button class="btn btn-primary mt-4" data-nav-btn="receive">前往动物交接管理</button></div>';
+        c.querySelector('[data-nav-btn]')?.addEventListener('click', () => this.navigateTo('receive'));
+        return;
+      }
+
+      const selectedPet = pets.find(p => String(p.id) === String(this.state.treatmentPetId)) || pets[0];
+      this.state.treatmentPetId = selectedPet.id;
+
+      let html = '<div class="card mb-5"><div class="card-header"><div class="card-title"><span class="card-title-bar"></span>选择诊疗动物</div></div><div class="card-body"><div style="display:grid;gap:var(--sp-2);">';
+      pets.forEach(p => {
+        html += '<div class="pet-select-item ' + (String(p.id) === String(selectedPet.id) ? 'selected' : '') + '" data-pet="' + p.id + '">' +
+          '<div class="photo-placeholder">🐾</div>' +
+          '<div style="flex:1;"><div style="font-weight:500;">' + this.escape(p.code) + ' · ' + this.escape(p.name || '') + '</div>' +
+          '<div style="font-size:var(--fs-sm);color:var(--ink-muted);">' + this.escape(p.species || '') + ' · ' + this.escape(p.breed || '') + ' · ' + this.escape(p.gender || '') + ' · ' + this.escape(p.age || '') + '</div></div>' +
+          '<span class="badge badge-info">' + TNR_API.getPetStatusText(p.status) + '</span></div>';
+      });
+      html += '</div></div></div><div id="treatmentFormArea"></div>';
+      c.innerHTML = html;
+
+      c.querySelectorAll('[data-pet]').forEach(el => {
+        el.addEventListener('click', () => {
+          this.state.treatmentPetId = el.dataset.pet;
+          this.state.treatmentData = {items: {}, sterilization: null, vaccine: null, deworming: null, chip: null};
+          this.renderTreatmentOperate();
+        });
+      });
+
+      this.renderTreatmentForm(selectedPet);
+    } catch (e) {
+      c.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-text">加载失败</div></div>';
+    }
+  },
+
+  async renderTreatmentForm(pet) {
+    const area = document.getElementById('treatmentFormArea');
+    if (!area) return;
+    area.innerHTML = '<div class="loading-state">加载表单...</div>';
+
+    let materials = [];
+    try { materials = await TNR_API.getMaterials(); } catch(e) {}
+    const vaccines = materials.filter(m => m.category === 'vaccine');
+    const dewormers = materials.filter(m => m.category === 'dewormer');
+
+    const td = this.state.treatmentData;
+    const esc = this.escape.bind(this);
+
+    let html = '<div class="card"><div class="card-header"><div class="card-title"><span class="card-title-bar"></span>诊疗操作 · ' + esc(pet.code) + '</div></div><div class="card-body">';
+
+    /* 基础信息 */
+    html += '<div class="form-section"><div class="form-section-header"><div class="form-section-header-icon">📋</div><div class="form-section-title">基础信息</div></div><div class="form-section-body"><div class="desc-list">' +
+      '<div class="desc-item"><div class="desc-label">宠物编号</div><div class="desc-value">' + esc(pet.code) + '</div></div>' +
+      '<div class="desc-item"><div class="desc-label">名称</div><div class="desc-value">' + esc(pet.name || '—') + '</div></div>' +
+      '<div class="desc-item"><div class="desc-label">物种/品种</div><div class="desc-value">' + esc(pet.species || '') + ' / ' + esc(pet.breed || '') + '</div></div>' +
+      '<div class="desc-item"><div class="desc-label">性别/年龄</div><div class="desc-value">' + esc(pet.gender || '') + ' / ' + esc(pet.age || '') + '</div></div>' +
+      '<div class="desc-item"><div class="desc-label">芯片号</div><div class="desc-value">' + esc(pet.chip_no || '—') + '</div></div>' +
+      '</div></div></div>';
+
+    /* 诊疗项目 */
+    html += '<div class="form-section"><div class="form-section-header"><div class="form-section-header-icon">🔬</div><div class="form-section-title">诊疗项目（勾选执行）</div></div><div class="form-section-body">';
+
+    /* 绝育 */
+    html += '<div class="treatment-item-card ' + (td.items.sterilization ? 'checked' : '') + '" data-toggle="sterilization" style="margin-bottom:var(--sp-3);"><div class="treatment-item-header">' +
+      '<input type="checkbox" ' + (td.items.sterilization ? 'checked' : '') + ' data-check="sterilization" style="width:18px;height:18px;accent-color:var(--cinnabar);cursor:pointer;" />' +
+      '<div class="treatment-item-icon">✂️</div><div style="flex:1;"><div style="font-weight:500;">绝育手术</div><div style="font-size:var(--fs-sm);color:var(--ink-muted);">必填录入完整病历档案，无库存消耗</div></div>' +
+      (td.items.sterilization ? (td.sterilization ? '<span class="badge badge-success">已填写</span>' : '<span class="badge badge-warning">待填写</span>') : '') + '</div>' +
+      (td.items.sterilization ? '<div class="treatment-item-body">' + (td.sterilization ?
+        '<div style="display:flex;align-items:center;gap:var(--sp-3);"><span style="font-size:var(--fs-sm);color:var(--ink-muted);">手术日期：' + esc(td.sterilization.surgery_date || '—') + ' · 医生：' + esc(td.sterilization.surgeon || '—') + '</span><button class="btn btn-outline btn-sm" data-ster-modal>修改病历</button></div>'
+        : '<button class="btn btn-outline btn-sm" data-ster-modal>填写病历</button>') + '</div>' : '') +
+      '</div>';
+
+    /* 疫苗 */
+    html += '<div class="treatment-item-card ' + (td.items.vaccine ? 'checked' : '') + '" data-toggle="vaccine" style="margin-bottom:var(--sp-3);"><div class="treatment-item-header">' +
+      '<input type="checkbox" ' + (td.items.vaccine ? 'checked' : '') + ' data-check="vaccine" style="width:18px;height:18px;accent-color:var(--cinnabar);cursor:pointer;" />' +
+      '<div class="treatment-item-icon">💉</div><div style="flex:1;"><div style="font-weight:500;">疫苗接种</div><div style="font-size:var(--fs-sm);color:var(--ink-muted);">勾选后自动扣减医院疫苗库存-1，记录批次</div></div></div>' +
+      (td.items.vaccine ? '<div class="treatment-item-body"><div class="form-row"><div class="form-group" style="margin:0;"><label class="form-label">疫苗类型</label><select class="form-select" id="vaccineSelect"><option value="">请选择</option>' +
+        vaccines.map(v => '<option value="' + v.id + '" ' + (td.vaccine && String(td.vaccine.material_id) === String(v.id) ? 'selected' : '') + ' ' + ((v.hospital_stock || 0) <= 0 ? 'disabled' : '') + '>' + esc(v.name) + ' (库存:' + (v.hospital_stock || 0) + (v.unit || '') + ')</option>').join('') +
+        '</select></div><div class="form-group" style="margin:0;"><label class="form-label">批号</label><input type="text" class="form-input" id="vaccineBatch" value="' + (td.vaccine ? esc(td.vaccine.batch_no || '') : '') + '" readonly /></div></div>' +
+        '<div class="form-group" style="margin:var(--sp-2) 0 0;"><label class="form-label">接种日期</label><input type="date" class="form-input" id="vaccineDate" value="' + (td.vaccine ? td.vaccine.date : new Date().toISOString().substr(0, 10)) + '" /></div></div>' : '') +
+      '</div>';
+
+    /* 驱虫 */
+    html += '<div class="treatment-item-card ' + (td.items.deworming ? 'checked' : '') + '" data-toggle="deworming" style="margin-bottom:var(--sp-3);"><div class="treatment-item-header">' +
+      '<input type="checkbox" ' + (td.items.deworming ? 'checked' : '') + ' data-check="deworming" style="width:18px;height:18px;accent-color:var(--cinnabar);cursor:pointer;" />' +
+      '<div class="treatment-item-icon">💊</div><div style="flex:1;"><div style="font-weight:500;">驱虫护理</div><div style="font-size:var(--fs-sm);color:var(--ink-muted);">勾选后自动扣减医院驱虫药库存-1，留存用药记录</div></div></div>' +
+      (td.items.deworming ? '<div class="treatment-item-body"><div class="form-row"><div class="form-group" style="margin:0;"><label class="form-label">驱虫药类型</label><select class="form-select" id="dewormerSelect"><option value="">请选择</option>' +
+        dewormers.map(d => '<option value="' + d.id + '" ' + (td.deworming && String(td.deworming.material_id) === String(d.id) ? 'selected' : '') + ' ' + ((d.hospital_stock || 0) <= 0 ? 'disabled' : '') + '>' + esc(d.name) + ' (库存:' + (d.hospital_stock || 0) + (d.unit || '') + ')</option>').join('') +
+        '</select></div><div class="form-group" style="margin:0;"><label class="form-label">批号</label><input type="text" class="form-input" id="dewormerBatch" value="' + (td.deworming ? esc(td.deworming.batch_no || '') : '') + '" readonly /></div></div>' +
+        '<div class="form-group" style="margin:var(--sp-2) 0 0;"><label class="form-label">用药日期</label><input type="date" class="form-input" id="dewormerDate" value="' + (td.deworming ? td.deworming.date : new Date().toISOString().substr(0, 10)) + '" /></div></div>' : '') +
+      '</div>';
+
+    /* 芯片 */
+    html += '<div class="treatment-item-card ' + (td.items.chip ? 'checked' : '') + '" data-toggle="chip"><div class="treatment-item-header">' +
+      '<input type="checkbox" ' + (td.items.chip ? 'checked' : '') + ' data-check="chip" style="width:18px;height:18px;accent-color:var(--cinnabar);cursor:pointer;" />' +
+      '<div class="treatment-item-icon">📡</div><div style="flex:1;"><div style="font-weight:500;">芯片植入</div><div style="font-size:var(--fs-sm);color:var(--ink-muted);">输入可用芯片编号，绑定宠物档案，库存-1，芯片永久不可复用</div></div></div>' +
+      (td.items.chip ? '<div class="treatment-item-body"><div class="form-row"><div class="form-group" style="margin:0;"><label class="form-label">芯片编号<span class="req">*</span></label><input type="text" class="form-input" id="chipInput" value="' + (td.chip ? esc(td.chip.chip_no || '') : '') + '" placeholder="请输入可用芯片编号" /></div>' +
+        '<div class="form-group" style="margin:0;"><label class="form-label">植入日期</label><input type="date" class="form-input" id="chipDate" value="' + (td.chip ? td.chip.date : new Date().toISOString().substr(0, 10)) + '" /></div></div></div>' : '') +
+      '</div>';
+
+    html += '</div></div>';
+
+    /* 操作按钮 */
+    html += '<div style="display:flex;gap:var(--sp-3);justify-content:flex-end;"><button class="btn btn-secondary" data-reset>重置</button><button class="btn btn-primary" data-save>保存诊疗记录</button></div>';
+    html += '</div></div>';
+
+    area.innerHTML = html;
+
+    /* 绑定事件 */
+    area.querySelectorAll('[data-toggle]').forEach(card => {
+      card.addEventListener('click', e => {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA' || e.target.closest('button')) return;
+        const item = card.dataset.toggle;
+        const cb = card.querySelector('input[type="checkbox"]');
+        const checked = !cb.checked;
+        cb.checked = checked;
+        this.state.treatmentData.items[item] = checked;
+        if (!checked) {
+          if (item === 'sterilization') this.state.treatmentData.sterilization = null;
+          if (item === 'vaccine') this.state.treatmentData.vaccine = null;
+          if (item === 'deworming') this.state.treatmentData.deworming = null;
+          if (item === 'chip') this.state.treatmentData.chip = null;
+        }
+        this.renderTreatmentForm(pet);
+      });
+    });
+
+    area.querySelectorAll('[data-check]').forEach(cb => {
+      cb.addEventListener('change', e => {
+        e.stopPropagation();
+        const item = cb.dataset.check;
+        this.state.treatmentData.items[item] = cb.checked;
+        if (!cb.checked) {
+          if (item === 'sterilization') this.state.treatmentData.sterilization = null;
+          if (item === 'vaccine') this.state.treatmentData.vaccine = null;
+          if (item === 'deworming') this.state.treatmentData.deworming = null;
+          if (item === 'chip') this.state.treatmentData.chip = null;
+        }
+        this.renderTreatmentForm(pet);
+      });
+    });
+
+    area.querySelector('[data-ster-modal]')?.addEventListener('click', e => {
+      e.stopPropagation();
+      this.openSterilizationModal(pet);
+    });
+
+    area.querySelector('[data-reset]')?.addEventListener('click', () => {
+      this.state.treatmentData = {items: {}, sterilization: null, vaccine: null, deworming: null, chip: null};
+      this.renderTreatmentForm(pet);
+    });
+
+    area.querySelector('[data-save]')?.addEventListener('click', () => this.saveTreatment(pet));
+
+    /* 疫苗/驱虫选择联动 */
+    const vSel = area.querySelector('#vaccineSelect');
+    if (vSel) vSel.addEventListener('change', () => {
+      const mid = vSel.value;
+      if (!mid) { this.state.treatmentData.vaccine = null; return; }
+      const mat = materials.find(m => String(m.id) === String(mid));
+      if (mat) {
+        this.state.treatmentData.vaccine = {material_id: mid, type: mat.name, batch_no: mat.batch_no, date: area.querySelector('#vaccineDate')?.value || new Date().toISOString().substr(0, 10), quantity: 1};
+        const bEl = area.querySelector('#vaccineBatch');
+        if (bEl) bEl.value = mat.batch_no || '';
+      }
+    });
+
+    const dSel = area.querySelector('#dewormerSelect');
+    if (dSel) dSel.addEventListener('change', () => {
+      const mid = dSel.value;
+      if (!mid) { this.state.treatmentData.deworming = null; return; }
+      const mat = materials.find(m => String(m.id) === String(mid));
+      if (mat) {
+        this.state.treatmentData.deworming = {material_id: mid, type: mat.name, batch_no: mat.batch_no, date: area.querySelector('#dewormerDate')?.value || new Date().toISOString().substr(0, 10), quantity: 1};
+        const bEl = area.querySelector('#dewormerBatch');
+        if (bEl) bEl.value = mat.batch_no || '';
+      }
+    });
+  },
+
+  openSterilizationModal(pet) {
+    const td = this.state.treatmentData, ex = td.sterilization || {};
+    TNR_UI.modal({
+      title: '绝育手术病历档案',
+      body: (bodyEl, closeFn) => {
+        bodyEl.innerHTML =
+          '<div class="form-row"><div class="form-group"><label class="form-label">手术日期<span class="req">*</span></label><input type="date" class="form-input" id="sterSurgeryDate" value="' + (ex.surgery_date || new Date().toISOString().substr(0, 10)) + '" /></div>' +
+          '<div class="form-group"><label class="form-label">主刀医生<span class="req">*</span></label><input type="text" class="form-input" id="sterSurgeon" value="' + this.escape(ex.surgeon || '') + '" placeholder="请输入医生姓名" /></div></div>' +
+          '<div class="form-group"><label class="form-label">诊断<span class="req">*</span></label><textarea class="form-textarea" id="sterDiagnosis" placeholder="请输入诊断信息">' + this.escape(ex.diagnosis || '') + '</textarea></div>' +
+          '<div class="form-group"><label class="form-label">麻醉方式<span class="req">*</span></label><select class="form-select" id="sterAnesthesia"><option value="吸入麻醉" ' + (ex.anesthesia === '吸入麻醉' ? 'selected' : '') + '>吸入麻醉</option><option value="注射麻醉" ' + (ex.anesthesia === '注射麻醉' ? 'selected' : '') + '>注射麻醉</option><option value="复合麻醉" ' + (ex.anesthesia === '复合麻醉' ? 'selected' : '') + '>复合麻醉</option></select></div>' +
+          '<div class="form-group"><label class="form-label">手术过程<span class="req">*</span></label><textarea class="form-textarea" id="sterProcedure" placeholder="请描述手术过程">' + this.escape(ex.procedure || '') + '</textarea></div>' +
+          '<div class="form-group"><label class="form-label">恢复情况<span class="req">*</span></label><textarea class="form-textarea" id="sterRecovery" placeholder="请描述术后恢复情况">' + this.escape(ex.recovery || '') + '</textarea></div>' +
+          '<div style="display:flex;gap:var(--sp-3);justify-content:flex-end;margin-top:var(--sp-4);"><button class="btn btn-secondary" data-close>取消</button><button class="btn btn-primary" id="sterSaveBtn">保存病历</button></div>';
+        bodyEl.querySelector('[data-close]').onclick = closeFn;
+        bodyEl.querySelector('#sterSaveBtn').onclick = () => {
+          const d = {
+            surgery_date: bodyEl.querySelector('#sterSurgeryDate').value,
+            surgeon: bodyEl.querySelector('#sterSurgeon').value.trim(),
+            diagnosis: bodyEl.querySelector('#sterDiagnosis').value.trim(),
+            anesthesia: bodyEl.querySelector('#sterAnesthesia').value,
+            procedure: bodyEl.querySelector('#sterProcedure').value.trim(),
+            recovery: bodyEl.querySelector('#sterRecovery').value.trim()
+          };
+          if (!d.surgery_date || !d.surgeon || !d.diagnosis || !d.procedure || !d.recovery) { TNR_UI.toast('请填写所有必填项', 'warning'); return; }
+          this.state.treatmentData.sterilization = d;
+          TNR_UI.toast('病历档案已保存', 'success');
+          closeFn();
+          this.renderTreatmentForm(pet);
+        };
+      }
+    });
+  },
+
+  async saveTreatment(pet) {
+    const td = this.state.treatmentData;
+    const items = td.items;
+    if (!items.sterilization && !items.vaccine && !items.deworming && !items.chip) { TNR_UI.toast('请至少选择一项诊疗项目', 'warning'); return; }
+    if (items.sterilization && !td.sterilization) { TNR_UI.toast('请填写绝育手术病历', 'warning'); return; }
+
+    const area = document.getElementById('treatmentFormArea');
+    if (!area) return;
+
+    if (items.vaccine) {
+      const vSel = area.querySelector('#vaccineSelect');
+      if (!vSel || !vSel.value) { TNR_UI.toast('请选择疫苗类型', 'warning'); return; }
+      const vDate = area.querySelector('#vaccineDate')?.value || new Date().toISOString().substr(0, 10);
+      const mat = await TNR_API.getMaterials().then(ms => ms.find(m => String(m.id) === String(vSel.value)));
+      td.vaccine = {material_id: vSel.value, type: mat ? mat.name : '', batch_no: mat ? mat.batch_no : '', date: vDate, quantity: 1};
+    }
+    if (items.deworming) {
+      const dSel = area.querySelector('#dewormerSelect');
+      if (!dSel || !dSel.value) { TNR_UI.toast('请选择驱虫药类型', 'warning'); return; }
+      const dDate = area.querySelector('#dewormerDate')?.value || new Date().toISOString().substr(0, 10);
+      const mat = await TNR_API.getMaterials().then(ms => ms.find(m => String(m.id) === String(dSel.value)));
+      td.deworming = {material_id: dSel.value, type: mat ? mat.name : '', batch_no: mat ? mat.batch_no : '', date: dDate, quantity: 1};
+    }
+    if (items.chip) {
+      const cInput = area.querySelector('#chipInput');
+      if (!cInput || !cInput.value.trim()) { TNR_UI.toast('请输入芯片编号', 'warning'); return; }
+      td.chip = {chip_no: cInput.value.trim(), date: area.querySelector('#chipDate')?.value || new Date().toISOString().substr(0, 10)};
+    }
+
+    const allChecked = items.sterilization && items.vaccine && items.deworming && items.chip;
+    const payload = {
+      pet_id: pet.id,
+      items: {
+        sterilization: !!items.sterilization,
+        vaccine: !!items.vaccine,
+        deworming: !!items.deworming,
+        chip: !!items.chip
+      },
+      sterilization: td.sterilization || null,
+      vaccine: td.vaccine || null,
+      deworming: td.deworming || null,
+      chip: td.chip || null,
+      status: allChecked ? 'completed' : 'in_progress'
+    };
+
+    try {
+      const res = await TNR_API.createTreatment(payload);
+      if (res.success) {
+        TNR_UI.toast('诊疗记录保存成功' + (allChecked ? '，诊疗已完成' : ''), 'success');
+        this.state.treatmentData = {items: {}, sterilization: null, vaccine: null, deworming: null, chip: null};
+        this.renderTreatmentOperate();
+      } else {
+        TNR_UI.toast(res.message || '保存失败', 'danger');
+      }
+    } catch (e) {
+      TNR_UI.toast(e.message || '操作失败', 'danger');
+    }
+  },
+
+  async renderTreatmentList() {
+    const c = document.getElementById('treatmentContent');
+    if (!c) return;
+    c.innerHTML = '<div class="loading-state">加载中...</div>';
+
+    try {
+      const treatments = await TNR_API.getTreatments();
+      if (treatments.length === 0) {
+        c.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📋</div><div class="empty-state-text">暂无诊疗记录</div></div>';
+        return;
+      }
+
+      const rows = treatments.map(t => {
+        const items = [];
+        if (t.items_sterilization) items.push('<span class="badge badge-cinnabar">绝育</span>');
+        if (t.items_vaccine) items.push('<span class="badge badge-info">疫苗</span>');
+        if (t.items_deworming) items.push('<span class="badge badge-success">驱虫</span>');
+        if (t.items_chip) items.push('<span class="badge badge-warning">芯片</span>');
+        return '<tr><td><div style="font-weight:500;">' + this.escape(t.pet_code || '') + '</div></td>' +
+          '<td>' + (items.join(' ') || '—') + '</td>' +
+          '<td>' + this.escape(t.hospital_name || '') + '</td>' +
+          '<td>' + this.escape(t.sterilization_surgeon || t.operator_name || '—') + '</td>' +
+          '<td>' + this.formatDateTime(t.created_at) + '</td>' +
+          '<td>' + this.treatmentStatusBadge(t.status) + '</td>' +
+          '<td><button class="btn-link" data-view-treatment="' + t.id + '">详情</button></td></tr>';
+      }).join('');
+
+      c.innerHTML = '<div class="table-wrapper"><table class="data-table"><thead><tr><th>宠物编号</th><th>诊疗项目</th><th>医院</th><th>医生</th><th>日期</th><th>状态</th><th>操作</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+
+      c.querySelectorAll('[data-view-treatment]').forEach(btn => {
+        btn.addEventListener('click', () => this.viewTreatmentDetail(btn.dataset.viewTreatment));
+      });
+    } catch (e) {
+      c.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-text">加载失败</div></div>';
+    }
+  },
+
+  async viewTreatmentDetail(treatmentId) {
+    try {
+      const res = await fetch('/api/business/treatments/' + treatmentId + '/');
+      const result = await res.json();
+      if (!result.success) { TNR_UI.toast(result.message || '加载失败', 'danger'); return; }
+      const t = result.data;
+      const pet = t.pet || {};
+
+      let html = '<div class="detail-section"><div class="detail-section-title">宠物信息</div>' + TNR_UI.renderDescList([
+        {label: '宠物编号', value: this.escape(t.pet_code)},
+        {label: '名称', value: this.escape(pet.name || '—')},
+        {label: '物种/品种', value: this.escape(pet.species || '') + ' / ' + this.escape(pet.breed || '')},
+        {label: '性别/年龄', value: this.escape(pet.gender || '') + ' / ' + this.escape(pet.age || '')}
+      ]) + '</div>';
+
+      html += '<div class="detail-section"><div class="detail-section-title">诊疗项目</div>' + TNR_UI.renderDescList([
+        {label: '绝育手术', value: t.items_sterilization ? '<span class="badge badge-success">已执行</span>' : '<span class="badge badge-default">未执行</span>'},
+        {label: '疫苗接种', value: t.items_vaccine ? '<span class="badge badge-success">已执行</span>' : '<span class="badge badge-default">未执行</span>'},
+        {label: '驱虫护理', value: t.items_deworming ? '<span class="badge badge-success">已执行</span>' : '<span class="badge badge-default">未执行</span>'},
+        {label: '芯片植入', value: t.items_chip ? '<span class="badge badge-success">已执行</span>' : '<span class="badge badge-default">未执行</span>'}
+      ]) + '</div>';
+
+      if (t.sterilization_surgeon) {
+        html += '<div class="detail-section"><div class="detail-section-title">绝育病历档案</div>' + TNR_UI.renderDescList([
+          {label: '手术日期', value: this.formatDate(t.sterilization_surgery_date)},
+          {label: '主刀医生', value: this.escape(t.sterilization_surgeon)},
+          {label: '麻醉方式', value: this.escape(t.sterilization_anesthesia)},
+          {label: '诊断', value: this.escape(t.sterilization_diagnosis), full: true},
+          {label: '手术过程', value: this.escape(t.sterilization_procedure), full: true},
+          {label: '恢复情况', value: this.escape(t.sterilization_recovery), full: true}
+        ]) + '</div>';
+      }
+      if (t.vaccine_type) {
+        html += '<div class="detail-section"><div class="detail-section-title">疫苗接种记录</div>' + TNR_UI.renderDescList([
+          {label: '疫苗类型', value: this.escape(t.vaccine_type)},
+          {label: '批号', value: this.escape(t.vaccine_batch_no)},
+          {label: '接种日期', value: this.formatDate(t.vaccine_date)},
+          {label: '数量', value: (t.vaccine_quantity || 0) + '支'}
+        ]) + '</div>';
+      }
+      if (t.deworming_type) {
+        html += '<div class="detail-section"><div class="detail-section-title">驱虫护理记录</div>' + TNR_UI.renderDescList([
+          {label: '驱虫药类型', value: this.escape(t.deworming_type)},
+          {label: '批号', value: this.escape(t.deworming_batch_no)},
+          {label: '用药日期', value: this.formatDate(t.deworming_date)},
+          {label: '数量', value: (t.deworming_quantity || 0) + '盒'}
+        ]) + '</div>';
+      }
+      if (t.chip_no) {
+        html += '<div class="detail-section"><div class="detail-section-title">芯片植入记录</div>' + TNR_UI.renderDescList([
+          {label: '芯片编号', value: this.escape(t.chip_no)},
+          {label: '植入日期', value: this.formatDate(t.chip_date)}
+        ]) + '</div>';
+      }
+      html += '<div class="detail-section"><div class="detail-section-title">其他信息</div>' + TNR_UI.renderDescList([
+        {label: '医院', value: this.escape(t.hospital_name)},
+        {label: '操作人', value: this.escape(t.operator_name)},
+        {label: '创建时间', value: this.formatDateTime(t.created_at)},
+        {label: '状态', value: this.treatmentStatusBadge(t.status)}
+      ]) + '</div>';
+
+      TNR_UI.drawer({title: '诊疗记录详情 · ' + this.escape(t.pet_code), body: html});
+    } catch (e) {
+      TNR_UI.toast(e.message || '加载失败', 'danger');
+    }
+  },
+
+  /* ========== 4. 物料库存管理 ========== */
+  async render_material() {
+    const page = document.getElementById('page-material');
+
+    let txns = [];
+    try { txns = await TNR_API.getMaterialTransactions(); } catch(e) {}
+    const pending = txns.filter(t => t.type === 'dispatch' && !(t.note || '').includes('[已签收]')).length;
+    const adjustments = txns.filter(t => t.type === 'adjustment').length;
+
+    page.innerHTML = '<div class="tabs">' +
+      '<div class="tab-item ' + (this.state.materialTab === 'pending' ? 'active' : '') + '" data-mtab="pending">待接收物料 (' + pending + ')</div>' +
+      '<div class="tab-item ' + (this.state.materialTab === 'stock' ? 'active' : '') + '" data-mtab="stock">实时库存</div>' +
+      '<div class="tab-item ' + (this.state.materialTab === 'adjustment' ? 'active' : '') + '" data-mtab="adjustment">库存异动 (' + adjustments + ')</div>' +
+      '<div class="tab-item ' + (this.state.materialTab === 'ledger' ? 'active' : '') + '" data-mtab="ledger">出入库台账 (' + txns.length + ')</div>' +
+      '</div><div id="materialTabContent"></div>';
+
+    page.querySelectorAll('[data-mtab]').forEach(el => {
+      el.addEventListener('click', () => {
+        this.state.materialTab = el.dataset.mtab;
+        page.querySelectorAll('.tab-item').forEach((t, i) => {
+          t.classList.toggle('active', ['pending','stock','adjustment','ledger'][i] === this.state.materialTab);
+        });
+        this.renderMaterialTab(txns);
+      });
+    });
+
+    this.renderMaterialTab(txns);
+  },
+
+  async renderMaterialTab(txns) {
+    const c = document.getElementById('materialTabContent');
+    if (!c) return;
+    if (this.state.materialTab === 'pending') this.renderMaterialPending(c, txns);
+    else if (this.state.materialTab === 'stock') this.renderMaterialStock(c);
+    else if (this.state.materialTab === 'adjustment') this.renderMaterialAdjustment(c, txns);
+    else if (this.state.materialTab === 'ledger') this.renderMaterialLedger(c, txns);
+  },
+
+  renderMaterialPending(c, txns) {
+    const dispatches = txns.filter(t => t.type === 'dispatch' && !(t.note || '').includes('[已签收]'));
+    if (dispatches.length === 0) {
+      c.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📦</div><div class="empty-state-text">暂无待接收物料</div><div class="empty-state-desc">所有下发的物料已确认接收</div></div>';
+      return;
+    }
+    const rows = dispatches.map(t => {
+      return '<tr><td><div style="font-weight:500;">' + this.escape(t.material_name || '') + '</div><div style="font-size:var(--fs-xs);color:var(--ink-light);">' + this.escape(t.ledger_no || '') + '</div></td>' +
+        '<td>' + (t.quantity || 0) + ' ' + this.escape(t.unit || '') + '</td>' +
+        '<td>' + this.escape(t.batch_no || '—') + '</td>' +
+        '<td>' + this.escape(t.operator_name || '') + '</td>' +
+        '<td>' + this.formatDate(t.date) + '</td>' +
+        '<td><button class="btn btn-success btn-sm" data-mreceive="' + t.id + '">确认入库</button></td></tr>';
+    }).join('');
+    c.innerHTML = '<div class="table-wrapper"><table class="data-table"><thead><tr><th>物料名称</th><th>数量</th><th>批号</th><th>下发方</th><th>下发日期</th><th>操作</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+    c.querySelectorAll('[data-mreceive]').forEach(btn => {
+      btn.addEventListener('click', () => this.confirmMaterialReceive(btn.dataset.mreceive));
+    });
+  },
+
+  async renderMaterialStock(c) {
+    c.innerHTML = '<div class="loading-state">加载中...</div>';
+    try {
+      const materials = await TNR_API.getMaterials();
+      if (materials.length === 0) {
+        c.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📦</div><div class="empty-state-text">暂无物料</div></div>';
+        return;
+      }
+      const cards = materials.map(m => {
+        const stock = m.hospital_stock || 0;
+        const safety = m.safety_stock || 1;
+        const isLow = stock < safety;
+        const pct = Math.min(100, (stock / (safety * 2)) * 100);
+        const color = isLow ? 'var(--rouge)' : (stock < safety * 1.5 ? 'var(--autumn-gold)' : 'var(--bamboo-green)');
+        return '<div class="card"><div class="card-body"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-3);">' +
+          '<div><div style="font-weight:600;font-size:var(--fs-lg);">' + this.escape(m.name) + '</div><div style="font-size:var(--fs-sm);color:var(--ink-muted);">' + TNR_API.getMaterialCategoryText(m.category) + ' · ' + this.escape(m.specification || '') + '</div></div>' +
+          '<span class="badge ' + (isLow ? 'badge-danger' : 'badge-success') + '">' + (isLow ? '库存不足' : '正常') + '</span></div>' +
+          '<div style="display:flex;align-items:center;gap:var(--sp-4);"><div style="flex:1;">' +
+          '<div class="stock-bar"><div class="stock-bar-fill" style="width:' + pct + '%;background:' + color + ';"></div></div>' +
+          '<div style="display:flex;justify-content:space-between;margin-top:4px;font-size:var(--fs-xs);color:var(--ink-light);"><span>当前库存</span><span>安全库存</span></div></div>' +
+          '<div style="text-align:right;"><div style="font-family:var(--font-display);font-size:var(--fs-2xl);font-weight:700;color:' + color + ';">' + stock + '</div><div style="font-size:var(--fs-xs);color:var(--ink-light);">/ ' + safety + ' ' + this.escape(m.unit || '') + '</div></div></div>' +
+          '<div class="desc-list mt-4"><div class="desc-item"><div class="desc-label">供应商</div><div class="desc-value">' + this.escape(m.supplier || '—') + '</div></div>' +
+          '<div class="desc-item"><div class="desc-label">批号</div><div class="desc-value">' + this.escape(m.batch_no || '—') + '</div></div>' +
+          '<div class="desc-item"><div class="desc-label">有效期</div><div class="desc-value">' + this.formatDate(m.expiry_date) + '</div></div></div></div></div>';
+      }).join('');
+      c.innerHTML = '<div class="stat-grid">' + cards + '</div>';
+    } catch (e) {
+      c.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-text">加载失败</div></div>';
+    }
+  },
+
+  async renderMaterialAdjustment(c, txns) {
+    let materials = [];
+    try { materials = await TNR_API.getMaterials(); } catch(e) {}
+
+    const adj = txns.filter(t => t.type === 'adjustment');
+    let adjHtml = '<div class="empty-state" style="padding:var(--sp-6);"><div class="empty-state-icon">📋</div><div class="empty-state-text">暂无异动记录</div></div>';
+    if (adj.length > 0) {
+      const rows = adj.map(t => {
+        return '<tr><td>' + this.escape(t.material_name || '') + '</td><td>' + this.escape(t.note || '—') + '</td><td>' + (t.quantity || 0) + ' ' + this.escape(t.unit || '') + '</td><td>' + this.formatDate(t.date) + '</td><td>' + this.escape(t.operator_name || '') + '</td></tr>';
+      }).join('');
+      adjHtml = '<div class="table-wrapper"><table class="data-table"><thead><tr><th>物料</th><th>原因</th><th>数量</th><th>日期</th><th>操作人</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+    }
+
+    c.innerHTML = '<div class="card"><div class="card-header"><div class="card-title"><span class="card-title-bar"></span>库存异动报备</div></div><div class="card-body">' +
+      '<div class="form-section"><div class="form-section-header"><div class="form-section-header-icon">📝</div><div class="form-section-title">新增异动报备</div></div><div class="form-section-body">' +
+      '<div class="form-row"><div class="form-group"><label class="form-label">物料<span class="req">*</span></label><select class="form-select" id="adjMaterial"><option value="">请选择</option>' +
+      materials.map(m => '<option value="' + m.id + '">' + this.escape(m.name) + ' (当前:' + (m.hospital_stock || 0) + (m.unit || '') + ')</option>').join('') +
+      '</select></div><div class="form-group"><label class="form-label">数量<span class="req">*</span></label><input type="number" class="form-input" id="adjQty" value="1" min="1" /></div></div>' +
+      '<div class="form-group"><label class="form-label">原因说明<span class="req">*</span></label><textarea class="form-textarea" id="adjReason" placeholder="请说明异动原因（过期/破损/盘亏等）"></textarea></div>' +
+      '<div style="display:flex;justify-content:flex-end;"><button class="btn btn-primary" id="adjSubmitBtn">提交报备</button></div></div></div></div></div>' +
+      '<div class="card mt-5"><div class="card-header"><div class="card-title"><span class="card-title-bar"></span>异动记录</div></div><div class="card-body-flush">' + adjHtml + '</div></div>';
+
+    c.querySelector('#adjSubmitBtn')?.addEventListener('click', () => this.saveStockAdjustment(materials));
+  },
+
+  async saveStockAdjustment(materials) {
+    const mid = document.getElementById('adjMaterial').value;
+    const qty = parseInt(document.getElementById('adjQty').value);
+    const reason = document.getElementById('adjReason').value.trim();
+    if (!mid) { TNR_UI.toast('请选择物料', 'warning'); return; }
+    if (!qty || qty <= 0) { TNR_UI.toast('请输入有效数量', 'warning'); return; }
+    if (!reason) { TNR_UI.toast('请填写原因说明', 'warning'); return; }
+
+    try {
+      const res = await TNR_API.adjustStock({material_id: parseInt(mid), quantity: qty, reason: reason});
+      if (res.success) {
+        TNR_UI.toast('异动报备已提交，库存已扣减', 'success');
+        this.render_material();
+      } else {
+        TNR_UI.toast(res.message || '提交失败', 'danger');
+      }
+    } catch (e) {
+      TNR_UI.toast(e.message || '操作失败', 'danger');
+    }
+  },
+
+  renderMaterialLedger(c, txns) {
+    const data = txns.slice().sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+    if (data.length === 0) {
+      c.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📊</div><div class="empty-state-text">暂无台账记录</div></div>';
+      return;
+    }
+    const typeMap = {'purchase': '采购入库', 'dispatch': '收容所下发', 'consume': '诊疗消耗', 'adjustment': '库存异动'};
+    const typeBadge = {'purchase': 'badge-success', 'dispatch': 'badge-info', 'consume': 'badge-warning', 'adjustment': 'badge-danger'};
+    const rows = data.map(t => {
+      const sign = (t.type === 'consume' || t.type === 'adjustment') ? '-' : '+';
+      return '<tr><td><div style="font-weight:500;">' + this.escape(t.ledger_no || '') + '</div></td>' +
+        '<td><span class="badge ' + (typeBadge[t.type] || 'badge-default') + '">' + (typeMap[t.type] || t.type) + '</span></td>' +
+        '<td>' + this.escape(t.material_name || '') + '</td>' +
+        '<td>' + sign + (t.quantity || 0) + ' ' + this.escape(t.unit || '') + '</td>' +
+        '<td>' + this.escape(t.batch_no || '—') + '</td>' +
+        '<td>' + this.escape(t.from_to || '') + '</td>' +
+        '<td>' + this.escape(t.operator_name || '') + '</td>' +
+        '<td>' + this.formatDate(t.date) + '</td></tr>';
+    }).join('');
+    c.innerHTML = '<div class="table-wrapper"><table class="data-table"><thead><tr><th>单据编号</th><th>类型</th><th>物料</th><th>数量</th><th>批号</th><th>来源/去向</th><th>操作人</th><th>日期</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+  },
+
+  async confirmMaterialReceive(txnId) {
+    TNR_UI.confirm('确认接收该批物料？', '确认入库').then(async ok => {
+      if (!ok) return;
+      try {
+        const res = await TNR_API.receiveMaterial(txnId);
+        if (res.success) {
+          TNR_UI.toast('物料入库成功', 'success');
+          this.render_material();
+        } else {
+          TNR_UI.toast(res.message || '入库失败', 'danger');
+        }
+      } catch (e) {
+        TNR_UI.toast(e.message || '操作失败', 'danger');
+      }
+    });
+  },
+
+  /* ========== 5. 领养信息维护 ========== */
+  async render_adoption_info() {
+    const page = document.getElementById('page-adoption-info');
+    page.innerHTML = '<div class="loading-state">加载中...</div>';
+
+    try {
+      const [pets, listings] = await Promise.all([
+        TNR_API.getHospitalPets('pending_adopt'),
+        TNR_API.getHallListings()
+      ]);
+
+      if (pets.length === 0) {
+        page.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🐾</div><div class="empty-state-text">暂无待领养动物</div><div class="empty-state-desc">诊疗完成5天后，动物状态将自动变更为「待领养」</div></div>';
+        return;
+      }
+
+      const html = pets.map(p => {
+        const listing = listings.find(l => l.pet && String(l.pet.id) === String(p.id));
+        const inHall = listing && listing.is_active;
+        const intro = listing ? (listing.intro || '') : (p.description || '');
+        const personality = listing ? (listing.personality || '') : '';
+        const bodyCondition = listing ? (listing.body_condition || '') : '';
+
+        return '<div class="card mb-4"><div class="card-header"><div class="card-title"><span class="card-title-bar"></span>' + this.escape(p.code) + ' · ' + this.escape(p.name || '') + '</div>' +
+          '<div class="flex gap-2">' + (inHall ? '<span class="badge badge-success">已上架领养大厅</span>' : '<span class="badge badge-warning">未上架</span>') +
+          '<span class="badge ' + TNR_API.getPetStatusBadge(p.status) + '">' + TNR_API.getPetStatusText(p.status) + '</span></div></div>' +
+          '<div class="card-body">' +
+          '<div class="detail-section"><div class="detail-section-title">照片管理（收容前/收容后/诊疗后）</div>' +
+          '<div style="grid-template-columns:repeat(3,1fr);display:grid;gap:var(--sp-3);">' +
+          this.renderPhotoSlot(p, 'photo_before', '收容前') +
+          this.renderPhotoSlot(p, 'photo_after', '收容后') +
+          this.renderPhotoSlot(p, 'photo_treatment', '诊疗后') +
+          '</div></div>' +
+          '<div class="detail-section"><div class="detail-section-title">宠物简介</div>' +
+          '<div class="form-group"><label class="form-label">简介描述</label><textarea class="form-textarea" id="desc_' + p.id + '" placeholder="请输入宠物简介">' + this.escape(intro) + '</textarea></div>' +
+          '<div class="form-row"><div class="form-group"><label class="form-label">性格特点</label><input type="text" class="form-input" id="personality_' + p.id + '" value="' + this.escape(personality) + '" placeholder="如：温顺、亲人" /></div>' +
+          '<div class="form-group"><label class="form-label">健康状况</label><input type="text" class="form-input" id="health_' + p.id + '" value="' + this.escape(bodyCondition) + '" placeholder="如：已绝育、已免疫" /></div></div>' +
+          '<div class="form-group"><label class="form-label">芯片编号</label><input type="text" class="form-input" value="' + this.escape(p.chip_no || '') + '" readonly /></div>' +
+          '</div>' +
+          '<div class="detail-section"><div class="detail-section-title">领养状态</div>' + TNR_UI.renderDescList([
+            {label: '当前状态', value: '<span class="badge ' + TNR_API.getPetStatusBadge(p.status) + '">' + TNR_API.getPetStatusText(p.status) + '</span>'},
+            {label: '领养大厅', value: inHall ? '<span class="badge badge-success">已发布</span>' : '<span class="badge badge-default">未发布</span>'},
+            {label: '物种/品种', value: this.escape(p.species || '') + ' / ' + this.escape(p.breed || '')}
+          ]) + '</div>' +
+          '<div style="display:flex;gap:var(--sp-3);justify-content:flex-end;">' +
+          '<button class="btn btn-secondary" data-save-info="' + p.id + '">保存资料</button>' +
+          (inHall ? '<button class="btn btn-secondary" data-unpublish="' + p.id + '">下架</button>' : '<button class="btn btn-gold" data-publish="' + p.id + '">发布至领养大厅</button>') +
+          '</div></div></div>';
+      }).join('');
+
+      page.innerHTML = html;
+
+      page.querySelectorAll('[data-save-info]').forEach(btn => {
+        btn.addEventListener('click', () => this.saveAdoptionInfo(btn.dataset.saveInfo));
+      });
+      page.querySelectorAll('[data-publish]').forEach(btn => {
+        btn.addEventListener('click', () => this.publishToHall(btn.dataset.publish));
+      });
+      page.querySelectorAll('[data-unpublish]').forEach(btn => {
+        btn.addEventListener('click', () => this.unpublishFromHall(btn.dataset.unpublish));
+      });
+      page.querySelectorAll('[data-upload-photo]').forEach(btn => {
+        btn.addEventListener('click', () => this.uploadPhoto(btn.dataset.uploadPhoto, btn.dataset.photoField));
+      });
+    } catch (e) {
+      page.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-text">加载失败</div></div>';
+    }
+  },
+
+  renderPhotoSlot(pet, photoField, label) {
+    const url = pet[photoField] || '';
+    const inner = url ? '<img src="' + url + '" style="width:100%;height:100%;object-fit:cover;border-radius:var(--r-lg);" />' : '📷';
+    return '<div style="cursor:pointer;" data-upload-photo="' + pet.id + '" data-photo-field="' + photoField + '"><div class="photo-placeholder-lg">' + inner + '</div><div style="text-align:center;font-size:var(--fs-sm);color:var(--ink-muted);margin-top:4px;">' + label + '</div></div>';
+  },
+
+  uploadPhoto(petId, photoField) {
+    const labels = {photo_before: '收容前', photo_after: '收容后', photo_treatment: '诊疗后', photo_group: '合照'};
+    TNR_UI.modal({
+      title: '上传照片（' + (labels[photoField] || '') + '）',
+      body: (bodyEl, closeFn) => {
+        bodyEl.innerHTML = '<div class="form-group"><label class="form-label">选择图片文件</label><input type="file" accept="image/*" id="photoFileInput" class="form-input" style="padding:4px;" /></div>' +
+          '<div id="photoPreview" style="margin-top:var(--sp-3);"></div>' +
+          '<div style="display:flex;gap:var(--sp-3);justify-content:flex-end;margin-top:var(--sp-4);"><button class="btn btn-secondary" data-close>取消</button><button class="btn btn-primary" id="photoUploadBtn">上传</button></div>';
+        bodyEl.querySelector('[data-close]').onclick = closeFn;
+        bodyEl.querySelector('#photoFileInput').addEventListener('change', e => {
+          const file = e.target.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = ev => {
+            bodyEl.querySelector('#photoPreview').innerHTML = '<img src="' + ev.target.result + '" style="width:100%;border-radius:var(--r-md);" />';
+          };
+          reader.readAsDataURL(file);
+        });
+        bodyEl.querySelector('#photoUploadBtn').onclick = async () => {
+          const file = bodyEl.querySelector('#photoFileInput').files[0];
+          if (!file) { TNR_UI.toast('请选择图片文件', 'warning'); return; }
+          try {
+            const res = await TNR_API.uploadPetPhoto(petId, photoField, file);
+            if (res.success) {
+              TNR_UI.toast('照片上传成功', 'success');
+              closeFn();
+              this.render_adoption_info();
+            } else {
+              TNR_UI.toast(res.message || '上传失败', 'danger');
+            }
+          } catch (e) {
+            TNR_UI.toast(e.message || '上传失败', 'danger');
+          }
+        };
+      }
+    });
+  },
+
+  async saveAdoptionInfo(petId) {
+    const intro = document.getElementById('desc_' + petId).value.trim();
+    const personality = document.getElementById('personality_' + petId).value.trim();
+    const bodyCondition = document.getElementById('health_' + petId).value.trim();
+
+    try {
+      const res = await TNR_API.editAdoptionInfo(petId, {intro, personality, body_condition: bodyCondition});
+      if (res.success) {
+        TNR_UI.toast('领养资料保存成功', 'success');
+      } else {
+        TNR_UI.toast(res.message || '保存失败', 'danger');
+      }
+    } catch (e) {
+      TNR_UI.toast(e.message || '操作失败', 'danger');
+    }
+  },
+
+  async publishToHall(petId) {
+    try {
+      const res = await TNR_API.editAdoptionInfo(petId, {is_active: true});
+      if (res.success) {
+        TNR_UI.toast('已发布至领养大厅', 'success');
+        this.render_adoption_info();
+      } else {
+        TNR_UI.toast(res.message || '发布失败', 'danger');
+      }
+    } catch (e) {
+      TNR_UI.toast(e.message || '操作失败', 'danger');
+    }
+  },
+
+  async unpublishFromHall(petId) {
+    try {
+      const res = await TNR_API.editAdoptionInfo(petId, {is_active: false});
+      if (res.success) {
+        TNR_UI.toast('已从领养大厅下架', 'success');
+        this.render_adoption_info();
+      } else {
+        TNR_UI.toast(res.message || '下架失败', 'danger');
+      }
+    } catch (e) {
+      TNR_UI.toast(e.message || '操作失败', 'danger');
+    }
+  },
+
+  /* ========== 6. 安乐死处置 ========== */
+  async render_euthanasia() {
+    const page = document.getElementById('page-euthanasia');
+    page.innerHTML = '<div class="loading-state">加载中...</div>';
+
+    try {
+      const [eligiblePets, records] = await Promise.all([
+        TNR_API.getHospitalPets(),
+        TNR_API.getEuthanasia()
+      ]);
+
+      const eligible = eligiblePets.filter(p => p.status === 'in_treatment' || p.status === 'pending_adopt');
+
+      let html = '<div class="card mb-5"><div class="card-header"><div class="card-title"><span class="card-title-bar"></span>新增安乐死处置</div></div><div class="card-body">' +
+        '<div class="form-hint" style="padding:var(--sp-3);background:var(--rouge-light);border-radius:var(--r-md);color:var(--rouge);font-size:var(--fs-sm);margin-bottom:var(--sp-4);">⚠️ 安乐死处置为不可逆操作，请确认后谨慎执行。处置完成后将登记遗体移交记录并扣减活体库存。</div>' +
+        '<div class="form-row"><div class="form-group"><label class="form-label">选择动物<span class="req">*</span></label><select class="form-select" id="euthPetSelect"><option value="">请选择</option>' +
+        eligible.map(p => '<option value="' + p.id + '">' + this.escape(p.code) + ' · ' + this.escape(p.name || '') + ' (' + TNR_API.getPetStatusText(p.status) + ')</option>').join('') +
+        '</select></div><div class="form-group"><label class="form-label">处置日期<span class="req">*</span></label><input type="date" class="form-input" id="euthDate" value="' + new Date().toISOString().substr(0, 10) + '" /></div></div>' +
+        '<div class="form-group"><label class="form-label">安乐死原因<span class="req">*</span></label><select class="form-select" id="euthReason"><option value="严重疾病">严重疾病</option><option value="严重外伤">严重外伤</option><option value="攻击性过强">攻击性过强</option><option value="无法救治">无法救治</option><option value="其他">其他</option></select></div>' +
+        '<div class="form-group"><label class="form-label">动物状况描述<span class="req">*</span></label><textarea class="form-textarea" id="euthCondition" placeholder="请详细描述动物状况及处置原因"></textarea></div>' +
+        '<div style="display:flex;justify-content:flex-end;"><button class="btn btn-danger" id="euthSubmitBtn">提交安乐死处置</button></div></div></div>';
+
+      /* 记录列表 */
+      html += '<div class="card"><div class="card-header"><div class="card-title"><span class="card-title-bar"></span>安乐死处置记录</div></div><div class="card-body-flush">';
+      if (records.length === 0) {
+        html += '<div class="empty-state" style="padding:var(--sp-6);"><div class="empty-state-icon">⚰️</div><div class="empty-state-text">暂无处置记录</div></div>';
+      } else {
+        const rows = records.map(e => {
+          return '<tr><td><div style="font-weight:500;">' + this.escape(e.pet_code || '') + '</div></td>' +
+            '<td>' + this.escape(e.reason || '') + '</td>' +
+            '<td>' + this.formatDate(e.euthanized_at) + '</td>' +
+            '<td>' + (e.body_received ? '<span class="badge badge-success">已移交</span>' : '<span class="badge badge-warning">未移交</span>') + '</td>' +
+            '<td>' + this.escape(e.operator_name || '') + '</td>' +
+            '<td><button class="btn-link" data-view-euth="' + e.id + '">详情</button></td></tr>';
+        }).join('');
+        html += '<div class="table-wrapper"><table class="data-table"><thead><tr><th>宠物编号</th><th>原因</th><th>处置日期</th><th>遗体移交</th><th>操作人</th><th>操作</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+      }
+      html += '</div></div>';
+
+      page.innerHTML = html;
+
+      page.querySelector('#euthSubmitBtn')?.addEventListener('click', () => this.saveEuthanasia());
+      page.querySelectorAll('[data-view-euth]').forEach(btn => {
+        btn.addEventListener('click', () => this.viewEuthanasiaDetail(btn.dataset.viewEuth, records));
+      });
+    } catch (e) {
+      page.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-text">加载失败</div></div>';
+    }
+  },
+
+  async saveEuthanasia() {
+    const petId = document.getElementById('euthPetSelect').value;
+    const date = document.getElementById('euthDate').value;
+    const reason = document.getElementById('euthReason').value;
+    const condition = document.getElementById('euthCondition').value.trim();
+
+    if (!petId) { TNR_UI.toast('请选择动物', 'warning'); return; }
+    if (!date) { TNR_UI.toast('请选择处置日期', 'warning'); return; }
+    if (!condition) { TNR_UI.toast('请填写动物状况描述', 'warning'); return; }
+
+    TNR_UI.confirm('确认对该动物执行安乐死处置？此操作不可逆。', '确认安乐死处置').then(async ok => {
+      if (!ok) return;
+      try {
+        const res = await TNR_API.createEuthanasia({pet_id: parseInt(petId), reason, condition, euthanized_at: date});
+        if (res.success) {
+          TNR_UI.toast('安乐死处置已登记，动物状态已更新', 'success');
+          this.render_euthanasia();
+        } else {
+          TNR_UI.toast(res.message || '登记失败', 'danger');
+        }
+      } catch (e) {
+        TNR_UI.toast(e.message || '操作失败', 'danger');
+      }
+    });
+  },
+
+  viewEuthanasiaDetail(id, records) {
+    const e = records.find(x => String(x.id) === String(id));
+    if (!e) return;
+    const html = '<div class="detail-section"><div class="detail-section-title">处置信息</div>' + TNR_UI.renderDescList([
+      {label: '宠物编号', value: this.escape(e.pet_code || '')},
+      {label: '处置日期', value: this.formatDate(e.euthanized_at)},
+      {label: '原因', value: this.escape(e.reason || '')},
+      {label: '动物状况', value: this.escape(e.condition || ''), full: true},
+      {label: '遗体移交', value: e.body_received ? '<span class="badge badge-success">已移交</span>' : '<span class="badge badge-warning">未移交</span>'},
+      {label: '移交日期', value: this.formatDate(e.body_received_at)},
+      {label: '操作人', value: this.escape(e.operator_name || '')},
+      {label: '单据编号', value: this.escape(e.ledger_no || '')}
+    ]) + '</div>';
+    TNR_UI.drawer({title: '安乐死处置详情 · ' + this.escape(e.pet_code), body: html});
+  },
+
+  /* ========== 7. 单据台账 ========== */
+  async render_ledger() {
+    const page = document.getElementById('page-ledger');
+    page.innerHTML = '<div class="loading-state">加载中...</div>';
+
+    try {
+      const [transfers, treatments, txns, euthanasia] = await Promise.all([
+        TNR_API.getTransfers(),
+        TNR_API.getTreatments(),
+        TNR_API.getMaterialTransactions(),
+        TNR_API.getEuthanasia()
+      ]);
+
+      page.innerHTML = '<div class="tabs">' +
+        '<div class="tab-item ' + (this.state.ledgerTab === 'transfer' ? 'active' : '') + '" data-ltab="transfer">交接台账 (' + transfers.length + ')</div>' +
+        '<div class="tab-item ' + (this.state.ledgerTab === 'treatment' ? 'active' : '') + '" data-ltab="treatment">诊疗台账 (' + treatments.length + ')</div>' +
+        '<div class="tab-item ' + (this.state.ledgerTab === 'material' ? 'active' : '') + '" data-ltab="material">物料台账 (' + txns.length + ')</div>' +
+        '<div class="tab-item ' + (this.state.ledgerTab === 'euthanasia' ? 'active' : '') + '" data-ltab="euthanasia">安乐死台账 (' + euthanasia.length + ')</div>' +
+        '</div><div id="ledgerTabContent"></div>';
+
+      page.querySelectorAll('[data-ltab]').forEach(el => {
+        el.addEventListener('click', () => {
+          this.state.ledgerTab = el.dataset.ltab;
+          page.querySelectorAll('.tab-item').forEach((t, i) => {
+            t.classList.toggle('active', ['transfer','treatment','material','euthanasia'][i] === this.state.ledgerTab);
+          });
+          this.renderLedgerTab(transfers, treatments, txns, euthanasia);
+        });
+      });
+
+      this.renderLedgerTab(transfers, treatments, txns, euthanasia);
+    } catch (e) {
+      page.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-text">加载失败</div></div>';
+    }
+  },
+
+  renderLedgerTab(transfers, treatments, txns, euthanasia) {
+    const c = document.getElementById('ledgerTabContent');
+    if (!c) return;
+    const tab = this.state.ledgerTab;
+
+    if (tab === 'transfer') {
+      const data = transfers.slice().sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
+      if (data.length === 0) { c.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📊</div><div class="empty-state-text">暂无交接台账</div></div>'; return; }
+      const rows = data.map(t => {
+        const codes = this.parsePetCodes(t.pet_codes);
+        return '<tr><td>' + this.escape(t.ledger_no || '') + '</td><td>' + this.formatDateTime(t.created_at) + '</td><td>' + this.escape(t.from_shelter_name || '') + '</td><td>' + (t.pet_count || 0) + '</td><td>' + this.escape(codes.join(', ')) + '</td><td>' + this.transferStatusBadge(t.status) + '</td><td>' + this.formatDate(t.received_at) + '</td></tr>';
+      }).join('');
+      c.innerHTML = '<div class="table-wrapper"><table class="data-table"><thead><tr><th>单据编号</th><th>创建时间</th><th>来源收容所</th><th>动物数量</th><th>宠物编号</th><th>状态</th><th>接收时间</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+    } else if (tab === 'treatment') {
+      const data = treatments.slice().sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
+      if (data.length === 0) { c.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📊</div><div class="empty-state-text">暂无诊疗台账</div></div>'; return; }
+      const rows = data.map(t => {
+        const items = [];
+        if (t.items_sterilization) items.push('绝育');
+        if (t.items_vaccine) items.push('疫苗');
+        if (t.items_deworming) items.push('驱虫');
+        if (t.items_chip) items.push('芯片');
+        return '<tr><td>' + this.escape(t.pet_code || '') + '</td><td>' + (items.join('、') || '—') + '</td><td>' + this.escape(t.hospital_name || '') + '</td><td>' + this.escape(t.sterilization_surgeon || t.operator_name || '—') + '</td><td>' + this.formatDateTime(t.created_at) + '</td><td>' + this.treatmentStatusBadge(t.status) + '</td></tr>';
+      }).join('');
+      c.innerHTML = '<div class="table-wrapper"><table class="data-table"><thead><tr><th>宠物编号</th><th>诊疗项目</th><th>医院</th><th>医生</th><th>日期</th><th>状态</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+    } else if (tab === 'material') {
+      const data = txns.slice().sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+      if (data.length === 0) { c.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📊</div><div class="empty-state-text">暂无物料台账</div></div>'; return; }
+      const typeMap = {'purchase': '采购入库', 'dispatch': '收容所下发', 'consume': '诊疗消耗', 'adjustment': '库存异动'};
+      const typeBadge = {'purchase': 'badge-success', 'dispatch': 'badge-info', 'consume': 'badge-warning', 'adjustment': 'badge-danger'};
+      const rows = data.map(t => {
+        const sign = (t.type === 'consume' || t.type === 'adjustment') ? '-' : '+';
+        return '<tr><td>' + this.escape(t.ledger_no || '') + '</td><td><span class="badge ' + (typeBadge[t.type] || 'badge-default') + '">' + (typeMap[t.type] || t.type) + '</span></td><td>' + this.escape(t.material_name || '') + '</td><td>' + sign + (t.quantity || 0) + ' ' + this.escape(t.unit || '') + '</td><td>' + this.formatDate(t.date) + '</td><td>' + this.escape(t.operator_name || '') + '</td></tr>';
+      }).join('');
+      c.innerHTML = '<div class="table-wrapper"><table class="data-table"><thead><tr><th>单据编号</th><th>类型</th><th>物料</th><th>数量</th><th>日期</th><th>操作人</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+    } else if (tab === 'euthanasia') {
+      const data = euthanasia.slice().sort((a, b) => (b.euthanized_at || '').localeCompare(a.euthanized_at || ''));
+      if (data.length === 0) { c.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📊</div><div class="empty-state-text">暂无安乐死台账</div></div>'; return; }
+      const rows = data.map(e => {
+        return '<tr><td>' + this.escape(e.ledger_no || '') + '</td><td>' + this.escape(e.pet_code || '') + '</td><td>' + this.escape(e.reason || '') + '</td><td>' + this.formatDate(e.euthanized_at) + '</td><td>' + (e.body_received ? '<span class="badge badge-success">已移交</span>' : '<span class="badge badge-warning">未移交</span>') + '</td><td>' + this.escape(e.operator_name || '') + '</td></tr>';
+      }).join('');
+      c.innerHTML = '<div class="table-wrapper"><table class="data-table"><thead><tr><th>单据编号</th><th>宠物编号</th><th>原因</th><th>处置日期</th><th>遗体移交</th><th>操作人</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+    }
+  },
+
+  /* ========== 8. 个人中心 ========== */
+  render_profile() {
+    const u = this.currentUser();
+    if (!u) return;
+    const page = document.getElementById('page-profile');
+    page.innerHTML = '<div class="card mb-5"><div class="card-header"><div class="card-title"><span class="card-title-bar"></span>账户信息</div></div><div class="card-body">' +
+      TNR_UI.renderDescList([
+        {label: '用户名', value: this.escape(u.username || '')},
+        {label: '姓名', value: this.escape(u.name || '')},
+        {label: '所属机构', value: this.escape(u.institution_name || '—')},
+        {label: '机构类型', value: '宠物医院'},
+        {label: '角色', value: this.escape(u.role_display || '医院操作员')},
+        {label: '所属区县', value: this.escape(u.district_name || '—')},
+        {label: '联系电话', value: this.escape(u.phone || '—')},
+        {label: '用户ID', value: this.escape(String(u.id || ''))}
+      ]) + '</div></div>' +
+      '<div class="card"><div class="card-header"><div class="card-title"><span class="card-title-bar"></span>系统说明</div></div><div class="card-body">' +
+      '<div style="font-size:var(--fs-sm);color:var(--ink-muted);line-height:1.8;">' +
+      '· 医院端负责动物接收、诊疗操作、物料管理、领养信息维护及安乐死处置。<br>' +
+      '· 诊疗完成后5天，系统自动将动物状态变更为「待领养」。<br>' +
+      '· 领养出库登记由收容所端完成，医院端仅维护领养大厅信息。<br>' +
+      '· 物料库存联动：疫苗/驱虫/芯片在诊疗时自动扣减医院库存。<br>' +
+      '· 如需修改密码，请联系系统管理员。' +
+      '</div></div></div>';
+  }
+};
+
+/* === 启动 === */
+Hospital.init();
+</script>
+{% endblock %}

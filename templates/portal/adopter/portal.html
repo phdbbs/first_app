@@ -1,0 +1,1495 @@
+{% extends 'portal/adopter_base.html' %}
+{% load static %}
+
+{% block title %}领养人端 · 流浪动物TNR管理系统{% endblock %}
+
+{% block extra_head %}
+<style>
+  body { background: #e8e4de; }
+  .topbar { display: none !important; }
+
+  .mobile-frame {
+    max-width: 420px;
+    margin: 0 auto;
+    min-height: 100vh;
+    background: var(--rice-paper);
+    position: relative;
+    padding-bottom: 64px;
+    box-shadow: 0 0 40px rgba(0,0,0,0.12);
+    overflow: hidden;
+  }
+
+  .mobile-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--grad-sidebar);
+    color: #fff;
+    padding: var(--sp-4) var(--sp-4);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 52px;
+  }
+  .mobile-header-title {
+    font-family: var(--font-display);
+    font-size: var(--fs-lg);
+    font-weight: 600;
+  }
+  .mobile-header-back {
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 20px;
+    color: #fff;
+    border-radius: var(--r-md);
+    transition: background var(--t-fast);
+  }
+  .mobile-header-back:active { background: rgba(255,255,255,0.1); }
+  .mobile-header-right { display: flex; align-items: center; gap: var(--sp-2); font-size: 18px; cursor: pointer; }
+
+  .mobile-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 420px;
+    background: var(--white);
+    border-top: 1px solid var(--border-light);
+    display: flex;
+    justify-content: space-around;
+    padding: var(--sp-2) 0 calc(var(--sp-2) + env(safe-area-inset-bottom));
+    z-index: 100;
+    box-shadow: 0 -2px 12px rgba(0,0,0,0.04);
+  }
+  .mobile-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: var(--sp-1) var(--sp-2);
+    cursor: pointer;
+    color: var(--ink-light);
+    transition: color var(--t-fast);
+    flex: 1;
+    position: relative;
+    text-decoration: none;
+  }
+  .mobile-nav-item.active { color: var(--cinnabar); }
+  .mobile-nav-icon { font-size: 20px; line-height: 1; }
+  .mobile-nav-label { font-size: 10px; line-height: 1.2; }
+  .mobile-nav-badge {
+    position: absolute;
+    top: 2px;
+    right: 50%;
+    margin-right: -24px;
+    background: var(--cinnabar);
+    color: #fff;
+    font-size: 9px;
+    min-width: 16px; height: 16px;
+    border-radius: var(--r-full);
+    display: flex; align-items: center; justify-content: center;
+    padding: 0 4px;
+    font-weight: 600;
+  }
+
+  .mobile-content { padding: var(--sp-3) var(--sp-3) var(--sp-6); }
+
+  .page-view { display: none; animation: fadeInUp 0.3s ease; }
+  .page-view.active { display: block; }
+  @keyframes fadeInUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  .mobile-search-bar { position: relative; margin-bottom: var(--sp-3); }
+  .mobile-search-bar .form-input {
+    padding-left: 36px;
+    padding-right: 12px;
+    border-radius: var(--r-full);
+    background: var(--white);
+  }
+  .mobile-search-bar .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+    color: var(--ink-light);
+    pointer-events: none;
+  }
+
+  .pet-card {
+    background: var(--white);
+    border-radius: var(--r-xl);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-light);
+    margin-bottom: var(--sp-3);
+    cursor: pointer;
+    transition: all var(--t-base);
+  }
+  .pet-card:active { transform: scale(0.98); }
+  .pet-card-photo {
+    width: 80px;
+    height: 80px;
+    border-radius: var(--r-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    flex-shrink: 0;
+  }
+  .pet-card-body { display: flex; gap: var(--sp-3); padding: var(--sp-3); }
+  .pet-card-info { flex: 1; min-width: 0; }
+  .pet-card-name {
+    font-family: var(--font-display);
+    font-size: var(--fs-lg);
+    font-weight: 600;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+  }
+  .pet-card-code { font-size: var(--fs-xs); color: var(--ink-light); font-family: var(--font-mono); margin-top: 2px; }
+  .pet-card-desc {
+    font-size: var(--fs-sm);
+    color: var(--ink-muted);
+    margin-top: var(--sp-1);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .pet-card-meta { display: flex; align-items: center; gap: var(--sp-2); margin-top: var(--sp-2); flex-wrap: wrap; }
+  .pet-card-meta-item { font-size: var(--fs-xs); color: var(--ink-light); display: flex; align-items: center; gap: 2px; }
+  .pet-card-footer {
+    padding: var(--sp-2) var(--sp-3);
+    background: var(--rice-warm);
+    border-top: 1px solid var(--border-faint);
+    font-size: var(--fs-xs);
+    color: var(--ink-muted);
+    display: flex;
+    align-items: center;
+    gap: var(--sp-1);
+  }
+
+  .photo-placeholder {
+    background: var(--grad-cinnabar);
+    color: rgba(255,255,255,0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--r-lg);
+    aspect-ratio: 1;
+    font-size: 48px;
+  }
+  .photo-placeholder.cat { background: linear-gradient(135deg, #C89B3C 0%, #8B6914 100%); }
+  .photo-placeholder.dog { background: linear-gradient(135deg, #5B7A4F 0%, #3D5535 100%); }
+  .photo-placeholder.other { background: linear-gradient(135deg, #864E36 0%, #5C3623 100%); }
+
+  .mobile-overlay {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 420px;
+    height: 100vh;
+    background: var(--rice-paper);
+    z-index: 500;
+    overflow-y: auto;
+    display: none;
+    padding-bottom: var(--sp-8);
+  }
+  .mobile-overlay.show {
+    display: block;
+    animation: slideInFromRight 0.3s ease;
+  }
+  @keyframes slideInFromRight {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(-50%); opacity: 1; }
+  }
+
+  .detail-photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-2); margin-bottom: var(--sp-4); }
+  .detail-photo-item { aspect-ratio: 1; border-radius: var(--r-md); overflow: hidden; position: relative; }
+  .detail-photo-label {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    background: rgba(28,28,28,0.65);
+    color: #fff;
+    font-size: 10px;
+    padding: 2px 4px;
+    text-align: center;
+  }
+
+  .detail-section {
+    background: var(--white);
+    border-radius: var(--r-xl);
+    padding: var(--sp-4);
+    margin-bottom: var(--sp-3);
+    border: 1px solid var(--border-light);
+  }
+  .detail-section-title {
+    font-family: var(--font-display);
+    font-size: var(--fs-md);
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: var(--sp-3);
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+  }
+  .detail-section-title::before {
+    content: '';
+    width: 3px;
+    height: 16px;
+    background: var(--grad-cinnabar);
+    border-radius: 2px;
+  }
+
+  .info-row { display: flex; padding: var(--sp-2) 0; border-bottom: 1px solid var(--border-faint); }
+  .info-row:last-child { border-bottom: none; }
+  .info-label { width: 80px; flex-shrink: 0; font-size: var(--fs-sm); color: var(--ink-light); }
+  .info-value { flex: 1; font-size: var(--fs-sm); color: var(--ink-text); font-weight: 500; }
+
+  .timeline { padding-left: var(--sp-5); }
+  .timeline-item::before { left: -18px; }
+
+  .empty-state { text-align: center; padding: var(--sp-12) var(--sp-6); color: var(--ink-light); }
+  .empty-state-icon { font-size: 48px; margin-bottom: var(--sp-3); opacity: 0.4; }
+  .empty-state-text { font-size: var(--fs-md); }
+  .empty-state-hint { font-size: var(--fs-sm); margin-top: var(--sp-2); }
+
+  .checkin-form {
+    background: var(--white);
+    border-radius: var(--r-xl);
+    padding: var(--sp-4);
+    border: 1px solid var(--border-light);
+    margin-bottom: var(--sp-4);
+  }
+  .checkin-pet-select { display: flex; gap: var(--sp-2); overflow-x: auto; margin-bottom: var(--sp-3); padding-bottom: var(--sp-2); }
+  .checkin-pet-item {
+    flex-shrink: 0;
+    padding: var(--sp-2) var(--sp-3);
+    border: 1px solid var(--border-ink);
+    border-radius: var(--r-full);
+    font-size: var(--fs-sm);
+    color: var(--ink-muted);
+    cursor: pointer;
+    transition: all var(--t-fast);
+    white-space: nowrap;
+  }
+  .checkin-pet-item.active {
+    background: var(--cinnabar-light);
+    border-color: var(--cinnabar);
+    color: var(--cinnabar);
+    font-weight: 600;
+  }
+
+  .photo-upload-area {
+    border: 2px dashed var(--border-ink);
+    border-radius: var(--r-lg);
+    padding: var(--sp-6);
+    text-align: center;
+    cursor: pointer;
+    transition: all var(--t-base);
+    background: var(--rice-light);
+    position: relative;
+  }
+  .photo-upload-area:hover { border-color: var(--cinnabar); background: var(--cinnabar-light); }
+  .photo-upload-area.has-photo { padding: 0; border-style: solid; border-color: var(--border-ink); }
+  .photo-upload-preview { width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: var(--r-md); }
+  .photo-upload-placeholder { font-size: 36px; margin-bottom: var(--sp-2); }
+
+  .checkin-history-item {
+    background: var(--white);
+    border-radius: var(--r-lg);
+    padding: var(--sp-3);
+    border: 1px solid var(--border-light);
+    margin-bottom: var(--sp-2);
+  }
+  .checkin-history-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--sp-1); }
+  .checkin-history-month { font-family: var(--font-display); font-size: var(--fs-md); font-weight: 600; }
+  .checkin-history-note { font-size: var(--fs-sm); color: var(--ink-muted); margin-top: var(--sp-1); }
+  .checkin-history-date { font-size: var(--fs-xs); color: var(--ink-light); }
+
+  .message-item {
+    background: var(--white);
+    border-radius: var(--r-lg);
+    padding: var(--sp-3) var(--sp-4);
+    border: 1px solid var(--border-light);
+    margin-bottom: var(--sp-2);
+    cursor: pointer;
+    transition: all var(--t-fast);
+    display: flex;
+    gap: var(--sp-3);
+    align-items: flex-start;
+  }
+  .message-item:active { background: var(--rice-light); }
+  .message-item.unread { border-left: 3px solid var(--cinnabar); }
+  .message-icon {
+    width: 36px; height: 36px;
+    border-radius: var(--r-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .message-content { flex: 1; min-width: 0; }
+  .message-title { font-size: var(--fs-md); font-weight: 500; color: var(--ink); display: flex; align-items: center; gap: var(--sp-2); }
+  .message-preview {
+    font-size: var(--fs-sm);
+    color: var(--ink-muted);
+    margin-top: 2px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .message-time { font-size: var(--fs-xs); color: var(--ink-light); margin-top: var(--sp-1); }
+  .message-unread-dot { width: 8px; height: 8px; border-radius: var(--r-full); background: var(--cinnabar); flex-shrink: 0; }
+
+  .profile-header {
+    background: var(--grad-sidebar);
+    padding: var(--sp-6) var(--sp-4);
+    text-align: center;
+    border-radius: var(--r-xl);
+    margin-bottom: var(--sp-4);
+    color: #fff;
+  }
+  .profile-avatar {
+    width: 64px; height: 64px;
+    border-radius: var(--r-full);
+    background: var(--grad-cinnabar);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0 auto var(--sp-3);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  }
+  .profile-name { font-family: var(--font-display); font-size: var(--fs-xl); font-weight: 600; }
+  .profile-phone { font-size: var(--fs-sm); color: rgba(255,255,255,0.6); margin-top: 2px; }
+  .profile-section {
+    background: var(--white);
+    border-radius: var(--r-xl);
+    overflow: hidden;
+    border: 1px solid var(--border-light);
+    margin-bottom: var(--sp-4);
+  }
+  .profile-section-header {
+    padding: var(--sp-3) var(--sp-4);
+    background: var(--rice-warm);
+    font-family: var(--font-display);
+    font-size: var(--fs-md);
+    font-weight: 600;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+  }
+  .profile-section-body { padding: var(--sp-4); }
+  .profile-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--sp-3) var(--sp-4);
+    border-bottom: 1px solid var(--border-faint);
+    cursor: pointer;
+    transition: background var(--t-fast);
+  }
+  .profile-row:active { background: var(--rice-light); }
+  .profile-row:last-child { border-bottom: none; }
+  .profile-row-label { font-size: var(--fs-md); color: var(--ink-text); display: flex; align-items: center; gap: var(--sp-2); }
+  .profile-row-value { font-size: var(--fs-sm); color: var(--ink-light); display: flex; align-items: center; gap: var(--sp-1); }
+  .profile-row-arrow { color: var(--ink-light); font-size: 14px; }
+
+  .contact-guide {
+    background: var(--autumn-light);
+    border-radius: var(--r-lg);
+    padding: var(--sp-3);
+    border: 1px solid var(--autumn-gold);
+  }
+  .contact-guide-title {
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    color: var(--autumn-gold);
+    margin-bottom: var(--sp-1);
+    display: flex;
+    align-items: center;
+    gap: var(--sp-1);
+  }
+  .contact-guide-text { font-size: var(--fs-sm); color: var(--ink-text); line-height: 1.8; }
+
+  .adoption-process {
+    background: var(--azurite-light);
+    border-radius: var(--r-lg);
+    padding: var(--sp-3);
+    border: 1px solid var(--azurite);
+  }
+  .adoption-process-title {
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    color: var(--azurite);
+    margin-bottom: var(--sp-2);
+    display: flex;
+    align-items: center;
+    gap: var(--sp-1);
+  }
+  .adoption-process-list { counter-reset: step-counter; }
+  .adoption-process-list > div {
+    padding-left: 20px;
+    position: relative;
+    margin-bottom: var(--sp-1);
+    font-size: var(--fs-sm);
+    color: var(--ink-text);
+    line-height: 1.8;
+  }
+  .adoption-process-list > div::before {
+    content: counter(step-counter);
+    counter-increment: step-counter;
+    position: absolute;
+    left: 0;
+    font-weight: 600;
+    color: var(--azurite);
+  }
+
+  .toast-container {
+    top: var(--sp-4);
+    right: 50%;
+    transform: translateX(50%);
+    left: auto;
+  }
+  .toast { min-width: auto; max-width: 360px; }
+
+  .adoption-card {
+    background: var(--white);
+    border-radius: var(--r-xl);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-light);
+    margin-bottom: var(--sp-3);
+    cursor: pointer;
+    transition: all var(--t-base);
+  }
+  .adoption-card:active { transform: scale(0.98); }
+  .adoption-card-header { display: flex; gap: var(--sp-3); padding: var(--sp-3); }
+  .adoption-card-footer {
+    padding: var(--sp-2) var(--sp-3);
+    background: var(--bamboo-light);
+    border-top: 1px solid var(--border-faint);
+    font-size: var(--fs-sm);
+    color: var(--bamboo-green);
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+  }
+
+  .message-detail-content { padding: var(--sp-4); }
+  .message-detail-title { font-family: var(--font-display); font-size: var(--fs-lg); font-weight: 600; color: var(--ink); margin-bottom: var(--sp-2); }
+  .message-detail-meta {
+    display: flex;
+    gap: var(--sp-3);
+    font-size: var(--fs-xs);
+    color: var(--ink-light);
+    margin-bottom: var(--sp-3);
+    padding-bottom: var(--sp-3);
+    border-bottom: 1px solid var(--border-faint);
+  }
+  .message-detail-body { font-size: var(--fs-md); color: var(--ink-text); line-height: 1.8; }
+
+  .pending-month-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    background: var(--autumn-light);
+    color: var(--autumn-gold);
+    border-radius: var(--r-full);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    margin-right: var(--sp-2);
+  }
+
+  .section-header-mobile { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--sp-3); }
+  .section-header-title {
+    font-family: var(--font-display);
+    font-size: var(--fs-md);
+    font-weight: 600;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+  }
+  .section-header-title::before {
+    content: '';
+    width: 3px;
+    height: 16px;
+    background: var(--grad-cinnabar);
+    border-radius: 2px;
+  }
+
+  .hidden { display: none !important; }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="mobile-frame">
+
+  <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+
+  <!-- 移动端头部 -->
+  <div class="mobile-header">
+    <span class="mobile-header-back hidden" id="headerBack" onclick="goBack()">‹</span>
+    <span class="mobile-header-title" id="headerTitle">领养大厅</span>
+    <span class="mobile-header-right">
+      {% if user.is_authenticated %}
+        <a href="{% url 'portal' %}" class="btn btn-ghost btn-sm" style="color:rgba(255,255,255,0.8);">门户</a>
+        <a href="{% url 'accounts:logout' %}" class="btn btn-ghost btn-sm" style="color:rgba(255,255,255,0.8);">退出</a>
+        <div class="mobile-header-avatar" style="width:28px;height:28px;border-radius:var(--r-full);background:var(--grad-cinnabar);display:flex;align-items:center;justify-content:center;font-size:var(--fs-sm);font-weight:600;">{{ user.username|slice:":1"|upper }}</div>
+      {% else %}
+        <a href="{% url 'accounts:login' %}" class="btn btn-ghost btn-sm" style="color:rgba(255,255,255,0.8);">登录</a>
+      {% endif %}
+    </span>
+  </div>
+
+  <!-- 内容区 -->
+  <div class="mobile-content">
+
+    <!-- ===== 领养大厅 ===== -->
+    <div class="page-view active" id="page-hall">
+      <div class="mobile-search-bar">
+        <span class="search-icon">🔍</span>
+        <input type="text" class="form-input" id="hallSearch" placeholder="搜索宠物名称/编号/品种" oninput="renderHall()">
+      </div>
+      <div id="hallList"></div>
+    </div>
+
+    <!-- ===== 我的领养 ===== -->
+    <div class="page-view" id="page-my-adoption">
+      <div id="myAdoptionList"></div>
+    </div>
+
+    <!-- ===== 回访打卡 ===== -->
+    <div class="page-view" id="page-checkin">
+      <div id="checkinContent"></div>
+    </div>
+
+    <!-- ===== 消息中心 ===== -->
+    <div class="page-view" id="page-messages">
+      <div id="messagesList"></div>
+    </div>
+
+    <!-- ===== 个人中心 ===== -->
+    <div class="page-view" id="page-profile">
+      <div id="profileContent"></div>
+    </div>
+
+  </div>
+
+  <!-- 底部导航 -->
+  <div class="mobile-bottom-nav">
+    <div class="mobile-nav-item active" data-tab="hall" onclick="switchTab('hall')">
+      <span class="mobile-nav-icon">🏠</span>
+      <span class="mobile-nav-label">领养大厅</span>
+    </div>
+    {% if not public_mode %}
+    <div class="mobile-nav-item" data-tab="my-adoption" onclick="switchTab('my-adoption')">
+      <span class="mobile-nav-icon">🐾</span>
+      <span class="mobile-nav-label">我的领养</span>
+    </div>
+    <div class="mobile-nav-item" data-tab="checkin" onclick="switchTab('checkin')">
+      <span class="mobile-nav-icon">📷</span>
+      <span class="mobile-nav-label">回访打卡</span>
+    </div>
+    <div class="mobile-nav-item" data-tab="messages" onclick="switchTab('messages')">
+      <span class="mobile-nav-icon">🔔</span>
+      <span class="mobile-nav-label">消息中心</span>
+    </div>
+    <div class="mobile-nav-item" data-tab="profile" onclick="switchTab('profile')">
+      <span class="mobile-nav-icon">👤</span>
+      <span class="mobile-nav-label">个人中心</span>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ========== 宠物详情页（覆盖层） ========== -->
+<div class="mobile-overlay" id="petDetailOverlay">
+  <div class="mobile-header">
+    <span class="mobile-header-back" onclick="closeOverlay('petDetailOverlay')">‹</span>
+    <span class="mobile-header-title">宠物详情</span>
+    <span></span>
+  </div>
+  <div class="mobile-content" id="petDetailContent"></div>
+</div>
+
+<!-- ========== 生命周期溯源（覆盖层） ========== -->
+<div class="mobile-overlay" id="lifecycleOverlay">
+  <div class="mobile-header">
+    <span class="mobile-header-back" onclick="closeOverlay('lifecycleOverlay')">‹</span>
+    <span class="mobile-header-title">生命周期溯源</span>
+    <span></span>
+  </div>
+  <div class="mobile-content" id="lifecycleContent"></div>
+</div>
+
+<!-- ========== 消息详情（覆盖层） ========== -->
+<div class="mobile-overlay" id="messageDetailOverlay">
+  <div class="mobile-header">
+    <span class="mobile-header-back" onclick="closeOverlay('messageDetailOverlay')">‹</span>
+    <span class="mobile-header-title">消息详情</span>
+    <span></span>
+  </div>
+  <div class="mobile-content" id="messageDetailContent"></div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/tnr-api.js' %}"></script>
+<script>
+/* ============================================
+   领养人端 H5 门户 - 应用逻辑（对接 Django API）
+   ============================================ */
+
+window.TNR_USER = {{ user_data|safe }};
+const PUBLIC_MODE = {% if public_mode %}true{% else %}false{% endif %};
+
+// === 全局状态 ===
+let currentPage = 'hall';
+let overlayStack = [];
+let selectedCheckinPet = null;
+let uploadedPhotoFile = null;
+let hallCache = [];          // 领养大厅列表缓存
+let myAdoptionCache = [];    // 我的领养缓存
+
+// === 工具函数 ===
+
+function getCurrentUser() {
+  return TNR_API.getCurrentUser();
+}
+
+function getPetEmoji(species) {
+  if (species === '猫') return '🐱';
+  if (species === '狗') return '🐶';
+  return '🐾';
+}
+
+function getPhotoClass(species) {
+  if (species === '猫') return 'cat';
+  if (species === '狗') return 'dog';
+  return 'other';
+}
+
+function getMessageTypeIcon(type) {
+  const map = { 'approval': '📋', 'checkin_reminder': '⏰', 'system': '📢', 'notice': '📜', 'policy': '📜' };
+  return map[type] || '📨';
+}
+
+function getMessageTypeLabel(type) {
+  const map = { 'approval': '审核通知', 'checkin_reminder': '打卡提醒', 'system': '系统公告', 'notice': '公告', 'policy': '政策通知' };
+  return map[type] || '消息';
+}
+
+function getCheckinStatusBadge(status) {
+  const map = {
+    'approved': '<span class="badge badge-success">已通过</span>',
+    'rejected': '<span class="badge badge-danger">已驳回</span>',
+    'pending': '<span class="badge badge-warning">待审核</span>'
+  };
+  return map[status] || '<span class="badge badge-default">未知</span>';
+}
+
+// === 导航 ===
+
+const tabTitles = {
+  'hall': '领养大厅',
+  'my-adoption': '我的领养',
+  'checkin': '回访打卡',
+  'messages': '消息中心',
+  'profile': '个人中心'
+};
+
+function switchTab(tabId) {
+  currentPage = tabId;
+  document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
+  const page = document.getElementById('page-' + tabId);
+  if (page) page.classList.add('active');
+  document.querySelectorAll('.mobile-nav-item').forEach(n => n.classList.remove('active'));
+  const navItem = document.querySelector('.mobile-nav-item[data-tab="' + tabId + '"]');
+  if (navItem) navItem.classList.add('active');
+  const titleEl = document.getElementById('headerTitle');
+  if (titleEl) titleEl.textContent = tabTitles[tabId] || '';
+  const backEl = document.getElementById('headerBack');
+  if (backEl) backEl.classList.add('hidden');
+
+  if (tabId === 'hall') renderHall();
+  else if (tabId === 'my-adoption') renderMyAdoption();
+  else if (tabId === 'checkin') renderCheckin();
+  else if (tabId === 'messages') renderMessages();
+  else if (tabId === 'profile') renderProfile();
+
+  updateMessageBadge();
+}
+
+async function updateMessageBadge() {
+  if (PUBLIC_MODE || !getCurrentUser()) return;
+  try {
+    const messages = await TNR_API.getAllRaw('messages');
+    const count = messages.filter(m => !m.is_read).length;
+    const navItem = document.querySelector('.mobile-nav-item[data-tab="messages"]');
+    if (!navItem) return;
+    let badge = navItem.querySelector('.mobile-nav-badge');
+    if (count > 0) {
+      if (!badge) {
+        badge = document.createElement('span');
+        badge.className = 'mobile-nav-badge';
+        navItem.appendChild(badge);
+      }
+      badge.textContent = count > 99 ? '99+' : count;
+    } else {
+      if (badge) badge.remove();
+    }
+  } catch (e) { /* 静默 */ }
+}
+
+function goBack() {
+  if (overlayStack.length > 0) {
+    const overlayId = overlayStack.pop();
+    closeOverlay(overlayId);
+  }
+}
+
+function showOverlay(overlayId) {
+  const el = document.getElementById(overlayId);
+  if (el) el.classList.add('show');
+  overlayStack.push(overlayId);
+}
+
+function closeOverlay(overlayId) {
+  const el = document.getElementById(overlayId);
+  if (el) el.classList.remove('show');
+  overlayStack = overlayStack.filter(id => id !== overlayId);
+}
+
+// === 1. 领养大厅 ===
+
+async function renderHall() {
+  const container = document.getElementById('hallList');
+  if (!container) return;
+  const keyword = (document.getElementById('hallSearch')?.value || '').trim().toLowerCase();
+
+  // 显示加载态
+  container.innerHTML = '<div class="empty-state"><div class="empty-state-icon" style="animation:spin 1s linear infinite;">⏳</div><div class="empty-state-text">加载中...</div></div>';
+
+  try {
+    const listings = await TNR_API.getAllRaw('pets');
+    hallCache = listings;
+
+    let filtered = listings;
+    if (keyword) {
+      filtered = listings.filter(item => {
+        const p = item.pet || item;
+        return (p.name && p.name.toLowerCase().includes(keyword)) ||
+               (p.code && p.code.toLowerCase().includes(keyword)) ||
+               (p.breed && p.breed.toLowerCase().includes(keyword)) ||
+               (p.species && p.species.toLowerCase().includes(keyword));
+      });
+    }
+
+    if (filtered.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">🐾</div>
+          <div class="empty-state-text">暂无可领养的宠物</div>
+          <div class="empty-state-hint">请稍后再来查看</div>
+        </div>`;
+      return;
+    }
+
+    let html = '<div style="font-size:12px;color:var(--ink-light);margin-bottom:8px;">共 ' + filtered.length + ' 只待领养宠物</div>';
+    filtered.forEach(item => {
+      const pet = item.pet || item;
+      const hospitalName = item.hospital_name || '未知医院';
+      const photoClass = getPhotoClass(pet.species);
+      const emoji = getPetEmoji(pet.species);
+      const genderIcon = pet.gender === '公' ? '♂' : '♀';
+      const genderColor = pet.gender === '公' ? 'var(--azurite)' : 'var(--cinnabar)';
+      const desc = item.intro || pet.description || '暂无描述';
+
+      html += `
+        <div class="pet-card" onclick="showPetDetail('${item.id}')">
+          <div class="pet-card-body">
+            <div class="pet-card-photo photo-placeholder ${photoClass}">${emoji}</div>
+            <div class="pet-card-info">
+              <div class="pet-card-name">
+                ${TNR_UI.escape(pet.name || '未命名')}
+                <span class="badge badge-cinnabar">待领养</span>
+              </div>
+              <div class="pet-card-code">${TNR_UI.escape(pet.code || '')}</div>
+              <div class="pet-card-desc">${TNR_UI.escape(desc)}</div>
+              <div class="pet-card-meta">
+                <span class="pet-card-meta-item">${TNR_UI.escape(pet.species || '')} · ${TNR_UI.escape(pet.breed || '')}</span>
+                <span class="pet-card-meta-item" style="color:${genderColor};font-weight:600;">${genderIcon} ${TNR_UI.escape(pet.gender || '')}</span>
+                <span class="pet-card-meta-item">${TNR_UI.escape(pet.age || '')}</span>
+              </div>
+            </div>
+          </div>
+          <div class="pet-card-footer">
+            <span>🏥 ${TNR_UI.escape(hospitalName)}</span>
+            <span style="margin-left:auto;color:var(--cinnabar);">查看详情 ›</span>
+          </div>
+        </div>`;
+    });
+
+    html += `
+      <div class="contact-guide" style="margin-top:12px;">
+        <div class="contact-guide-title">📌 线下联系指引</div>
+        <div class="contact-guide-text">
+          领养流程为线下办理，请自主联系对应医院/捕捉点咨询。<br>
+          领养资格审核、承诺书签署及领养协议均在线下完成。
+        </div>
+      </div>`;
+
+    container.innerHTML = html;
+  } catch (e) {
+    container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-text">加载失败</div><div class="empty-state-hint">${TNR_UI.escape(e.message)}</div></div>`;
+  }
+}
+
+// === 2. 宠物详情页 ===
+
+async function showPetDetail(listingId) {
+  const content = document.getElementById('petDetailContent');
+  content.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⏳</div><div class="empty-state-text">加载中...</div></div>';
+  showOverlay('petDetailOverlay');
+
+  // 优先从缓存取，否则请求详情
+  let item = hallCache.find(l => String(l.id) === String(listingId));
+  if (!item) {
+    try {
+      const json = await TNR_API.get(TNR_API.BASE + 'adoptions/hall/' + listingId + '/');
+      item = json.data;
+    } catch (e) {
+      content.innerHTML = `<div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-text">${TNR_UI.escape(e.message)}</div></div>`;
+      return;
+    }
+  }
+  if (!item) {
+    TNR_UI.toast('宠物信息不存在', 'danger');
+    return;
+  }
+
+  const pet = item.pet || item;
+  const hospitalName = item.hospital_name || '';
+  const photoClass = getPhotoClass(pet.species);
+  const emoji = getPetEmoji(pet.species);
+  const genderIcon = pet.gender === '公' ? '♂' : '♀';
+
+  let html = '';
+
+  // 照片区
+  html += '<div class="detail-section">';
+  html += '<div class="detail-section-title">宠物照片</div>';
+  html += '<div class="detail-photo-grid">';
+  if (pet.photo_before) {
+    html += `<div class="detail-photo-item"><img src="${pet.photo_before}" style="width:100%;height:100%;object-fit:cover;" alt="捕捉前"><div class="detail-photo-label">捕捉前</div></div>`;
+  } else {
+    html += `<div class="detail-photo-item"><div class="photo-placeholder ${photoClass}">${emoji}</div><div class="detail-photo-label">捕捉前</div></div>`;
+  }
+  if (pet.photo_after) {
+    html += `<div class="detail-photo-item"><img src="${pet.photo_after}" style="width:100%;height:100%;object-fit:cover;" alt="术后"><div class="detail-photo-label">术后</div></div>`;
+  } else {
+    html += `<div class="detail-photo-item"><div class="photo-placeholder ${photoClass}">${emoji}</div><div class="detail-photo-label">术后</div></div>`;
+  }
+  if (pet.photo_treatment) {
+    html += `<div class="detail-photo-item"><img src="${pet.photo_treatment}" style="width:100%;height:100%;object-fit:cover;" alt="诊疗后"><div class="detail-photo-label">诊疗后</div></div>`;
+  } else {
+    html += `<div class="detail-photo-item"><div class="photo-placeholder ${photoClass}">${emoji}</div><div class="detail-photo-label">诊疗后</div></div>`;
+  }
+  html += '</div>';
+  html += '</div>';
+
+  // 基本信息
+  html += '<div class="detail-section">';
+  html += '<div class="detail-section-title">基本信息</div>';
+  html += `<div class="info-row"><div class="info-label">编号</div><div class="info-value" style="font-family:var(--font-mono);">${TNR_UI.escape(pet.code || '')}</div></div>`;
+  html += `<div class="info-row"><div class="info-label">名称</div><div class="info-value">${TNR_UI.escape(pet.name || '—')}</div></div>`;
+  html += `<div class="info-row"><div class="info-label">物种</div><div class="info-value">${TNR_UI.escape(pet.species || '—')}</div></div>`;
+  html += `<div class="info-row"><div class="info-label">品种</div><div class="info-value">${TNR_UI.escape(pet.breed || '—')}</div></div>`;
+  html += `<div class="info-row"><div class="info-label">性别</div><div class="info-value">${genderIcon} ${TNR_UI.escape(pet.gender || '—')}</div></div>`;
+  html += `<div class="info-row"><div class="info-label">年龄</div><div class="info-value">${TNR_UI.escape(pet.age || '—')}</div></div>`;
+  html += `<div class="info-row"><div class="info-label">毛色</div><div class="info-value">${TNR_UI.escape(pet.color || '—')}</div></div>`;
+  html += `<div class="info-row"><div class="info-label">体重</div><div class="info-value">${TNR_UI.escape(pet.weight || '—')}</div></div>`;
+  html += `<div class="info-row"><div class="info-label">芯片号</div><div class="info-value" style="font-family:var(--font-mono);">${TNR_UI.escape(pet.chip_no || '未植入')}</div></div>`;
+  html += '</div>';
+
+  // 上架信息
+  if (item.intro || item.personality || item.body_condition) {
+    html += '<div class="detail-section">';
+    html += '<div class="detail-section-title">领养信息</div>';
+    if (item.intro) html += `<div class="info-row"><div class="info-label">简介</div><div class="info-value">${TNR_UI.escape(item.intro)}</div></div>`;
+    if (item.personality) html += `<div class="info-row"><div class="info-label">性格</div><div class="info-value">${TNR_UI.escape(item.personality)}</div></div>`;
+    if (item.body_condition) html += `<div class="info-row"><div class="info-label">身体状况</div><div class="info-value">${TNR_UI.escape(item.body_condition)}</div></div>`;
+    html += '</div>';
+  }
+
+  // 所属医院
+  html += '<div class="detail-section">';
+  html += '<div class="detail-section-title">所属医院</div>';
+  if (hospitalName) {
+    html += `<div class="info-row"><div class="info-label">医院名称</div><div class="info-value">${TNR_UI.escape(hospitalName)}</div></div>`;
+  } else {
+    html += '<div class="info-row"><div class="info-label">所属医院</div><div class="info-value text-muted">暂无</div></div>';
+  }
+  html += '</div>';
+
+  // 领养要求
+  html += '<div class="detail-section">';
+  html += '<div class="detail-section-title">领养要求</div>';
+  html += '<div style="font-size:13px;color:var(--ink-text);line-height:1.8;">';
+  html += '<div>· 有固定住所，居住环境适合养宠</div>';
+  html += '<div>· 有稳定收入，能承担宠物日常开支</div>';
+  html += '<div>· 有养宠经验或愿意学习养宠知识</div>';
+  html += '<div>· 承诺定期疫苗、驱虫，不弃养、不虐待</div>';
+  html += '<div>· 配合每月回访打卡，接受定期回访</div>';
+  html += '</div>';
+  html += '</div>';
+
+  // 线下联系指引
+  html += '<div class="detail-section">';
+  html += '<div class="contact-guide">';
+  html += '<div class="contact-guide-title">📌 线下联系指引</div>';
+  html += '<div class="contact-guide-text">';
+  html += '1. 请自行联系上方所属医院咨询领养事宜<br>';
+  html += '2. 前往捕捉点进行线下资质审核<br>';
+  html += '3. 签署纸质承诺书及领养协议<br>';
+  html += '4. 审核通过后开通领养人专属端口<br>';
+  html += '5. 到指定医院领取宠物';
+  html += '</div>';
+  html += '</div>';
+  html += '</div>';
+
+  // 领养流程须知
+  html += '<div class="detail-section">';
+  html += '<div class="detail-section-title">领养流程须知</div>';
+  const flowDoc = item.flow_doc || '';
+  if (flowDoc) {
+    html += `<div style="font-size:13px;color:var(--ink-text);line-height:1.8;white-space:pre-line;">${TNR_UI.escape(flowDoc)}</div>`;
+  } else {
+    html += '<div class="adoption-process">';
+    html += '<div class="adoption-process-title">📋 领养流程</div>';
+    html += '<div class="adoption-process-list">';
+    html += '<div>领养人线下自主联系对应医院/捕捉点</div>';
+    html += '<div>捕捉点线下审核领养人资质（房产、居住、个人情况）</div>';
+    html += '<div>签署纸质承诺书</div>';
+    html += '<div>领养协议全部线下签署、纸质存档</div>';
+    html += '<div>审核通过后，系统开通领养人专属端口</div>';
+    html += '<div>到指定医院领取宠物，完成领养</div>';
+    html += '<div>每月登录小程序完成回访打卡</div>';
+    html += '</div>';
+    html += '</div>';
+  }
+  html += '</div>';
+
+  content.innerHTML = html;
+}
+
+// === 3. 我的领养 ===
+
+async function renderMyAdoption() {
+  if (PUBLIC_MODE || !getCurrentUser()) {
+    document.getElementById('myAdoptionList').innerHTML = loginRequiredHtml('前往登录后查看您的领养记录');
+    return;
+  }
+  const container = document.getElementById('myAdoptionList');
+  container.innerHTML = loadingHtml();
+
+  try {
+    const adoptions = await TNR_API.getAllRaw('adoptions');
+    myAdoptionCache = adoptions;
+
+    if (adoptions.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">🐾</div>
+          <div class="empty-state-text">暂无领养记录</div>
+          <div class="empty-state-hint">前往领养大厅查看可领养宠物</div>
+        </div>`;
+      return;
+    }
+
+    let html = '<div style="font-size:12px;color:var(--ink-light);margin-bottom:8px;">共 ' + adoptions.length + ' 条领养记录</div>';
+    adoptions.forEach(adoption => {
+      const pet = adoption.pet;
+      if (!pet) return;
+      const photoClass = getPhotoClass(pet.species);
+      const emoji = getPetEmoji(pet.species);
+      const adoptedAt = adoption.adopted_at ? adoption.adopted_at.substring(0, 10) : '—';
+
+      html += `
+        <div class="adoption-card" onclick="showLifecycle('${adoption.id}')">
+          <div class="adoption-card-header">
+            <div class="pet-card-photo photo-placeholder ${photoClass}">${emoji}</div>
+            <div class="pet-card-info">
+              <div class="pet-card-name">${TNR_UI.escape(pet.name || '未命名')} <span class="badge badge-success">已领养</span></div>
+              <div class="pet-card-code">${TNR_UI.escape(pet.code || '')}</div>
+              <div class="pet-card-meta">
+                <span class="pet-card-meta-item">${TNR_UI.escape(pet.species || '')} · ${TNR_UI.escape(pet.breed || '')}</span>
+                <span class="pet-card-meta-item">领养日期：${TNR_UI.escape(adoptedAt)}</span>
+              </div>
+            </div>
+          </div>
+          <div class="adoption-card-footer">
+            <span>📋 ${TNR_UI.escape(adoption.hospital_name || '—')}</span>
+            <span style="margin-left:auto;color:var(--cinnabar);">查看生命周期 ›</span>
+          </div>
+        </div>`;
+    });
+
+    container.innerHTML = html;
+  } catch (e) {
+    container.innerHTML = errorHtml(e.message);
+  }
+}
+
+// === 生命周期溯源 ===
+
+async function showLifecycle(adoptionId) {
+  const content = document.getElementById('lifecycleContent');
+  content.innerHTML = loadingHtml();
+  showOverlay('lifecycleOverlay');
+
+  const adoption = myAdoptionCache.find(a => String(a.id) === String(adoptionId));
+  if (!adoption || !adoption.pet) {
+    content.innerHTML = errorHtml('领养记录不存在');
+    return;
+  }
+
+  const pet = adoption.pet;
+  const photoClass = getPhotoClass(pet.species);
+  const emoji = getPetEmoji(pet.species);
+  const adoptedAt = adoption.adopted_at ? adoption.adopted_at.substring(0, 10) : '—';
+
+  let html = '';
+
+  // 宠物概要
+  html += '<div class="detail-section" style="text-align:center;">';
+  html += `<div class="pet-card-photo photo-placeholder ${photoClass}" style="width:80px;height:80px;margin:0 auto 12px;font-size:40px;">${emoji}</div>`;
+  html += `<div style="font-family:var(--font-display);font-size:18px;font-weight:600;color:var(--ink);">${TNR_UI.escape(pet.name || '未命名')}</div>`;
+  html += `<div style="font-size:12px;color:var(--ink-light);font-family:var(--font-mono);margin-top:4px;">${TNR_UI.escape(pet.code || '')}</div>`;
+  html += `<div style="margin-top:8px;">${TNR_UI.statusBadge(TNR_API.getPetStatusText(pet.status), TNR_API.getPetStatusBadge(pet.status).replace('badge-',''))}</div>`;
+  html += '</div>';
+
+  // 时间线
+  html += '<div class="detail-section">';
+  html += '<div class="detail-section-title">全生命周期溯源</div>';
+  html += '<div class="timeline">';
+
+  // 领养记录
+  html += `<div class="timeline-item done">
+    <div class="timeline-time">${TNR_UI.escape(adoptedAt)}</div>
+    <div class="timeline-title">领养完成</div>
+    <div class="timeline-desc">领养人：${TNR_UI.escape(adoption.adopter_name || '—')}<br>医院：${TNR_UI.escape(adoption.hospital_name || '—')}<br>协议：${TNR_UI.escape(adoption.adoption_agreement || '线下已签')}</div>
+  </div>`;
+
+  html += '</div>';
+  html += '</div>';
+
+  content.innerHTML = html;
+}
+
+// === 4. 回访打卡 ===
+
+async function renderCheckin() {
+  if (PUBLIC_MODE || !getCurrentUser()) {
+    document.getElementById('checkinContent').innerHTML = loginRequiredHtml('前往登录后进行回访打卡');
+    return;
+  }
+  const container = document.getElementById('checkinContent');
+
+  try {
+    const [adoptions, checkIns] = await Promise.all([
+      TNR_API.getAllRaw('adoptions'),
+      TNR_API.getAllRaw('checkIns'),
+    ]);
+    myAdoptionCache = adoptions;
+
+    if (adoptions.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">📷</div>
+          <div class="empty-state-text">暂无领养宠物</div>
+          <div class="empty-state-hint">领养宠物后可进行月度回访打卡</div>
+        </div>`;
+      return;
+    }
+
+    const now = new Date();
+    const currentMonth = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+    const pendingPets = adoptions.filter(adoption => {
+      const petCheckIns = checkIns.filter(c => String(c.pet) === String(adoption.pet) || String(c.pet_id) === String(adoption.pet));
+      return !petCheckIns.some(c => c.month === currentMonth);
+    });
+
+    let html = '';
+
+    // 待打卡提醒
+    if (pendingPets.length > 0) {
+      html += '<div class="section-header-mobile">';
+      html += '<div class="section-header-title">待打卡月份</div>';
+      html += '</div>';
+      html += '<div style="margin-bottom:16px;">';
+      pendingPets.forEach(adoption => {
+        const pet = adoption.pet;
+        if (!pet) return;
+        html += `<span class="pending-month-tag">⏰ ${TNR_UI.escape(pet.name || '未命名')} - ${currentMonth}</span>`;
+      });
+      html += '</div>';
+    }
+
+    // 打卡表单
+    html += '<div class="section-header-mobile">';
+    html += '<div class="section-header-title">提交月度打卡</div>';
+    html += '</div>';
+
+    html += '<div class="checkin-form">';
+    html += '<div class="form-label">选择宠物</div>';
+    html += '<div class="checkin-pet-select">';
+    adoptions.forEach((adoption, idx) => {
+      const pet = adoption.pet;
+      if (!pet) return;
+      const active = (idx === 0) ? ' active' : '';
+      const petId = pet.id || adoption.pet;
+      html += `<div class="checkin-pet-item${active}" data-pet-id="${petId}" onclick="selectCheckinPet('${petId}', this)">${TNR_UI.escape(pet.name || '未命名')} · ${TNR_UI.escape(pet.code || '')}</div>`;
+    });
+    html += '</div>';
+
+    html += `<div class="form-label">打卡月份</div>`;
+    html += `<div style="margin-bottom:12px;"><span class="badge badge-cinnabar" style="font-size:13px;">${currentMonth}</span></div>`;
+
+    html += '<div class="form-label">宠物近期照片</div>';
+    html += `<div class="photo-upload-area" id="photoUploadArea" onclick="document.getElementById('checkinPhotoInput').click()">
+      <div class="photo-upload-placeholder">📷</div>
+      <div style="font-size:13px;color:var(--ink-muted);">点击上传照片</div>
+      <div style="font-size:11px;color:var(--ink-light);margin-top:4px;">支持 JPG/PNG 格式</div>
+    </div>`;
+    html += `<input type="file" id="checkinPhotoInput" accept="image/*" style="display:none;" onchange="onPhotoSelected(event)">`;
+
+    html += '<div class="form-group" style="margin-top:16px;">';
+    html += '<label class="form-label">近况说明</label>';
+    html += '<textarea class="form-textarea" id="checkinNote" placeholder="请简要描述宠物近期状况（食欲、精神、健康等）" rows="3"></textarea>';
+    html += '</div>';
+
+    html += `<button class="btn btn-primary w-full" onclick="submitCheckin('${currentMonth}')" id="checkinSubmitBtn">提交打卡</button>`;
+    html += '</div>';
+
+    // 打卡历史
+    html += '<div class="section-header-mobile" style="margin-top:16px;">';
+    html += '<div class="section-header-title">打卡历史</div>';
+    html += '</div>';
+
+    if (checkIns.length === 0) {
+      html += `
+        <div class="empty-state" style="padding:24px;">
+          <div class="empty-state-icon" style="font-size:36px;">📋</div>
+          <div class="empty-state-text" style="font-size:13px;">暂无打卡记录</div>
+        </div>`;
+    } else {
+      const sorted = [...checkIns].sort((a, b) => (b.month || '').localeCompare(a.month || ''));
+      sorted.forEach(checkin => {
+        const petName = checkin.pet_name || checkin.adopter_name || '';
+        html += `
+          <div class="checkin-history-item">
+            <div class="checkin-history-header">
+              <span class="checkin-history-month">${TNR_UI.escape(checkin.month || '—')}</span>
+              ${getCheckinStatusBadge(checkin.status)}
+            </div>
+            <div style="font-size:12px;color:var(--ink-light);">${TNR_UI.escape(petName)} · ${TNR_UI.escape(checkin.pet_code || '')}</div>
+            ${checkin.note ? `<div class="checkin-history-note">${TNR_UI.escape(checkin.note)}</div>` : ''}
+            <div class="checkin-history-date">提交时间：${TNR_UI.escape(checkin.created_at ? checkin.created_at.substring(0, 16).replace('T', ' ') : '—')}</div>
+          </div>`;
+      });
+    }
+
+    container.innerHTML = html;
+
+    // 设置默认选中的宠物
+    if (adoptions.length > 0) {
+      const firstPet = adoptions[0].pet;
+      if (firstPet) selectedCheckinPet = firstPet.id || adoptions[0].pet;
+    }
+    uploadedPhotoFile = null;
+  } catch (e) {
+    container.innerHTML = errorHtml(e.message);
+  }
+}
+
+function selectCheckinPet(petId, el) {
+  selectedCheckinPet = petId;
+  document.querySelectorAll('.checkin-pet-item').forEach(item => item.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function onPhotoSelected(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  uploadedPhotoFile = file;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const area = document.getElementById('photoUploadArea');
+    area.classList.add('has-photo');
+    area.innerHTML = `<img src="${e.target.result}" class="photo-upload-preview" alt="预览"><div style="position:absolute;top:8px;right:8px;background:rgba(157,41,51,0.9);color:#fff;border:none;padding:4px 8px;border-radius:4px;font-size:12px;cursor:pointer;" onclick="event.stopPropagation();resetPhotoUpload()">重新上传</div>`;
+  };
+  reader.readAsDataURL(file);
+}
+
+function resetPhotoUpload() {
+  uploadedPhotoFile = null;
+  const input = document.getElementById('checkinPhotoInput');
+  if (input) input.value = '';
+  const area = document.getElementById('photoUploadArea');
+  area.classList.remove('has-photo');
+  area.innerHTML = `
+    <div class="photo-upload-placeholder">📷</div>
+    <div style="font-size:13px;color:var(--ink-muted);">点击上传照片</div>
+    <div style="font-size:11px;color:var(--ink-light);margin-top:4px;">支持 JPG/PNG 格式</div>`;
+}
+
+async function submitCheckin(month) {
+  if (!selectedCheckinPet) {
+    TNR_UI.toast('请选择打卡宠物', 'warning');
+    return;
+  }
+  const noteEl = document.getElementById('checkinNote');
+  const note = noteEl ? noteEl.value.trim() : '';
+  if (!note) {
+    TNR_UI.toast('请填写近况说明', 'warning');
+    return;
+  }
+
+  const btn = document.getElementById('checkinSubmitBtn');
+  if (btn) { btn.disabled = true; btn.textContent = '提交中...'; }
+
+  // 使用 FormData 提交（含文件）
+  const formData = new FormData();
+  formData.append('pet_id', selectedCheckinPet);
+  formData.append('month', month);
+  formData.append('note', note);
+  if (uploadedPhotoFile) formData.append('photo', uploadedPhotoFile);
+
+  try {
+    const json = await TNR_API.post(TNR_API.BASE + 'checkins/create/', formData);
+    TNR_UI.toast(json.message || '打卡提交成功，等待审核', 'success');
+    renderCheckin();
+  } catch (e) {
+    TNR_UI.toast(e.message || '提交失败', 'danger');
+    if (btn) { btn.disabled = false; btn.textContent = '提交打卡'; }
+  }
+}
+
+// === 5. 消息中心 ===
+
+async function renderMessages() {
+  if (PUBLIC_MODE || !getCurrentUser()) {
+    document.getElementById('messagesList').innerHTML = loginRequiredHtml('前往登录后查看消息');
+    return;
+  }
+  const container = document.getElementById('messagesList');
+  container.innerHTML = loadingHtml();
+
+  try {
+    const messages = await TNR_API.getAllRaw('messages');
+
+    if (messages.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">🔔</div>
+          <div class="empty-state-text">暂无消息</div>
+        </div>`;
+      return;
+    }
+
+    const sorted = [...messages].sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
+    const unreadCount = messages.filter(m => !m.is_read).length;
+
+    let html = '<div style="font-size:12px;color:var(--ink-light);margin-bottom:8px;">共 ' + messages.length + ' 条消息，' + unreadCount + ' 条未读</div>';
+
+    sorted.forEach(msg => {
+      const icon = getMessageTypeIcon(msg.type);
+      const typeLabel = getMessageTypeLabel(msg.type);
+      const iconBg = msg.is_read ? 'var(--rice-warm)' : 'var(--cinnabar-light)';
+
+      html += `
+        <div class="message-item ${msg.is_read ? '' : 'unread'}" onclick="showMessageDetail('${msg.id}')">
+          <div class="message-icon" style="background:${iconBg};">${icon}</div>
+          <div class="message-content">
+            <div class="message-title">
+              ${TNR_UI.escape(msg.title)}
+              ${!msg.is_read ? '<span class="message-unread-dot"></span>' : ''}
+            </div>
+            <div class="message-preview">${TNR_UI.escape(msg.content || '')}</div>
+            <div class="message-time">${TNR_UI.escape(msg.created_at ? msg.created_at.substring(0, 16).replace('T', ' ') : '')} · ${typeLabel}</div>
+          </div>
+        </div>`;
+    });
+
+    container.innerHTML = html;
+    updateMessageBadge();
+  } catch (e) {
+    container.innerHTML = errorHtml(e.message);
+  }
+}
+
+async function showMessageDetail(messageId) {
+  const content = document.getElementById('messageDetailContent');
+  showOverlay('messageDetailOverlay');
+  content.innerHTML = loadingHtml();
+
+  // 从缓存查找（避免再请求）
+  let msg = null;
+  try {
+    const messages = await TNR_API.getAllRaw('messages');
+    msg = messages.find(m => String(m.id) === String(messageId));
+  } catch (e) {
+    content.innerHTML = errorHtml(e.message);
+    return;
+  }
+  if (!msg) {
+    content.innerHTML = errorHtml('消息不存在');
+    return;
+  }
+
+  // 标记已读
+  if (!msg.is_read) {
+    try {
+      await TNR_API.post(TNR_API.BASE + 'portal/messages/' + msg.id + '/read/', {});
+    } catch (e) { /* 静默 */ }
+  }
+
+  const icon = getMessageTypeIcon(msg.type);
+  const typeLabel = getMessageTypeLabel(msg.type);
+
+  let html = '<div class="message-detail-content">';
+  html += `<div class="message-detail-title">${TNR_UI.escape(msg.title)}</div>`;
+  html += `<div class="message-detail-meta">`;
+  html += `<span>${icon} ${typeLabel}</span>`;
+  html += `<span>${TNR_UI.escape(msg.created_at ? msg.created_at.substring(0, 16).replace('T', ' ') : '—')}</span>`;
+  html += `</div>`;
+  html += `<div class="message-detail-body">${TNR_UI.escape(msg.content || '暂无内容')}</div>`;
+  html += `</div>`;
+
+  content.innerHTML = html;
+
+  setTimeout(() => {
+    renderMessages();
+    updateMessageBadge();
+  }, 300);
+}
+
+// === 6. 个人中心 ===
+
+function renderProfile() {
+  const user = getCurrentUser();
+  if (!user) {
+    document.getElementById('profileContent').innerHTML = loginRequiredHtml('请登录后查看个人中心');
+    return;
+  }
+
+  const avatarText = user.name ? user.name.charAt(0) : '👤';
+  let html = '';
+
+  // 头部
+  html += '<div class="profile-header">';
+  html += `<div class="profile-avatar">${TNR_UI.escape(avatarText)}</div>`;
+  html += `<div class="profile-name">${TNR_UI.escape(user.name || '—')}</div>`;
+  html += `<div class="profile-phone">${TNR_UI.escape(user.phone || '—')}</div>`;
+  html += '</div>';
+
+  // 身份绑定
+  html += '<div class="profile-section">';
+  html += '<div class="profile-section-header">🔐 账号信息</div>';
+  html += `<div class="profile-row"><div class="profile-row-label">👤 账号</div><div class="profile-row-value">${TNR_UI.escape(user.username || '—')}</div></div>`;
+  html += `<div class="profile-row"><div class="profile-row-label">🎭 角色</div><div class="profile-row-value">${TNR_UI.escape(user.role_display || '领养人')}</div></div>`;
+  html += `<div class="profile-row"><div class="profile-row-label">📱 手机号码</div><div class="profile-row-value">${TNR_UI.escape(user.phone || '—')}</div></div>`;
+  if (user.district_name) {
+    html += `<div class="profile-row"><div class="profile-row-label">📍 所属区县</div><div class="profile-row-value">${TNR_UI.escape(user.district_name)}</div></div>`;
+  }
+  html += '</div>';
+
+  // 其他
+  html += '<div class="profile-section">';
+  html += '<div class="profile-section-header">⚙️ 其他</div>';
+  html += '<div class="profile-row" onclick="aboutApp()">';
+  html += '<div class="profile-row-label">ℹ️ 关于系统</div>';
+  html += '<div class="profile-row-value"><span class="profile-row-arrow">›</span></div>';
+  html += '</div>';
+  html += `<div class="profile-row" onclick="window.location.href='/accounts/logout/'">`;
+  html += '<div class="profile-row-label" style="color:var(--cinnabar);">🚪 退出登录</div>';
+  html += '<div class="profile-row-value"><span class="profile-row-arrow">›</span></div>';
+  html += '</div>';
+  html += '</div>';
+
+  // 版本信息
+  html += '<div style="text-align:center;padding:16px;color:var(--ink-light);font-size:11px;">';
+  html += 'TNR流浪动物管理系统 · 领养人端<br>v1.0.0';
+  html += '</div>';
+
+  document.getElementById('profileContent').innerHTML = html;
+}
+
+function aboutApp() {
+  TNR_UI.modal({
+    title: '关于系统',
+    body: `
+      <div style="text-align:center;padding:16px 0;">
+        <div style="font-size:48px;margin-bottom:12px;">🐾</div>
+        <div style="font-family:var(--font-display);font-size:18px;font-weight:600;color:var(--ink);margin-bottom:4px;">TNR流浪动物管理系统</div>
+        <div style="font-size:13px;color:var(--ink-light);margin-bottom:16px;">领养人端 v1.0.0</div>
+        <div style="font-size:13px;color:var(--ink-muted);line-height:1.8;text-align:left;padding:0 16px;">
+          TNR（捕捉-绝育-放养）是一种人道化的流浪动物治理模式。本系统致力于规范流浪动物管理全流程，实现可溯源、可监管、可闭环治理。
+        </div>
+        <div style="margin-top:16px;font-size:12px;color:var(--ink-light);">
+          © 2025 TNR管理系统
+        </div>
+      </div>
+    `,
+    actions: '<button class="btn btn-primary" onclick="document.querySelector(\'.modal-overlay\').remove()">确定</button>'
+  });
+}
+
+// === 辅助 HTML ===
+
+function loadingHtml() {
+  return '<div class="empty-state"><div class="empty-state-icon">⏳</div><div class="empty-state-text">加载中...</div></div>';
+}
+
+function errorHtml(msg) {
+  return `<div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-text">加载失败</div><div class="empty-state-hint">${TNR_UI.escape(msg || '未知错误')}</div></div>`;
+}
+
+function loginRequiredHtml(hint) {
+  const loginUrl = '{% url "accounts:login" %}';
+  return `
+    <div class="empty-state">
+      <div class="empty-state-icon">🔒</div>
+      <div class="empty-state-text">请先登录</div>
+      <div class="empty-state-hint">${TNR_UI.escape(hint || '')}</div>
+      <div style="margin-top:16px;"><a href="${loginUrl}" class="btn btn-primary">前往登录</a></div>
+    </div>`;
+}
+
+// === 初始化 ===
+
+(function init() {
+  // 公开模式：仅展示领养大厅
+  if (PUBLIC_MODE) {
+    document.getElementById('headerTitle').textContent = '领养大厅';
+    renderHall();
+  } else {
+    switchTab('hall');
+  }
+})();
+</script>
+{% endblock %}

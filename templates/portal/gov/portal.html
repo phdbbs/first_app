@@ -1,0 +1,1511 @@
+{% extends 'portal/gov_base.html' %}
+{% load static %}
+
+{% block title %}政府监管端 · 流浪动物TNR管理系统{% endblock %}
+
+{% block nav_dashboard %}active{% endblock %}
+
+{% block page_title %}政府监管端{% endblock %}
+
+{% block extra_head %}
+{{ block.super }}
+<style>
+  /* 政府监管端 SPA 组件样式（来自原型，已移除登录页样式） */
+  .chart-bar-container{display:flex;align-items:center;gap:var(--sp-3);margin-bottom:var(--sp-3)}
+  .chart-bar-label{width:80px;font-size:var(--fs-sm);color:var(--ink-muted);text-align:right;flex-shrink:0}
+  .chart-bar-track{flex:1;height:24px;background:var(--rice-warm);border-radius:var(--r-sm);overflow:hidden}
+  .chart-bar-fill{height:100%;background:var(--grad-cinnabar);border-radius:var(--r-sm);transition:width .6s;display:flex;align-items:center;justify-content:flex-end;padding-right:var(--sp-2);color:#fff;font-size:var(--fs-xs);font-weight:600;min-width:30px}
+  .chart-bar-fill.green{background:var(--grad-bamboo)}
+  .chart-bar-fill.gold{background:var(--grad-gold)}
+  .chart-bar-fill.blue{background:var(--azurite)}
+  .log-entry{padding:var(--sp-3) var(--sp-4);border-bottom:1px solid var(--border-faint);display:flex;align-items:center;gap:var(--sp-3)}
+  .log-time{font-size:var(--fs-xs);color:var(--ink-light);white-space:nowrap;font-variant-numeric:tabular-nums}
+  .log-action{font-size:var(--fs-sm);color:var(--ink-text);font-weight:500;min-width:100px}
+  .log-detail{font-size:var(--fs-xs);color:var(--ink-muted);flex:1}
+  .alert-item{display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-3) var(--sp-4);border-radius:var(--r-md);margin-bottom:var(--sp-2)}
+  .alert-item.warning{background:var(--autumn-light);border-left:3px solid var(--autumn-gold)}
+  .alert-item.danger{background:var(--rouge-light);border-left:3px solid var(--rouge)}
+  .alert-icon{font-size:20px}
+  .alert-text{flex:1;font-size:var(--fs-sm)}
+  .role-perm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:var(--sp-3)}
+  .role-perm-card{padding:var(--sp-3) var(--sp-4);border:1px solid var(--border-light);border-radius:var(--r-md);background:var(--rice-light)}
+  .role-perm-card h4{font-family:var(--font-display);font-size:var(--fs-md);color:var(--ink);margin-bottom:var(--sp-2)}
+  .role-perm-card p{font-size:var(--fs-xs);color:var(--ink-muted);line-height:1.6}
+  .dashboard-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-5);margin-bottom:var(--sp-5)}
+  @media(max-width:1024px){.dashboard-grid{grid-template-columns:1fr}}
+  .district-compare-table td{text-align:center}
+  .district-compare-table th{text-align:center}
+  .topbar-time{font-size:var(--fs-sm);color:var(--ink-muted);font-variant-numeric:tabular-nums}
+  .page-view{display:none}
+  .page-view.active{display:block}
+</style>
+{% endblock %}
+
+{% block content %}
+<input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+
+<div id="govTopbarDistrict" style="display:none;"></div>
+<div class="topbar-time" id="govTopbarTime" style="display:none;"></div>
+
+<!-- SPA 页面容器 -->
+<div class="admin-content">
+  <!-- 1. 数据总览大屏 -->
+  <div class="page-view active" id="page-dashboard"></div>
+  <!-- 2. 机构基础管理 -->
+  <div class="page-view" id="page-institutions"></div>
+  <!-- 3. 账号权限管理 -->
+  <div class="page-view" id="page-accounts"></div>
+  <!-- 4. 全业务监管 -->
+  <div class="page-view" id="page-supervision"></div>
+  <!-- 5. 物料全局监管 -->
+  <div class="page-view" id="page-material"></div>
+  <!-- 6. 全局台账中心 -->
+  <div class="page-view" id="page-ledger"></div>
+  <!-- 7. 系统配置 -->
+  <div class="page-view" id="page-settings"></div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>window.TNR_USER = {{ user_data|safe }};</script>
+<script src="{% static 'js/tnr-api.js' %}"></script>
+<script>
+/* ============================================
+   政府监管端 - SPA 应用逻辑
+   ============================================ */
+
+const GovPortal = {
+  currentUser: window.TNR_USER || null,
+  instState: { tab: 'district' },
+  supState: { tab: 'capture' },
+  ledgerState: { tab: 'capture' },
+  settingsState: { tab: 'prefix' },
+  titles: {
+    'dashboard': '数据总览大屏',
+    'institutions': '机构基础管理',
+    'accounts': '账号权限管理',
+    'supervision': '全业务监管',
+    'material': '物料全局监管',
+    'ledger': '全局台账中心',
+    'settings': '系统配置'
+  },
+
+  /* ========== 初始化 ========== */
+  init() {
+    this.bindSidebarNav();
+    this.startClock();
+    this.navigate('dashboard');
+  },
+
+  /* 绑定 gov_base 侧边栏导航 → SPA 路由 */
+  bindSidebarNav() {
+    const navMap = {
+      '数据总览大屏': 'dashboard',
+      '机构基础管理': 'institutions',
+      '账号权限管理': 'accounts',
+      '全业务监管': 'supervision',
+      '物料全局监管': 'material',
+      '全局台账中心': 'ledger',
+      '系统配置': 'settings'
+    };
+    document.querySelectorAll('.portal-sidebar-nav .nav-item').forEach(a => {
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        const label = a.querySelector('.nav-item-label')?.textContent.trim();
+        const page = navMap[label];
+        if (page) {
+          document.querySelectorAll('.portal-sidebar-nav .nav-item').forEach(x => x.classList.remove('active'));
+          a.classList.add('active');
+          this.navigate(page);
+        }
+      });
+    });
+  },
+
+  navigate(pageId) {
+    document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
+    const page = document.getElementById('page-' + pageId);
+    if (page) page.classList.add('active');
+    const titleEl = document.querySelector('.portal-topbar-title');
+    if (titleEl) titleEl.textContent = this.titles[pageId] || '';
+    const renderer = this['render_' + pageId];
+    if (renderer) renderer.call(this);
+  },
+
+  startClock() {
+    const update = () => {
+      const el = document.getElementById('govTopbarTime');
+      if (el) {
+        const now = new Date();
+        el.textContent = now.getFullYear() + '-' +
+          String(now.getMonth() + 1).padStart(2, '0') + '-' +
+          String(now.getDate()).padStart(2, '0') + ' ' +
+          String(now.getHours()).padStart(2, '0') + ':' +
+          String(now.getMinutes()).padStart(2, '0') + ':' +
+          String(now.getSeconds()).padStart(2, '0');
+      }
+    };
+    update();
+    setInterval(update, 1000);
+  },
+
+  /* ========== 辅助方法 ========== */
+  isCityLevel() { return this.currentUser && this.currentUser.role === 'gov_city'; },
+
+  getRoleName(role) {
+    return { gov_city: '市级管理员', gov_district: '区级管理员', shelter: '捕捉点操作员', hospital: '医院操作员', adopter: '领养人' }[role] || role;
+  },
+  getRoleBadge(role) {
+    return { gov_city: 'badge-ink', gov_district: 'badge-info', shelter: 'badge-cinnabar', hospital: 'badge-success', adopter: 'badge-warning' }[role] || 'badge-default';
+  },
+  getStatusBadge(status) {
+    const map = { active: { text: '启用', badge: 'badge-success' }, inactive: { text: '停用', badge: 'badge-danger' }, disabled: { text: '停用', badge: 'badge-danger' } };
+    return map[status] || { text: status, badge: 'badge-default' };
+  },
+  getInstTypeLabel(type) {
+    return { community: '小区', hospital: '医院', shelter: '捕捉点' }[type] || type;
+  },
+  canCreateRole(role) {
+    // 政府端不允许创建领养人（领养人在捕捉点领养登记时自动创建）
+    if (role === 'adopter') return false;
+    if (this.currentUser.role === 'gov_city') return ['gov_city', 'gov_district', 'shelter', 'hospital'].includes(role);
+    if (this.currentUser.role === 'gov_district') return ['shelter', 'hospital'].includes(role);
+    return false;
+  },
+  getDistrictName(district, fallbackId) {
+    if (!district && !fallbackId) return '全市';
+    if (district && district.name) return district.name;
+    return fallbackId || '—';
+  },
+
+  /* ========== 1. 数据总览大屏 ========== */
+  async render_dashboard() {
+    const el = document.getElementById('page-dashboard');
+    el.innerHTML = '<div class="table-empty"><div class="table-empty-icon">⏳</div><div class="table-empty-text">加载中...</div></div>';
+    try {
+      const stats = await TNR_API.getDashboardStats();
+      const districts = await TNR_API.getDistricts();
+      const institutions = await TNR_API.getInstitutions();
+      const captures = await TNR_API.getCaptures();
+      const treatments = await TNR_API.getTreatments();
+      const releases = await TNR_API.getReleases();
+      const adoptions = await TNR_API.getAdoptions();
+      const euthanasia = await TNR_API.getEuthanasia();
+      const materialSup = await TNR_API.getMaterialSupervision();
+
+      const totalCaptures = (captures || []).reduce((s, c) => s + (c.pet_count || 0), 0);
+      const totalTreatments = (treatments || []).length;
+      const totalReleases = (releases || []).length;
+      const totalAdoptions = (adoptions || []).length;
+      const totalEuthanasia = (euthanasia || []).length;
+      const inTransit = (stats && stats.pet_status_distribution) ? (stats.pet_status_distribution.in_transit || 0) : 0;
+
+      const instCounts = (stats && stats.institution_counts) || {};
+      const matStats = (stats && stats.material_stats) || {};
+
+      // 区县统计
+      const districtStats = (districts || []).map(d => {
+        const dc = (captures || []).filter(c => c.district_id === d.id);
+        const dt = (treatments || []).filter(t => t.district_id === d.id);
+        const dr = (releases || []).filter(r => r.district_id === d.id);
+        const da = (adoptions || []).filter(a => a.district_id === d.id);
+        const de = (euthanasia || []).filter(e => e.district_id === d.id);
+        return {
+          d,
+          captures: dc.reduce((s, c) => s + (c.pet_count || 0), 0),
+          treatments: dt.length, releases: dr.length,
+          adoptions: da.length, euthanasia: de.length
+        };
+      });
+
+      // 物料消耗柱状图
+      const materials = (materialSup && materialSup.materials) || [];
+      const txns = (materialSup && materialSup.transactions) || [];
+      const matChart = materials.map(m => {
+        const consumed = txns.filter(t => t.material_id === m.id && t.type === 'consume').reduce((s, t) => s + t.quantity, 0);
+        return { label: m.name, value: consumed };
+      });
+      const matMax = Math.max(...matChart.map(m => m.value), 1);
+
+      // 最近活动
+      const activities = [];
+      (captures || []).forEach(c => activities.push({ time: c.created_at, title: '捕捉登记', desc: (c.community_name || '') + ' · ' + (c.pet_count || 0) + '只', type: 'capture' }));
+      (stats && stats.capture_total !== undefined ? [] : []).forEach(() => {});
+      const transfers = await TNR_API.getTransfers();
+      (transfers || []).forEach(t => activities.push({ time: t.created_at, title: '转运交接', desc: (t.from_shelter_name || '') + ' → ' + (t.to_hospital_name || ''), type: 'transfer' }));
+      (treatments || []).forEach(t => activities.push({ time: t.created_at, title: '诊疗记录', desc: (t.pet_code || '') + ' · ' + (t.hospital_name || ''), type: 'treatment' }));
+      (releases || []).forEach(r => activities.push({ time: r.created_at, title: '放养登记', desc: (r.pet_code || '') + ' → ' + (r.community_name || ''), type: 'release' }));
+      (adoptions || []).forEach(a => activities.push({ time: a.created_at, title: '领养登记', desc: (a.pet_code || '') + ' · ' + (a.adopter_name || ''), type: 'adoption' }));
+      (euthanasia || []).forEach(e => activities.push({ time: e.created_at, title: '安乐死处置', desc: (e.pet_code || '') + ' · ' + (e.hospital_name || ''), type: 'euthanasia' }));
+      activities.sort((a, b) => new Date(b.time || 0) - new Date(a.time || 0));
+      const recentActivities = activities.slice(0, 8);
+      const activityIcons = { capture: '🐾', transfer: '🚐', treatment: '🏥', release: '🌱', adoption: '🏠', euthanasia: '⚖️' };
+
+      el.innerHTML = `
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-card-icon">🐾</div>
+            <div><div class="stat-card-value">${totalCaptures}</div><div class="stat-card-label">捕捉总量</div></div>
+          </div>
+          <div class="stat-card blue">
+            <div class="stat-card-icon">🏥</div>
+            <div><div class="stat-card-value">${totalTreatments}</div><div class="stat-card-label">诊疗总量</div></div>
+          </div>
+          <div class="stat-card green">
+            <div class="stat-card-icon">🌱</div>
+            <div><div class="stat-card-value">${totalReleases}</div><div class="stat-card-label">放养总量</div></div>
+          </div>
+          <div class="stat-card gold">
+            <div class="stat-card-icon">🏠</div>
+            <div><div class="stat-card-value">${totalAdoptions}</div><div class="stat-card-label">领养总量</div></div>
+          </div>
+          <div class="stat-card rouge">
+            <div class="stat-card-icon">⚖️</div>
+            <div><div class="stat-card-value">${totalEuthanasia}</div><div class="stat-card-label">安乐死数量</div></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-icon">🏢</div>
+            <div><div class="stat-card-value">${instCounts.total || (institutions || []).length}</div><div class="stat-card-label">机构总数</div></div>
+          </div>
+        </div>
+
+        <div class="dashboard-grid">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><span class="card-title-bar"></span>区县业务统计</div>
+            </div>
+            <div class="card-body card-body-flush">
+              <div class="table-wrapper" style="border:none;">
+                <table class="data-table district-compare-table">
+                  <thead><tr>
+                    <th style="text-align:left;">区县</th>
+                    <th>捕捉</th><th>诊疗</th><th>放养</th><th>领养</th><th>安乐死</th>
+                  </tr></thead>
+                  <tbody>
+                    ${districtStats.length ? districtStats.map(ds => `
+                      <tr>
+                        <td style="text-align:left;font-weight:600;">${TNR_UI.escape(ds.d.name)}</td>
+                        <td>${ds.captures}</td><td>${ds.treatments}</td><td>${ds.releases}</td>
+                        <td>${ds.adoptions}</td><td>${ds.euthanasia}</td>
+                      </tr>
+                    `).join('') : '<tr><td colspan="6" class="table-empty">暂无数据</td></tr>'}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><span class="card-title-bar"></span>物料消耗统计</div>
+            </div>
+            <div class="card-body">
+              <div class="stat-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:var(--sp-5);">
+                <div><div class="fs-2xl font-bold font-display" style="color:var(--ink);">${matStats.total_purchased || 0}</div><div class="fs-sm text-muted">采购总量</div></div>
+                <div><div class="fs-2xl font-bold font-display" style="color:var(--azurite);">${matStats.total_dispatched || 0}</div><div class="fs-sm text-muted">下发总量</div></div>
+                <div><div class="fs-2xl font-bold font-display" style="color:var(--cinnabar);">${matStats.total_consumed || 0}</div><div class="fs-sm text-muted">消耗总量</div></div>
+              </div>
+              ${matChart.length ? matChart.map(m => `
+                <div class="chart-bar-container">
+                  <div class="chart-bar-label">${TNR_UI.escape(m.label)}</div>
+                  <div class="chart-bar-track">
+                    <div class="chart-bar-fill" style="width:${(m.value / matMax * 100).toFixed(1)}%">${m.value}</div>
+                  </div>
+                </div>
+              `).join('') : '<div class="table-empty">暂无物料数据</div>'}
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><span class="card-title-bar"></span>最近业务动态</div>
+          </div>
+          <div class="card-body">
+            <div class="timeline">
+              ${recentActivities.length ? recentActivities.map(a => `
+                <div class="timeline-item">
+                  <div class="timeline-time">${TNR_UI.formatDateTime(a.time)}</div>
+                  <div class="timeline-title">${activityIcons[a.type] || '📋'} ${TNR_UI.escape(a.title)}</div>
+                  <div class="timeline-desc">${TNR_UI.escape(a.desc)}</div>
+                </div>
+              `).join('') : '<div class="table-empty">暂无动态</div>'}
+            </div>
+          </div>
+        </div>
+      `;
+    } catch (e) {
+      el.innerHTML = '<div class="table-empty"><div class="table-empty-icon">⚠️</div><div class="table-empty-text">加载失败：' + TNR_UI.escape(e.message) + '</div></div>';
+    }
+  },
+
+  /* ========== 2. 机构基础管理 ========== */
+  async render_institutions() {
+    const el = document.getElementById('page-institutions');
+    // 小区不再单独设置（手填即可），改为区县设置 + 医院管理 + 捕捉点管理
+    const typeLabels = { district: '区县', hospital: '医院', shelter: '捕捉点' };
+    el.innerHTML = `
+      <div class="tabs">
+        ${Object.keys(typeLabels).map(t => `
+          <div class="tab-item ${this.instState.tab === t ? 'active' : ''}" data-inst-tab="${t}">${typeLabels[t]}管理</div>
+        `).join('')}
+      </div>
+      <div id="instContent"></div>
+    `;
+    el.querySelectorAll('[data-inst-tab]').forEach(tab => {
+      tab.addEventListener('click', () => { this.instState.tab = tab.dataset.instTab; this.render_institutions(); });
+    });
+    await this.renderInstitutionsContent();
+  },
+
+  async renderInstitutionsContent() {
+    const districts = await TNR_API.getDistricts();
+    const activeDistricts = (districts || []).filter(d => d.status === 'active');
+    const typeLabels = { district: '区县', hospital: '医院', shelter: '捕捉点' };
+    const contentEl = document.getElementById('instContent');
+
+    if (this.instState.tab === 'district') {
+      // 区县管理 - 只读列表 + 仅市级管理员可增编停
+      const canManage = this.isCityLevel();
+      contentEl.innerHTML = TNR_UI.renderFilterBar([
+        { key: 'status', label: '状态', type: 'select', options: [{ value: 'active', label: '启用' }, { value: 'inactive', label: '停用' }] },
+        { key: 'search', label: '搜索', type: 'search', placeholder: '名称/代码' }
+      ], canManage ? `<button class="btn btn-primary btn-sm" id="btnAddDist">+ 新增区县</button>` : '')
+        + '<div class="table-wrapper" id="distTableWrapper"></div>';
+      if (canManage) document.getElementById('btnAddDist').addEventListener('click', () => this.showDistrictModal());
+      await this.renderDistrictsTable();
+      TNR_UI.bindFilter(() => this.renderDistrictsTable());
+      return;
+    }
+
+    // 医院/捕捉点管理
+    contentEl.innerHTML = TNR_UI.renderFilterBar([
+      { key: 'district', label: '区县', type: 'select', options: activeDistricts.filter(d => !d.is_city).map(d => ({ value: d.id, label: d.name })) },
+      { key: 'status', label: '状态', type: 'select', options: [{ value: 'active', label: '启用' }, { value: 'inactive', label: '停用' }] },
+      { key: 'search', label: '搜索', type: 'search', placeholder: '名称/地址/联系人' }
+    ], `<button class="btn btn-primary btn-sm" id="btnAddInst">+ 新增${typeLabels[this.instState.tab]}</button>`)
+      + '<div class="table-wrapper" id="instTableWrapper"></div>';
+    document.getElementById('btnAddInst').addEventListener('click', () => this.showInstitutionModal());
+    await this.renderInstitutionsTable();
+    TNR_UI.bindFilter(() => this.renderInstitutionsTable());
+  },
+
+  async renderDistrictsTable() {
+    const filters = TNR_UI.getFilterValues();
+    let data = await TNR_API.getDistricts();
+    if (filters.status) data = data.filter(d => d.status === filters.status);
+    if (filters.search) {
+      const s = filters.search.toLowerCase();
+      data = data.filter(d => (d.name && d.name.toLowerCase().includes(s)) || (d.code && d.code.toLowerCase().includes(s)));
+    }
+    const canManage = this.isCityLevel();
+    const columns = [
+      { key: 'id', title: '编号', width: '90px' },
+      { key: 'name', title: '区县名称', render: r => TNR_UI.escape(r.name) + (r.is_city ? ' <span class="badge badge-info">市级</span>' : '') },
+      { key: 'code', title: '区县代码', render: r => TNR_UI.escape(r.code || '—') },
+      { key: 'is_city', title: '级别', render: r => r.is_city ? '<span class="badge badge-ink">市级</span>' : '<span class="badge badge-default">区级</span>' },
+      { key: 'status', title: '状态', render: r => { const s = this.getStatusBadge(r.status); return `<span class="badge ${s.badge}">${s.text}</span>`; } }
+    ];
+    const rowActions = canManage ? (r => `
+      <button class="btn-link" data-edit-dist="${r.id}">编辑</button>
+      <button class="btn-link ${r.status === 'active' ? 'danger' : 'success'}" data-toggle-dist="${r.id}">${r.status === 'active' ? '停用' : '启用'}</button>
+    `) : (() => '');
+    document.getElementById('distTableWrapper').innerHTML = TNR_UI.renderTable({ columns, data, rowActions, emptyText: '暂无区县数据' });
+    document.querySelectorAll('[data-edit-dist]').forEach(b => b.addEventListener('click', () => this.showDistrictModal(b.dataset.editDist)));
+    document.querySelectorAll('[data-toggle-dist]').forEach(b => b.addEventListener('click', () => this.toggleDistrictStatus(b.dataset.toggleDist)));
+  },
+
+  async showDistrictModal(id) {
+    const districts = await TNR_API.getDistricts();
+    let dist = null;
+    if (id) {
+      dist = (districts || []).find(d => String(d.id) === String(id));
+    }
+    const body = `
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">区县名称<span class="req">*</span></label>
+          <input type="text" class="form-input" id="dist-name" value="${dist ? TNR_UI.escape(dist.name) : ''}" placeholder="如：朝阳区">
+        </div>
+        <div class="form-group">
+          <label class="form-label">区县代码<span class="req">*</span></label>
+          <input type="text" class="form-input" id="dist-code" value="${dist ? TNR_UI.escape(dist.code) : ''}" placeholder="如：CY">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">级别</label>
+        <select class="form-select" id="dist-is-city">
+          <option value="0" ${!dist || !dist.is_city ? 'selected' : ''}>区级（具体区县）</option>
+          <option value="1" ${dist && dist.is_city ? 'selected' : ''}>市级（市管理员/捕捉点归属）</option>
+        </select>
+      </div>
+      <p class="form-hint">说明：市级区县用于市管理员/捕捉点操作员归属；区级区县用于区级管理员/医院归属。</p>
+    `;
+    const m = TNR_UI.modal({
+      title: dist ? '编辑区县' : '新增区县', body, size: 'md',
+      actions: `<button class="btn btn-secondary" data-action="cancel">取消</button><button class="btn btn-primary" id="distSave">保存</button>`
+    });
+    m.overlay.querySelector('[data-action="cancel"]').addEventListener('click', m.close);
+    m.overlay.querySelector('#distSave').addEventListener('click', async () => {
+      const name = document.getElementById('dist-name').value.trim();
+      const code = document.getElementById('dist-code').value.trim();
+      const is_city = document.getElementById('dist-is-city').value === '1';
+      if (!name) { TNR_UI.toast('请输入区县名称', 'warning'); return; }
+      if (!code) { TNR_UI.toast('请输入区县代码', 'warning'); return; }
+      const payload = { name, code, is_city };
+      try {
+        if (dist) {
+          await TNR_API.editDistrict(dist.id, payload);
+          TNR_UI.toast('区县更新成功', 'success');
+        } else {
+          await TNR_API.createDistrict(payload);
+          TNR_UI.toast('区县创建成功', 'success');
+        }
+        m.close();
+        await this.renderDistrictsTable();
+      } catch (e) {
+        TNR_UI.toast(e.message || '操作失败', 'danger');
+      }
+    });
+  },
+
+  async toggleDistrictStatus(id) {
+    try {
+      const res = await TNR_API.toggleDistrict(id);
+      TNR_UI.toast(res.message || '操作成功', 'success');
+      await this.renderDistrictsTable();
+    } catch (e) {
+      TNR_UI.toast(e.message || '操作失败', 'danger');
+    }
+  },
+
+  async renderInstitutionsTable() {
+    const filters = TNR_UI.getFilterValues();
+    let data = await TNR_API.getInstitutions(this.instState.tab);
+    if (!this.isCityLevel() && this.currentUser.district_id) {
+      data = data.filter(i => i.district_id === this.currentUser.district_id);
+    }
+    if (filters.district) data = data.filter(i => String(i.district_id) === String(filters.district));
+    if (filters.status) data = data.filter(i => i.status === filters.status);
+    if (filters.search) {
+      const s = filters.search.toLowerCase();
+      data = data.filter(i => (i.name && i.name.toLowerCase().includes(s)) || (i.address && i.address.toLowerCase().includes(s)) || (i.contact && i.contact.toLowerCase().includes(s)));
+    }
+    const districts = await TNR_API.getDistricts();
+    const districtMap = {};
+    (districts || []).forEach(d => { districtMap[d.id] = d.name; });
+
+    const columns = [
+      { key: 'id', title: '编号', width: '90px' },
+      { key: 'name', title: '名称', render: r => TNR_UI.escape(r.name) },
+      { key: 'district_id', title: '区县', render: r => TNR_UI.escape(districtMap[r.district_id] || r.district_name || '—') },
+      { key: 'address', title: '地址', render: r => TNR_UI.escape(r.address || '—') },
+      { key: 'contact', title: '联系人', render: r => TNR_UI.escape(r.contact || '—') },
+      { key: 'phone', title: '电话', render: r => TNR_UI.escape(r.phone || '—') },
+      { key: 'status', title: '状态', render: r => { const s = this.getStatusBadge(r.status); return `<span class="badge ${s.badge}">${s.text}</span>`; } }
+    ];
+    const rowActions = r => `
+      <button class="btn-link" data-edit="${r.id}">编辑</button>
+      <button class="btn-link ${r.status === 'active' ? 'danger' : 'success'}" data-toggle="${r.id}">${r.status === 'active' ? '停用' : '启用'}</button>
+    `;
+    document.getElementById('instTableWrapper').innerHTML = TNR_UI.renderTable({ columns, data, rowActions, emptyText: '暂无机构数据' });
+    document.querySelectorAll('[data-edit]').forEach(b => b.addEventListener('click', () => this.showInstitutionModal(b.dataset.edit)));
+    document.querySelectorAll('[data-toggle]').forEach(b => b.addEventListener('click', () => this.toggleInstitutionStatus(b.dataset.toggle)));
+  },
+
+  async showInstitutionModal(id) {
+    const districts = await TNR_API.getDistricts();
+    // 捕捉点/医院必须挂具体区县，不能挂市级
+    const activeDistricts = (districts || []).filter(d => d.status === 'active' && !d.is_city);
+    const typeLabels = { hospital: '医院', shelter: '捕捉点' };
+    let inst = null;
+    if (id) {
+      const all = await TNR_API.getInstitutions(this.instState.tab);
+      inst = all.find(i => String(i.id) === String(id));
+    }
+
+    const body = `
+      <div class="form-group">
+        <label class="form-label">名称<span class="req">*</span></label>
+        <input type="text" class="form-input" id="inst-name" value="${inst ? TNR_UI.escape(inst.name) : ''}" placeholder="请输入${typeLabels[this.instState.tab]}名称">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">所属区县<span class="req">*</span></label>
+          <select class="form-select" id="inst-district">
+            ${activeDistricts.map(d => `<option value="${d.id}" ${inst && inst.district_id === d.id ? 'selected' : ''}>${TNR_UI.escape(d.name)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">状态</label>
+          <select class="form-select" id="inst-status">
+            <option value="active" ${!inst || inst.status === 'active' ? 'selected' : ''}>启用</option>
+            <option value="inactive" ${inst && inst.status === 'inactive' ? 'selected' : ''}>停用</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">地址</label>
+        <input type="text" class="form-input" id="inst-address" value="${inst ? TNR_UI.escape(inst.address || '') : ''}" placeholder="请输入详细地址">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">联系人</label>
+          <input type="text" class="form-input" id="inst-contact" value="${inst ? TNR_UI.escape(inst.contact || '') : ''}" placeholder="请输入联系人">
+        </div>
+        <div class="form-group">
+          <label class="form-label">联系电话</label>
+          <input type="text" class="form-input" id="inst-phone" value="${inst ? TNR_UI.escape(inst.phone || '') : ''}" placeholder="请输入电话">
+        </div>
+      </div>
+    `;
+
+    const m = TNR_UI.modal({
+      title: inst ? `编辑${typeLabels[this.instState.tab]}` : `新增${typeLabels[this.instState.tab]}`,
+      body, size: 'lg',
+      actions: `<button class="btn btn-secondary" data-action="cancel">取消</button><button class="btn btn-primary" id="instSave">保存</button>`
+    });
+    m.overlay.querySelector('[data-action="cancel"]').addEventListener('click', m.close);
+    m.overlay.querySelector('#instSave').addEventListener('click', async () => {
+      const name = document.getElementById('inst-name').value.trim();
+      if (!name) { TNR_UI.toast('请输入名称', 'warning'); return; }
+      const phone = document.getElementById('inst-phone').value.trim();
+      if (phone && !phone.replace(/[-+]/g, '').match(/^\d+$/)) { TNR_UI.toast('联系电话格式不正确', 'warning'); return; }
+      const payload = {
+        name, type: this.instState.tab,
+        district_id: document.getElementById('inst-district').value,
+        address: document.getElementById('inst-address').value.trim(),
+        contact: document.getElementById('inst-contact').value.trim(),
+        phone: phone,
+      };
+      try {
+        if (inst) {
+          await TNR_API.editInstitution(inst.id, payload);
+          TNR_UI.toast('机构更新成功', 'success');
+        } else {
+          await TNR_API.createInstitution(payload);
+          TNR_UI.toast('机构创建成功', 'success');
+        }
+        m.close();
+        await this.renderInstitutionsTable();
+      } catch (e) {
+        TNR_UI.toast(e.message || '操作失败', 'danger');
+      }
+    });
+  },
+
+  async toggleInstitutionStatus(id) {
+    try {
+      const res = await TNR_API.toggleInstitution(id);
+      TNR_UI.toast(res.message || '操作成功', 'success');
+      await this.renderInstitutionsTable();
+    } catch (e) {
+      TNR_UI.toast(e.message || '操作失败', 'danger');
+    }
+  },
+
+  /* ========== 3. 账号权限管理 ========== */
+  async render_accounts() {
+    const el = document.getElementById('page-accounts');
+    const districts = await TNR_API.getDistricts();
+    const activeDistricts = (districts || []).filter(d => d.status === 'active');
+    el.innerHTML = TNR_UI.renderFilterBar([
+      { key: 'role', label: '角色', type: 'select', options: [
+        { value: 'gov_city', label: '市级管理员' }, { value: 'gov_district', label: '区级管理员' },
+        { value: 'shelter', label: '捕捉点操作员' }, { value: 'hospital', label: '医院操作员' }
+      ]},
+      { key: 'status', label: '状态', type: 'select', options: [{ value: 'active', label: '启用' }, { value: 'inactive', label: '停用' }] },
+      { key: 'search', label: '搜索', type: 'search', placeholder: '用户名/姓名/电话' }
+    ], `<button class="btn btn-primary btn-sm" id="btnAddAcct">+ 新增账号</button>`)
+      + '<div class="table-wrapper" id="acctTableWrapper"></div>'
+      + '<div class="card mt-5"><div class="card-header"><div class="card-title"><span class="card-title-bar"></span>角色权限说明</div></div><div class="card-body"><div class="role-perm-grid" id="rolePermGrid"></div></div></div>';
+
+    document.getElementById('btnAddAcct').addEventListener('click', () => this.showAccountModal());
+    await this.renderAccountsTable();
+    TNR_UI.bindFilter(() => this.renderAccountsTable());
+    this.renderRolePermissions();
+  },
+
+  async renderAccountsTable() {
+    const filters = TNR_UI.getFilterValues();
+    let data = await TNR_API.getUsers();
+    // 政府端账号管理只展示非领养人账号
+    data = data.filter(u => u.role !== 'adopter');
+    if (filters.role) data = data.filter(u => u.role === filters.role);
+    if (filters.status) data = data.filter(u => u.status === filters.status);
+    if (filters.search) {
+      const s = filters.search.toLowerCase();
+      data = data.filter(u => (u.username && u.username.toLowerCase().includes(s)) || (u.name && u.name.toLowerCase().includes(s)) || (u.phone && u.phone.includes(s)));
+    }
+    const columns = [
+      { key: 'username', title: '用户名' },
+      { key: 'name', title: '姓名', render: r => TNR_UI.escape(r.name) },
+      { key: 'role', title: '角色', render: r => `<span class="badge ${this.getRoleBadge(r.role)}">${this.getRoleName(r.role)}</span>` },
+      { key: 'district_name', title: '区县', render: r => TNR_UI.escape(r.district_name || '—') },
+      { key: 'institution_name', title: '所属机构', render: r => TNR_UI.escape(r.institution_name || '—') },
+      { key: 'phone', title: '电话', render: r => TNR_UI.escape(r.phone || '—') },
+      { key: 'status', title: '状态', render: r => { const s = this.getStatusBadge(r.status); return `<span class="badge ${s.badge}">${s.text}</span>`; } }
+    ];
+    const rowActions = r => `
+      <button class="btn-link ${r.status === 'active' ? 'danger' : 'success'}" data-toggle="${r.id}">${r.status === 'active' ? '停用' : '启用'}</button>
+    `;
+    document.getElementById('acctTableWrapper').innerHTML = TNR_UI.renderTable({ columns, data, rowActions, emptyText: '暂无账号' });
+    document.querySelectorAll('[data-toggle]').forEach(b => b.addEventListener('click', () => this.toggleAccountStatus(b.dataset.toggle)));
+  },
+
+  renderRolePermissions() {
+    const perms = [
+      { role: 'gov_city', name: '市级管理员', desc: '全市数据查看、机构管理、账号管理、区县管理、系统配置、全业务监管。所属区域：市级。' },
+      { role: 'gov_district', name: '区级管理员', desc: '本区县数据查看、本区县机构管理、本区县账号管理（限捕捉点/医院）。所属区域：具体区县。' },
+      { role: 'shelter', name: '捕捉点操作员', desc: '捕捉登记、转运派单、物料采购下发、放养管理、领养审核、回访管控。所属区域：市级，须关联捕捉点。' },
+      { role: 'hospital', name: '医院操作员', desc: '动物接收、诊疗绝育、物料消耗、领养资料维护、安乐死处置。所属区域：具体区县，须关联医院。' }
+    ];
+    document.getElementById('rolePermGrid').innerHTML = perms.map(p => `
+      <div class="role-perm-card">
+        <h4><span class="badge ${this.getRoleBadge(p.role)}">${p.name}</span></h4>
+        <p>${TNR_UI.escape(p.desc)}</p>
+      </div>
+    `).join('');
+  },
+
+  async showAccountModal() {
+    const districts = await TNR_API.getDistricts();
+    const activeDistricts = (districts || []).filter(d => d.status === 'active');
+    const cityDistricts = activeDistricts.filter(d => d.is_city);     // 市级
+    const realDistricts = activeDistricts.filter(d => !d.is_city);    // 区级
+    const allRoles = [
+      { value: 'gov_city', label: '市级管理员' }, { value: 'gov_district', label: '区级管理员' },
+      { value: 'shelter', label: '捕捉点操作员' }, { value: 'hospital', label: '医院操作员' }
+      // 领养人不在政府端创建（由捕捉点在领养登记时自动创建）
+    ];
+    const availableRoles = allRoles.filter(r => this.canCreateRole(r.value));
+
+    const body = `
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">用户名<span class="req">*</span></label>
+          <input type="text" class="form-input" id="acct-username" placeholder="登录用户名">
+        </div>
+        <div class="form-group">
+          <label class="form-label">密码<span class="req">*</span></label>
+          <input type="text" class="form-input" id="acct-password" value="123456" placeholder="至少6位">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">姓名<span class="req">*</span></label>
+          <input type="text" class="form-input" id="acct-name" placeholder="请输入姓名">
+        </div>
+        <div class="form-group">
+          <label class="form-label">角色<span class="req">*</span></label>
+          <select class="form-select" id="acct-role">
+            ${availableRoles.map(r => `<option value="${r.value}">${r.label}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">所属区县<span class="req">*</span></label>
+          <select class="form-select" id="acct-district">
+            <option value="">请选择</option>
+          </select>
+          <p class="form-hint" id="acct-district-hint">请先选择角色</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">联系电话</label>
+          <input type="text" class="form-input" id="acct-phone" placeholder="请输入电话">
+        </div>
+      </div>
+      <div class="form-group" id="acct-institution-group" style="display:none;">
+        <label class="form-label">关联机构<span class="req">*</span></label>
+        <select class="form-select" id="acct-institution">
+          <option value="">请选择</option>
+        </select>
+        <p class="form-hint" id="acct-institution-hint"></p>
+      </div>
+      <p class="form-hint">说明：领养人不在政府端创建，由捕捉点在领养登记时自动生成。</p>
+    `;
+
+    const m = TNR_UI.modal({
+      title: '新增账号', body, size: 'lg',
+      actions: `<button class="btn btn-secondary" data-action="cancel">取消</button><button class="btn btn-primary" id="acctSave">创建</button>`
+    });
+    m.overlay.querySelector('[data-action="cancel"]').addEventListener('click', m.close);
+
+    // 角色变更时联动区县选项 + 机构选项
+    const roleSelect = m.overlay.querySelector('#acct-role');
+    const districtSelect = m.overlay.querySelector('#acct-district');
+    const districtHint = m.overlay.querySelector('#acct-district-hint');
+    const instGroup = m.overlay.querySelector('#acct-institution-group');
+    const instSelect = m.overlay.querySelector('#acct-institution');
+    const instHint = m.overlay.querySelector('#acct-institution-hint');
+
+    const updateDistrictOptions = async () => {
+      const role = roleSelect.value;
+      districtSelect.innerHTML = '<option value="">请选择</option>';
+      instGroup.style.display = 'none';
+      instSelect.innerHTML = '<option value="">请选择</option>';
+
+      if (role === 'gov_city' || role === 'shelter') {
+        // 市级角色 → 必须选市级区县
+        cityDistricts.forEach(d => {
+          const opt = document.createElement('option');
+          opt.value = d.id; opt.textContent = d.name + '（市级）';
+          districtSelect.appendChild(opt);
+        });
+        districtHint.textContent = '市管理员/捕捉点操作员必须选市级区县';
+      } else if (role === 'gov_district' || role === 'hospital') {
+        // 区级角色 → 必须选具体区县，不能选市级
+        realDistricts.forEach(d => {
+          const opt = document.createElement('option');
+          opt.value = d.id; opt.textContent = d.name;
+          districtSelect.appendChild(opt);
+        });
+        districtHint.textContent = '区级管理员/医院操作员必须选具体区县，不能选市级';
+      } else {
+        districtHint.textContent = '请先选择角色';
+      }
+
+      // shelter/hospital 需要关联机构
+      if (role === 'shelter') {
+        instGroup.style.display = 'block';
+        instHint.textContent = '捕捉点操作员必须关联一个捕捉点机构';
+        const shelters = await TNR_API.getInstitutions('shelter');
+        const activeShelters = (shelters || []).filter(s => s.status === 'active');
+        activeShelters.forEach(s => {
+          const opt = document.createElement('option');
+          opt.value = s.id; opt.textContent = s.name + '（' + (s.district_name || '') + '）';
+          instSelect.appendChild(opt);
+        });
+      } else if (role === 'hospital') {
+        instGroup.style.display = 'block';
+        instHint.textContent = '医院操作员必须关联一个医院机构';
+        const hospitals = await TNR_API.getInstitutions('hospital');
+        const activeHospitals = (hospitals || []).filter(h => h.status === 'active');
+        activeHospitals.forEach(h => {
+          const opt = document.createElement('option');
+          opt.value = h.id; opt.textContent = h.name + '（' + (h.district_name || '') + '）';
+          instSelect.appendChild(opt);
+        });
+      }
+    };
+
+    roleSelect.addEventListener('change', updateDistrictOptions);
+    // 初始化一次
+    await updateDistrictOptions();
+
+    m.overlay.querySelector('#acctSave').addEventListener('click', async () => {
+      const username = document.getElementById('acct-username').value.trim();
+      const name = document.getElementById('acct-name').value.trim();
+      const role = document.getElementById('acct-role').value;
+      if (!username) { TNR_UI.toast('请输入用户名', 'warning'); return; }
+      if (!name) { TNR_UI.toast('请输入姓名', 'warning'); return; }
+
+      const password = document.getElementById('acct-password').value.trim();
+      if (password && password.length < 6) { TNR_UI.toast('密码长度不能少于6位', 'warning'); return; }
+
+      const districtId = document.getElementById('acct-district').value;
+      if (!districtId) { TNR_UI.toast('请选择所属区县', 'warning'); return; }
+
+      const phone = document.getElementById('acct-phone').value.trim();
+      if (phone && !phone.replace(/[-+]/g, '').match(/^\d+$/)) { TNR_UI.toast('联系电话格式不正确', 'warning'); return; }
+
+      const institutionId = document.getElementById('acct-institution').value || null;
+      if ((role === 'shelter' || role === 'hospital') && !institutionId) {
+        TNR_UI.toast('请选择关联机构', 'warning'); return;
+      }
+
+      try {
+        await TNR_API.createUser({
+          username, password: password || '123456', name, role,
+          district_id: districtId, institution_id: institutionId, phone
+        });
+        TNR_UI.toast('账号创建成功', 'success');
+        m.close();
+        await this.renderAccountsTable();
+      } catch (e) {
+        TNR_UI.toast(e.message || '创建失败', 'danger');
+      }
+    });
+  },
+
+  async toggleAccountStatus(id) {
+    try {
+      const res = await TNR_API.toggleUser(id);
+      TNR_UI.toast(res.message || '操作成功', 'success');
+      await this.renderAccountsTable();
+    } catch (e) {
+      TNR_UI.toast(e.message || '操作失败', 'danger');
+    }
+  },
+
+  /* ========== 4. 全业务监管 ========== */
+  async render_supervision() {
+    const el = document.getElementById('page-supervision');
+    const tabs = [
+      { id: 'capture', label: '捕捉监管' },
+      { id: 'transfer', label: '转运监管' },
+      { id: 'treatment', label: '诊疗监管' },
+      { id: 'release', label: '放养监管' },
+      { id: 'adoption', label: '领养回访监管' },
+      { id: 'euthanasia', label: '安乐死监管' }
+    ];
+    el.innerHTML = `
+      <div class="tabs">
+        ${tabs.map(t => `<div class="tab-item ${this.supState.tab === t.id ? 'active' : ''}" data-sup-tab="${t.id}">${t.label}</div>`).join('')}
+      </div>
+      <div id="supContent"></div>
+    `;
+    el.querySelectorAll('[data-sup-tab]').forEach(tab => {
+      tab.addEventListener('click', () => { this.supState.tab = tab.dataset.supTab; this.render_supervision(); });
+    });
+    await this.renderSupervisionContent();
+  },
+
+  async renderSupervisionContent() {
+    const districts = await TNR_API.getDistricts();
+    const activeDistricts = (districts || []).filter(d => d.status === 'active');
+    const contentEl = document.getElementById('supContent');
+    contentEl.innerHTML = TNR_UI.renderFilterBar([
+      { key: 'district', label: '区县', type: 'select', options: activeDistricts.map(d => ({ value: d.id, label: d.name })) },
+      { key: 'search', label: '搜索', type: 'search', placeholder: '编号/单据号/名称' }
+    ]) + '<div class="table-wrapper" id="supTableWrapper"></div>';
+    await this.renderSupervisionTable();
+    TNR_UI.bindFilter(() => this.renderSupervisionTable());
+  },
+
+  async renderSupervisionTable() {
+    const filters = TNR_UI.getFilterValues();
+    const type = this.supState.tab;
+    const sup = await TNR_API.getBusinessSupervision(type);
+    let data, columns;
+
+    if (type === 'capture') {
+      data = sup.captures || [];
+      if (filters.district) data = data.filter(r => String(r.district_id) === String(filters.district));
+      if (filters.search) { const s = filters.search.toLowerCase(); data = data.filter(r => (r.ledger_no && r.ledger_no.toLowerCase().includes(s)) || (r.community_name && r.community_name.toLowerCase().includes(s)) || (r.shelter_name && r.shelter_name.toLowerCase().includes(s))); }
+      columns = [
+        { key: 'ledger_no', title: '单据号', width: '160px' },
+        { key: 'shelter_name', title: '捕捉点', render: r => TNR_UI.escape(r.shelter_name) },
+        { key: 'community_name', title: '来源地点', render: r => TNR_UI.escape(r.community_name || '—') },
+        { key: 'pet_count', title: '数量', width: '70px' },
+        { key: 'district_id', title: '区县', render: r => TNR_UI.escape(r.district_name || r.district_id || '—') },
+        { key: 'created_at', title: '时间', width: '140px', render: r => TNR_UI.formatDateTime(r.created_at) },
+        { key: 'status', title: '状态', render: () => `<span class="badge badge-success">已完成</span>` }
+      ];
+    } else if (type === 'transfer') {
+      data = sup.transfers || [];
+      if (filters.district) data = data.filter(r => String(r.district_id) === String(filters.district));
+      if (filters.search) { const s = filters.search.toLowerCase(); data = data.filter(r => (r.ledger_no && r.ledger_no.toLowerCase().includes(s)) || (r.from_shelter_name && r.from_shelter_name.toLowerCase().includes(s)) || (r.to_hospital_name && r.to_hospital_name.toLowerCase().includes(s))); }
+      columns = [
+        { key: 'ledger_no', title: '单据号', width: '160px' },
+        { key: 'from_shelter_name', title: '出发捕捉点', render: r => TNR_UI.escape(r.from_shelter_name) },
+        { key: 'to_hospital_name', title: '接收医院', render: r => TNR_UI.escape(r.to_hospital_name) },
+        { key: 'pet_count', title: '数量', width: '70px' },
+        { key: 'district_id', title: '区县', render: r => TNR_UI.escape(r.district_name || r.district_id || '—') },
+        { key: 'created_at', title: '时间', width: '140px', render: r => TNR_UI.formatDateTime(r.created_at) },
+        { key: 'status', title: '状态', render: r => {
+          const m = { pending: { t: '待接收', b: 'badge-warning' }, received: { t: '已接收', b: 'badge-success' }, rejected: { t: '已驳回', b: 'badge-danger' } };
+          const s = m[r.status] || { t: r.status, b: 'badge-default' };
+          return `<span class="badge ${s.b}">${s.t}</span>`;
+        } }
+      ];
+    } else if (type === 'treatment') {
+      data = sup.treatments || [];
+      if (filters.district) data = data.filter(r => String(r.district_id) === String(filters.district));
+      if (filters.search) { const s = filters.search.toLowerCase(); data = data.filter(r => (r.pet_code && r.pet_code.toLowerCase().includes(s)) || (r.hospital_name && r.hospital_name.toLowerCase().includes(s))); }
+      columns = [
+        { key: 'pet_code', title: '编号', width: '130px' },
+        { key: 'hospital_name', title: '诊疗医院', render: r => TNR_UI.escape(r.hospital_name) },
+        { key: 'treatment_items', title: '诊疗内容', render: r => {
+          const items = r.treatment_items || [];
+          return items.map(i => `<span class="badge badge-info" style="margin-right:4px;">${i}</span>`).join('') || '—';
+        } },
+        { key: 'district_id', title: '区县', render: r => TNR_UI.escape(r.district_name || r.district_id || '—') },
+        { key: 'created_at', title: '时间', width: '140px', render: r => TNR_UI.formatDateTime(r.created_at) },
+        { key: 'status', title: '状态', render: r => {
+          const m = { in_progress: { t: '诊疗中', b: 'badge-info' }, completed: { t: '已完成', b: 'badge-success' } };
+          const s = m[r.status] || { t: r.status, b: 'badge-default' };
+          return `<span class="badge ${s.b}">${s.t}</span>`;
+        } }
+      ];
+    } else if (type === 'release') {
+      data = sup.releases || [];
+      if (filters.district) data = data.filter(r => String(r.district_id) === String(filters.district));
+      if (filters.search) { const s = filters.search.toLowerCase(); data = data.filter(r => (r.pet_code && r.pet_code.toLowerCase().includes(s)) || (r.community_name && r.community_name.toLowerCase().includes(s))); }
+      columns = [
+        { key: 'ledger_no', title: '单据号', width: '160px' },
+        { key: 'pet_code', title: '编号', width: '130px' },
+        { key: 'community_name', title: '放养地点', render: r => TNR_UI.escape(r.community_name) },
+        { key: 'pet_count', title: '数量', width: '70px', render: () => '1' },
+        { key: 'receiver_name', title: '接收人', render: r => TNR_UI.escape(r.receiver_name || '—') },
+        { key: 'district_id', title: '区县', render: r => TNR_UI.escape(r.district_name || r.district_id || '—') },
+        { key: 'released_at', title: '放养时间', width: '120px', render: r => TNR_UI.formatDateTime(r.released_at) },
+        { key: 'status', title: '状态', render: r => r.status === 'released' ? `<span class="badge badge-success">已放养</span>` : `<span class="badge badge-warning">待放养</span>` }
+      ];
+    } else if (type === 'adoption') {
+      data = sup.adoptions || [];
+      const checkIns = sup.checkins || [];
+      if (filters.district) data = data.filter(r => String(r.district_id) === String(filters.district));
+      if (filters.search) { const s = filters.search.toLowerCase(); data = data.filter(r => (r.pet_code && r.pet_code.toLowerCase().includes(s)) || (r.adopter_name && r.adopter_name.toLowerCase().includes(s))); }
+      columns = [
+        { key: 'ledger_no', title: '单据号', width: '160px' },
+        { key: 'pet_code', title: '编号', width: '130px' },
+        { key: 'adopter_name', title: '领养人', render: r => TNR_UI.escape(r.adopter_name) },
+        { key: 'adopter_phone', title: '联系电话', render: r => TNR_UI.escape(r.adopter_phone || '—') },
+        { key: 'hospital_name', title: '所属医院', render: r => TNR_UI.escape(r.hospital_name) },
+        { key: 'checkin_count', title: '回访打卡', render: r => {
+          const cnt = checkIns.filter(c => c.pet_id === r.pet_id).length;
+          return `<span class="badge ${cnt > 0 ? 'badge-success' : 'badge-warning'}">${cnt}次</span>`;
+        } },
+        { key: 'district_id', title: '区县', render: r => TNR_UI.escape(r.district_name || r.district_id || '—') },
+        { key: 'adopted_at', title: '领养时间', width: '120px', render: r => TNR_UI.formatDateTime(r.adopted_at) }
+      ];
+    } else if (type === 'euthanasia') {
+      data = sup.euthanasia || [];
+      if (filters.district) data = data.filter(r => String(r.district_id) === String(filters.district));
+      if (filters.search) { const s = filters.search.toLowerCase(); data = data.filter(r => (r.pet_code && r.pet_code.toLowerCase().includes(s)) || (r.hospital_name && r.hospital_name.toLowerCase().includes(s))); }
+      columns = [
+        { key: 'ledger_no', title: '单据号', width: '160px' },
+        { key: 'pet_code', title: '编号', width: '130px' },
+        { key: 'hospital_name', title: '处置医院', render: r => TNR_UI.escape(r.hospital_name) },
+        { key: 'reason', title: '处置原因', render: r => TNR_UI.escape(r.reason || '—') },
+        { key: 'district_id', title: '区县', render: r => TNR_UI.escape(r.district_name || r.district_id || '—') },
+        { key: 'euthanized_at', title: '处置时间', width: '120px', render: r => TNR_UI.formatDateTime(r.euthanized_at) }
+      ];
+    }
+
+    const rowActions = r => `<button class="btn-link" data-detail="${r.id}">详情</button>`;
+    document.getElementById('supTableWrapper').innerHTML = TNR_UI.renderTable({ columns, data, rowActions, emptyText: '暂无监管数据' });
+    document.querySelectorAll('[data-detail]').forEach(b => b.addEventListener('click', () => this.showSupervisionDetail(type, b.dataset.detail)));
+  },
+
+  /* 渲染宠物照片网格 */
+  renderPetPhotos(pet, label) {
+    if (!pet) return '';
+    const photos = [];
+    if (pet.photo_group) photos.push({ url: pet.photo_group, label: '合照' });
+    if (pet.photo_before) photos.push({ url: pet.photo_before, label: '术前' });
+    if (pet.photo_after) photos.push({ url: pet.photo_after, label: '术后' });
+    if (pet.photo_treatment) photos.push({ url: pet.photo_treatment, label: '诊疗' });
+    if (!photos.length) return '';
+    return `<div class="mt-4"><h4 class="font-display mb-3">${label || '动物照片'}</h4><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:var(--sp-3);">` +
+      photos.map(p => `<div><img src="${p.url}" alt="${p.label}" style="width:100%;height:120px;object-fit:cover;border-radius:var(--r-md);border:1px solid var(--border-light);"><div class="fs-xs text-muted text-center mt-1">${p.label}</div></div>`).join('') +
+      `</div></div>`;
+  },
+
+  renderPetsList(pets) {
+    if (!pets || !pets.length) return '';
+    return `<div class="mt-4"><h4 class="font-display mb-3">动物明细（${pets.length}只）</h4>` +
+      pets.map(p => `
+        <div style="padding:var(--sp-3);border:1px solid var(--border-light);border-radius:var(--r-md);margin-bottom:var(--sp-2);display:flex;gap:var(--sp-3);">
+          ${p.photo_group ? `<img src="${p.photo_group}" style="width:80px;height:80px;object-fit:cover;border-radius:var(--r-sm);">` : '<div style="width:80px;height:80px;background:var(--rice-warm);border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;color:var(--ink-light);font-size:24px;">🐾</div>'}
+          <div style="flex:1;">
+            <div><strong>${TNR_UI.escape(p.code)}</strong>${p.name ? ' · ' + TNR_UI.escape(p.name) : ''}</div>
+            <div class="fs-sm text-muted">${TNR_UI.escape(p.species || '')} ${TNR_UI.escape(p.breed || '')} ${TNR_UI.escape(p.gender || '')} ${TNR_UI.escape(p.color || '')}</div>
+          </div>
+        </div>
+      `).join('') + `</div>`;
+  },
+
+  async showSupervisionDetail(type, id) {
+    const sup = await TNR_API.getBusinessSupervision(type);
+    let record, list;
+    if (type === 'capture') list = sup.captures || [];
+    else if (type === 'transfer') list = sup.transfers || [];
+    else if (type === 'treatment') list = sup.treatments || [];
+    else if (type === 'release') list = sup.releases || [];
+    else if (type === 'adoption') list = sup.adoptions || [];
+    else if (type === 'euthanasia') list = sup.euthanasia || [];
+    record = list.find(r => String(r.id) === String(id));
+    if (!record) { TNR_UI.toast('记录不存在', 'warning'); return; }
+
+    let items = [];
+    let extraHtml = '';
+    if (type === 'capture') {
+      items = [
+        { label: '单据号', value: record.ledger_no },
+        { label: '捕捉点', value: record.shelter_name },
+        { label: '来源地点', value: record.community_name || '—' },
+        { label: '详细地址', value: record.address || '—' },
+        { label: '物业交接人', value: record.contact_person || '—' },
+        { label: '联系电话', value: record.contact_phone || '—' },
+        { label: '动物数量', value: record.pet_count },
+        { label: '宠物编号', value: (record.pet_codes || []).join('、') || '—' },
+        { label: '操作人', value: record.operator_name || '—' },
+        { label: '区县', value: record.district_name || '—' },
+        { label: '创建时间', value: TNR_UI.formatDateTime(record.created_at) }
+      ];
+      if (record.group_photo) {
+        extraHtml += `<div class="mt-4"><h4 class="font-display mb-3">合照</h4><img src="${record.group_photo}" style="max-width:100%;border-radius:var(--r-md);border:1px solid var(--border-light);"></div>`;
+      }
+    } else if (type === 'transfer') {
+      items = [
+        { label: '单据号', value: record.ledger_no },
+        { label: '出发捕捉点', value: record.from_shelter_name },
+        { label: '接收医院', value: record.to_hospital_name },
+        { label: '动物数量', value: record.pet_count },
+        { label: '宠物编号', value: (record.pet_codes || []).join('、') || '—' },
+        { label: '操作人', value: record.operator_name || '—' },
+        { label: '区县', value: record.district_name || '—' },
+        { label: '创建时间', value: TNR_UI.formatDateTime(record.created_at) },
+        { label: '接收时间', value: TNR_UI.formatDateTime(record.received_at) },
+        { label: '驳回原因', value: record.reject_reason || '—' }
+      ];
+    } else if (type === 'treatment') {
+      const ti = record.items || {};
+      const td = record.treatment_detail || {};
+      items = [
+        { label: '宠物编号', value: record.pet_code },
+        { label: '诊疗医院', value: record.hospital_name },
+        { label: '诊疗内容', value: (record.treatment_items || []).join('、') || '—' },
+        { label: '绝育', value: ti.sterilization ? '是' : '否' },
+        { label: '绝育日期', value: td.sterilization_surgery_date ? TNR_UI.formatDateTime(td.sterilization_surgery_date) : '—' },
+        { label: '主刀医生', value: td.sterilization_surgeon || '—' },
+        { label: '诊断', value: td.sterilization_diagnosis || '—' },
+        { label: '麻醉方式', value: td.sterilization_anesthesia || '—' },
+        { label: '手术过程', value: td.sterilization_procedure || '—' },
+        { label: '术后恢复', value: td.sterilization_recovery || '—' },
+        { label: '疫苗', value: ti.vaccine ? '是' : '否' },
+        { label: '疫苗类型', value: td.vaccine_type || '—' },
+        { label: '疫苗批号', value: td.vaccine_batch_no || '—' },
+        { label: '疫苗日期', value: td.vaccine_date ? TNR_UI.formatDateTime(td.vaccine_date) : '—' },
+        { label: '驱虫', value: ti.deworming ? '是' : '否' },
+        { label: '驱虫类型', value: td.deworming_type || '—' },
+        { label: '驱虫批号', value: td.deworming_batch_no || '—' },
+        { label: '芯片', value: ti.chip ? '是' : '否' },
+        { label: '芯片号', value: td.chip_no || '—' },
+        { label: '植入日期', value: td.chip_date ? TNR_UI.formatDateTime(td.chip_date) : '—' },
+        { label: '操作人', value: record.operator_name || '—' },
+        { label: '区县', value: record.district_name || '—' },
+        { label: '创建时间', value: TNR_UI.formatDateTime(record.created_at) }
+      ];
+      if (record.pet) extraHtml += this.renderPetPhotos(record.pet, '动物照片');
+    } else if (type === 'release') {
+      items = [
+        { label: '单据号', value: record.ledger_no },
+        { label: '宠物编号', value: record.pet_code },
+        { label: '动物数量', value: 1 },
+        { label: '放养地点', value: record.community_name || '—' },
+        { label: '接收人', value: record.receiver_name || '—' },
+        { label: '接收电话', value: record.receiver_phone || '—' },
+        { label: '操作人', value: record.operator_name || '—' },
+        { label: '区县', value: record.district_name || '—' },
+        { label: '放养时间', value: TNR_UI.formatDateTime(record.released_at) }
+      ];
+      if (record.pet) extraHtml += this.renderPetPhotos(record.pet, '放养动物照片');
+    } else if (type === 'adoption') {
+      const checkIns = (sup.checkins || []).filter(c => c.pet_id === record.pet_id);
+      items = [
+        { label: '单据号', value: record.ledger_no },
+        { label: '宠物编号', value: record.pet_code },
+        { label: '领养人', value: record.adopter_name },
+        { label: '联系电话', value: record.adopter_phone || '—' },
+        { label: '身份证号', value: record.adopter_id_card || '—' },
+        { label: '地址', value: record.adopter_address || '—' },
+        { label: '资质情况', value: record.qualification || '—' },
+        { label: '所属医院', value: record.hospital_name || '—' },
+        { label: '操作人', value: record.operator_name || '—' },
+        { label: '区县', value: record.district_name || '—' },
+        { label: '领养时间', value: TNR_UI.formatDateTime(record.adopted_at) },
+        { label: '回访打卡次数', value: checkIns.length + '次', full: true }
+      ];
+      if (record.pet) extraHtml += this.renderPetPhotos(record.pet, '领养动物照片');
+    } else if (type === 'euthanasia') {
+      items = [
+        { label: '单据号', value: record.ledger_no },
+        { label: '宠物编号', value: record.pet_code },
+        { label: '处置医院', value: record.hospital_name },
+        { label: '处置原因', value: record.reason },
+        { label: '动物状况', value: record.condition || '—' },
+        { label: '遗体已领取', value: record.body_received ? '是' : '否' },
+        { label: '遗体领取人', value: record.body_received_by_name || '—' },
+        { label: '操作人', value: record.operator_name || '—' },
+        { label: '区县', value: record.district_name || '—' },
+        { label: '处置时间', value: TNR_UI.formatDateTime(record.euthanized_at) }
+      ];
+      if (record.pet) extraHtml += this.renderPetPhotos(record.pet, '动物照片');
+    }
+
+    TNR_UI.drawer({
+      title: '业务详情',
+      body: bodyEl => {
+        bodyEl.innerHTML = TNR_UI.renderDescList(items) + extraHtml +
+          (type === 'adoption' && (sup.checkins || []).filter(c => c.pet_id === record.pet_id).length > 0 ?
+            '<div class="mt-5"><h4 class="font-display mb-3">回访打卡记录</h4><div class="timeline">' +
+            (sup.checkins || []).filter(c => c.pet_id === record.pet_id).map(c => `
+              <div class="timeline-item ${c.status === 'approved' ? 'done' : ''}">
+                <div class="timeline-time">${TNR_UI.formatDateTime(c.month || c.created_at)}</div>
+                <div class="timeline-title">${c.status === 'approved' ? '已审核' : '待审核'}</div>
+                <div class="timeline-desc">${TNR_UI.escape(c.note || '')}</div>
+              </div>
+            `).join('') + '</div></div>' : '');
+      }
+    });
+  },
+
+  /* ========== 5. 物料全局监管 ========== */
+  async render_material() {
+    const el = document.getElementById('page-material');
+    el.innerHTML = '<div class="table-empty"><div class="table-empty-icon">⏳</div><div class="table-empty-text">加载中...</div></div>';
+    try {
+      const sup = await TNR_API.getMaterialSupervision();
+      const materials = sup.materials || [];
+      const txns = sup.transactions || [];
+      const alerts = sup.alerts || [];
+      const stats = sup.stats || {};
+
+      const hospitals = (await TNR_API.getInstitutions('hospital')).filter(h => h.status === 'active');
+
+      const txnTypeMap = { purchase: { text: '采购入库', badge: 'badge-success' }, dispatch: { text: '下发出库', badge: 'badge-info' }, consume: { text: '消耗', badge: 'badge-cinnabar' }, adjustment: { text: '调整', badge: 'badge-default' } };
+
+      const recentTxns = [...txns].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0)).slice(0, 10);
+
+      el.innerHTML = `
+        <div class="stat-grid">
+          <div class="stat-card green"><div class="stat-card-icon">📦</div><div><div class="stat-card-value">${stats.total_purchased || 0}</div><div class="stat-card-label">采购总量</div></div></div>
+          <div class="stat-card blue"><div class="stat-card-icon">📤</div><div><div class="stat-card-value">${stats.total_dispatched || 0}</div><div class="stat-card-label">下发总量</div></div></div>
+          <div class="stat-card"><div class="stat-card-icon">🔬</div><div><div class="stat-card-value">${stats.total_consumed || 0}</div><div class="stat-card-label">消耗总量</div></div></div>
+          <div class="stat-card rouge"><div class="stat-card-icon">⚠️</div><div><div class="stat-card-value">${stats.alert_count || 0}</div><div class="stat-card-label">库存预警</div></div></div>
+        </div>
+
+        <div class="dashboard-grid">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><span class="card-title-bar"></span>物料库存明细</div>
+            </div>
+            <div class="card-body card-body-flush">
+              <div class="table-wrapper" style="border:none;">
+                <table class="data-table">
+                  <thead><tr>
+                    <th>物料名称</th>
+                    <th>分类</th>
+                    <th>收容所库存</th>
+                    <th>安全库存</th>
+                    <th>单位</th>
+                    <th>区县</th>
+                  </tr></thead>
+                  <tbody>
+                    ${materials.length ? materials.map(m => `
+                      <tr>
+                        <td><strong>${TNR_UI.escape(m.name)}</strong></td>
+                        <td>${TNR_UI.escape(m.category_display || m.category || '—')}</td>
+                        <td><span class="${(m.shelter_stock || 0) < (m.safety_stock || 0) ? 'text-danger font-bold' : ''}">${m.shelter_stock || 0}</span></td>
+                        <td>${m.safety_stock || 0}</td>
+                        <td>${TNR_UI.escape(m.unit || '—')}</td>
+                        <td>${TNR_UI.escape(m.district_name || '—')}</td>
+                      </tr>
+                    `).join('') : '<tr><td colspan="6" class="table-empty">暂无物料数据</td></tr>'}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><span class="card-title-bar"></span>库存异常预警</div>
+            </div>
+            <div class="card-body">
+              ${alerts.length ? alerts.map(a => `
+                <div class="alert-item warning">
+                  <span class="alert-icon">🟡</span>
+                  <span class="alert-text">${TNR_UI.escape(a.name)} 库存 ${a.shelter_stock} ${a.unit || ''}，低于安全库存 ${a.safety_stock} ${a.unit || ''}（缺口 ${a.shortage}）</span>
+                </div>
+              `).join('') : '<div class="table-empty"><div class="table-empty-icon">✅</div><div class="table-empty-text">暂无异常</div></div>'}
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><span class="card-title-bar"></span>物料流水追踪（最近 10 条）</div>
+          </div>
+          <div class="card-body card-body-flush">
+            <div class="table-wrapper" style="border:none;">
+              <table class="data-table">
+                <thead><tr>
+                  <th>单据号</th><th>类型</th><th>物料</th><th>数量</th><th>批号</th><th>来源/去向</th><th>操作人</th><th>区县</th><th>日期</th>
+                </tr></thead>
+                <tbody>
+                  ${recentTxns.length ? recentTxns.map(t => {
+                    const tm = txnTypeMap[t.type] || { text: t.type, badge: 'badge-default' };
+                    return `<tr>
+                      <td>${TNR_UI.escape(t.ledger_no || '—')}</td>
+                      <td><span class="badge ${tm.badge}">${tm.text}</span></td>
+                      <td>${TNR_UI.escape(t.material_name)}</td>
+                      <td>${t.quantity} ${t.unit || ''}</td>
+                      <td>${TNR_UI.escape(t.batch_no || '—')}</td>
+                      <td>${TNR_UI.escape(t.from_to || '—')}</td>
+                      <td>${TNR_UI.escape(t.operator_name || '—')}</td>
+                      <td>${TNR_UI.escape(t.district_name || '—')}</td>
+                      <td>${TNR_UI.formatDate(t.date)}</td>
+                    </tr>`;
+                  }).join('') : '<tr><td colspan="9" class="table-empty">暂无物料流水</td></tr>'}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+    } catch (e) {
+      el.innerHTML = '<div class="table-empty"><div class="table-empty-icon">⚠️</div><div class="table-empty-text">加载失败：' + TNR_UI.escape(e.message) + '</div></div>';
+    }
+  },
+
+  /* ========== 6. 全局台账中心 ========== */
+  async render_ledger() {
+    const el = document.getElementById('page-ledger');
+    const tabs = [
+      { id: 'capture', label: '捕捉台账' },
+      { id: 'transfer', label: '转运台账' },
+      { id: 'treatment', label: '诊疗台账' },
+      { id: 'release', label: '放养台账' },
+      { id: 'adoption', label: '领养台账' },
+      { id: 'material', label: '物料台账' },
+      { id: 'euthanasia', label: '安乐死台账' }
+    ];
+    el.innerHTML = `
+      <div class="tabs">
+        ${tabs.map(t => `<div class="tab-item ${this.ledgerState.tab === t.id ? 'active' : ''}" data-ledger-tab="${t.id}">${t.label}</div>`).join('')}
+      </div>
+      <div id="ledgerContent"></div>
+    `;
+    el.querySelectorAll('[data-ledger-tab]').forEach(tab => {
+      tab.addEventListener('click', () => { this.ledgerState.tab = tab.dataset.ledgerTab; this.render_ledger(); });
+    });
+    await this.renderLedgerContent();
+  },
+
+  async renderLedgerContent() {
+    const districts = await TNR_API.getDistricts();
+    const activeDistricts = (districts || []).filter(d => d.status === 'active');
+    const institutions = await TNR_API.getInstitutions();
+    const contentEl = document.getElementById('ledgerContent');
+    contentEl.innerHTML = TNR_UI.renderFilterBar([
+      { key: 'district', label: '区县', type: 'select', options: activeDistricts.map(d => ({ value: d.id, label: d.name })) },
+      { key: 'institution_id', label: '机构', type: 'select', options: institutions.map(i => ({ value: i.id, label: i.name })) },
+      { key: 'start_date', label: '开始日期', type: 'date' },
+      { key: 'end_date', label: '结束日期', type: 'date' }
+    ], `
+      <button class="btn btn-secondary btn-sm" id="btnExportLedger">📥 导出</button>
+      <button class="btn btn-secondary btn-sm" id="btnPrintLedger">🖨️ 打印</button>
+    `) + '<div class="table-wrapper" id="ledgerTableWrapper"></div>';
+    document.getElementById('btnExportLedger').addEventListener('click', () => {
+      const tabLabels = { capture: '捕捉', transfer: '转运', treatment: '诊疗', release: '放养', adoption: '领养', material: '物料', euthanasia: '安乐死' };
+      TNR_UI.toast(`${tabLabels[this.ledgerState.tab] || ''}台账导出成功（模拟）`, 'success');
+    });
+    document.getElementById('btnPrintLedger').addEventListener('click', () => window.print());
+    await this.renderLedgerTable();
+    TNR_UI.bindFilter(() => this.renderLedgerTable());
+  },
+
+  async renderLedgerTable() {
+    const filters = TNR_UI.getFilterValues();
+    // 注意：getFilterValues 返回小写的值，但 ledger API 需要 institution_id 和 business_type
+    const rawFilters = {};
+    document.querySelectorAll('[data-filter]').forEach(input => {
+      const key = input.dataset.filter;
+      rawFilters[key] = input.value;
+    });
+
+    const params = {
+      business_type: this.ledgerState.tab,
+      start_date: rawFilters.start_date || '',
+      end_date: rawFilters.end_date || '',
+      institution_id: rawFilters.institution_id || ''
+    };
+    if (rawFilters.district) {
+      // 区县筛选 - 由于 ledger_center 通过 institution_id 筛选，区县筛选仅作为客户端二次过滤
+    }
+
+    const result = await TNR_API.getLedger(params);
+    let records = (result && result.records) || [];
+    if (rawFilters.district) {
+      records = records.filter(r => r.district_name && r.district_name === (document.querySelector('[data-filter="district"]')?.selectedOptions[0]?.textContent || ''));
+    }
+
+    const typeLabelMap = { capture: '捕捉', transfer: '转运', treatment: '诊疗', release: '放养', adoption: '领养', material: '物料', euthanasia: '安乐死' };
+    const columns = [
+      { key: 'business_type', title: '类型', width: '80px', render: r => `<span class="badge badge-default">${typeLabelMap[r.business_type] || r.business_type}</span>` },
+      { key: 'ledger_no', title: '单据号', render: r => TNR_UI.escape(r.ledger_no || '—') },
+      { key: 'date', title: '日期', width: '140px', render: r => TNR_UI.formatDateTime(r.date) },
+      { key: 'district_name', title: '区县', render: r => TNR_UI.escape(r.district_name || '—') },
+      { key: 'operator_name', title: '操作人', render: r => TNR_UI.escape(r.operator_name || '—') },
+      { key: 'detail', title: '详情', render: r => {
+        const parts = [];
+        if (r.pet_code) parts.push('编号：' + r.pet_code);
+        if (r.shelter_name) parts.push(r.shelter_name);
+        if (r.community_name) parts.push(r.community_name);
+        if (r.from_shelter_name) parts.push(r.from_shelter_name + ' → ' + (r.to_hospital_name || ''));
+        if (r.hospital_name) parts.push(r.hospital_name);
+        if (r.adopter_name) parts.push('领养人：' + r.adopter_name);
+        if (r.receiver_name) parts.push('接收人：' + r.receiver_name);
+        if (r.material_name) parts.push(r.material_name + ' ' + (r.quantity || '') + (r.unit || ''));
+        if (r.reason) parts.push('原因：' + r.reason);
+        return TNR_UI.escape(parts.join(' · ')) || '—';
+      } }
+    ];
+
+    document.getElementById('ledgerTableWrapper').innerHTML =
+      '<div style="margin-bottom:var(--sp-3);font-size:var(--fs-sm);color:var(--ink-muted);">共 ' + records.length + ' 条记录</div>' +
+      TNR_UI.renderTable({ columns, data: records, emptyText: '暂无台账数据' });
+  },
+
+  /* ========== 7. 系统配置 ========== */
+  async render_settings() {
+    const el = document.getElementById('page-settings');
+    const tabs = [
+      { id: 'prefix', label: '编号规则配置' },
+      { id: 'logs', label: '操作日志' },
+      { id: 'params', label: '系统参数' }
+    ];
+    el.innerHTML = `
+      <div class="tabs">
+        ${tabs.map(t => `<div class="tab-item ${this.settingsState.tab === t.id ? 'active' : ''}" data-settings-tab="${t.id}">${t.label}</div>`).join('')}
+      </div>
+      <div id="settingsContent"></div>
+    `;
+    el.querySelectorAll('[data-settings-tab]').forEach(tab => {
+      tab.addEventListener('click', () => { this.settingsState.tab = tab.dataset.settingsTab; this.render_settings(); });
+    });
+    await this.renderSettingsContent();
+  },
+
+  async renderSettingsContent() {
+    const el = document.getElementById('settingsContent');
+    const tab = this.settingsState.tab;
+
+    if (tab === 'prefix') {
+      let config = {};
+      try {
+        config = await TNR_API.getSystemConfig();
+      } catch (e) {
+        TNR_UI.toast('加载配置失败：' + e.message, 'danger');
+      }
+      const prefixes = [
+        { type: '捕捉记录', key: 'capture_prefix', example: 'CAP-2025-0110-001' },
+        { type: '转运记录', key: 'transfer_prefix', example: 'TRF-2025-0111-001' },
+        { type: '诊疗记录', key: 'treatment_prefix', example: 'TRE-2025-0115-001' },
+        { type: '放养记录', key: 'release_prefix', example: 'REL-2025-0124-001' },
+        { type: '领养记录', key: 'adoption_prefix', example: 'ADP-2025-0128-001' },
+        { type: '安乐死记录', key: 'euthanasia_prefix', example: 'EUT-2025-0120-001' },
+        { type: '物料采购', key: 'purchase_prefix', example: 'PUR-2025-0105-001' },
+        { type: '物料下发', key: 'dispatch_prefix', example: 'DIS-2025-0108-001' },
+        { type: '物料消耗', key: 'consume_prefix', example: 'CON-2025-0113-001' }
+      ];
+      el.innerHTML = `
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><span class="card-title-bar"></span>编号规则配置</div>
+            <button class="btn btn-primary btn-sm" id="btnSavePrefixes">保存配置</button>
+          </div>
+          <div class="card-body card-body-flush">
+            <div class="table-wrapper" style="border:none;">
+              <table class="data-table">
+                <thead><tr><th>业务类型</th><th>前缀</th><th>示例</th></tr></thead>
+                <tbody>
+                  ${prefixes.map(p => `
+                    <tr>
+                      <td>${p.type}</td>
+                      <td><input type="text" class="form-input" style="width:120px;" value="${TNR_UI.escape(config[p.key] || '')}" data-prefix-key="${p.key}"></td>
+                      <td class="text-muted">${p.example}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        ${!this.isCityLevel() ? '<p class="form-hint mt-3">说明：仅市级管理员可修改编号规则配置。</p>' : ''}
+      `;
+      document.getElementById('btnSavePrefixes').addEventListener('click', async () => {
+        if (!this.isCityLevel()) { TNR_UI.toast('仅市级管理员可修改配置', 'danger'); return; }
+        const payload = {};
+        document.querySelectorAll('[data-prefix-key]').forEach(input => {
+          payload[input.dataset.prefixKey] = input.value.trim();
+        });
+        try {
+          await TNR_API.updateSystemConfig(payload);
+          TNR_UI.toast('编号规则已保存', 'success');
+        } catch (e) {
+          TNR_UI.toast(e.message || '保存失败', 'danger');
+        }
+      });
+    } else if (tab === 'logs') {
+      el.innerHTML = '<div class="table-empty"><div class="table-empty-icon">⏳</div><div class="table-empty-text">加载中...</div></div>';
+      try {
+        const logs = await TNR_API.getOperationLogs();
+        el.innerHTML = `
+          <div class="filter-bar">
+            <div class="filter-item">
+              <div class="filter-item-label">搜索</div>
+              <div class="search-input"><span class="search-input-icon">🔍</span>
+                <input type="text" class="form-input" data-filter="logsearch" placeholder="操作/详情/操作人">
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-body card-body-flush" id="logList">
+              ${this.renderLogList(logs || [])}
+            </div>
+          </div>
+        `;
+        TNR_UI.bindFilter(() => {
+          const f = TNR_UI.getFilterValues();
+          let filtered = logs || [];
+          if (f.logsearch) filtered = (logs || []).filter(l =>
+            (l.action && l.action.toLowerCase().includes(f.logsearch)) ||
+            (JSON.stringify(l.change_message || '').toLowerCase().includes(f.logsearch)) ||
+            (l.user_name && l.user_name.toLowerCase().includes(f.logsearch))
+          );
+          document.getElementById('logList').innerHTML = this.renderLogList(filtered);
+        });
+      } catch (e) {
+        el.innerHTML = '<div class="table-empty"><div class="table-empty-icon">⚠️</div><div class="table-empty-text">加载失败：' + TNR_UI.escape(e.message) + '</div></div>';
+      }
+    } else if (tab === 'params') {
+      el.innerHTML = `
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><span class="card-title-bar"></span>系统参数</div>
+          </div>
+          <div class="card-body">
+            ${TNR_UI.renderDescList([
+              { label: '系统名称', value: 'TNR流浪动物管理系统' },
+              { label: '当前版本', value: 'v1.0.0' },
+              { label: '部署环境', value: 'Django 5.0 生产环境' },
+              { label: '数据存储', value: 'PostgreSQL / SQLite' },
+              { label: '当前用户', value: this.currentUser.name || this.currentUser.username },
+              { label: '用户角色', value: this.getRoleName(this.currentUser.role) },
+              { label: '管辖范围', value: this.isCityLevel() ? '全市' : (this.currentUser.district_name || '本区县') }
+            ])}
+          </div>
+        </div>
+      `;
+    }
+  },
+
+  renderLogList(logs) {
+    if (!logs || logs.length === 0) return '<div class="table-empty"><div class="table-empty-icon">📋</div><div class="table-empty-text">暂无操作日志</div></div>';
+    const flagMap = { 1: '新增', 2: '修改', 3: '删除' };
+    return logs.map(log => `
+      <div class="log-entry">
+        <span class="log-time">${TNR_UI.formatDateTime(log.action_time)}</span>
+        <span class="log-action">${TNR_UI.escape(flagMap[log.action_flag] || log.content_type || '操作')}</span>
+        <span class="log-detail">${TNR_UI.escape(log.object_repr || '')} ${TNR_UI.escape(log.change_message || '')}</span>
+        <span class="text-muted fs-sm">${TNR_UI.escape(log.user_name || '')}</span>
+      </div>
+    `).join('');
+  }
+};
+
+/* ============================================
+   启动
+   ============================================ */
+document.addEventListener('DOMContentLoaded', () => {
+  GovPortal.init();
+});
+</script>
+{% endblock %}

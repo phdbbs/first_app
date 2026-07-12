@@ -1,0 +1,261 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}登录 · 流浪动物TNR管理系统{% endblock %}
+
+{% block extra_head %}
+<style>
+  /* 登录页专属样式 - 水墨丹青 */
+  body {
+    background: var(--grad-sidebar);
+    position: relative;
+    min-height: 100vh;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      radial-gradient(ellipse at 15% 20%, rgba(195,39,43,0.08) 0%, transparent 45%),
+      radial-gradient(ellipse at 85% 80%, rgba(200,155,60,0.05) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 50%, rgba(43,108,176,0.04) 0%, transparent 60%);
+  }
+
+  /* 隐藏顶部导航条（登录页独立布局） */
+  .topbar { display: none !important; }
+
+  .login-wrap {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--sp-6);
+    position: relative;
+    z-index: 1;
+  }
+
+  .login-card {
+    width: 100%;
+    max-width: 420px;
+    background: var(--white);
+    border-radius: var(--r-2xl);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    padding: var(--sp-10) var(--sp-8) var(--sp-8);
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* 卡片顶部装饰条 */
+  .login-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    height: 4px;
+    background: var(--grad-cinnabar);
+  }
+
+  /* 印章 Logo */
+  .login-seal {
+    width: 80px;
+    height: 80px;
+    background: var(--cinnabar);
+    border-radius: var(--r-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto var(--sp-5);
+    position: relative;
+    box-shadow:
+      0 0 0 3px var(--cinnabar),
+      0 0 0 5px var(--white),
+      0 0 0 6px rgba(195,39,43,0.4),
+      0 8px 24px rgba(195,39,43,0.3);
+    transform: rotate(-3deg);
+    animation: sealDrop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @keyframes sealDrop {
+    from { opacity: 0; transform: rotate(-12deg) scale(0.6); }
+    to { opacity: 1; transform: rotate(-3deg) scale(1); }
+  }
+
+  .login-seal::after {
+    content: '';
+    position: absolute;
+    inset: 6px;
+    border: 1.5px solid rgba(255,255,255,0.5);
+    border-radius: var(--r-sm);
+    pointer-events: none;
+  }
+
+  .login-seal-text {
+    font-family: var(--font-display);
+    font-size: 26px;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: -2px;
+    line-height: 1;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.15);
+  }
+
+  .login-title {
+    font-family: var(--font-display);
+    font-size: var(--fs-2xl);
+    font-weight: 700;
+    color: var(--ink);
+    text-align: center;
+    margin-bottom: var(--sp-1);
+    letter-spacing: 2px;
+  }
+
+  .login-subtitle {
+    text-align: center;
+    color: var(--ink-muted);
+    font-size: var(--fs-sm);
+    margin-bottom: var(--sp-6);
+    letter-spacing: 4px;
+    font-family: var(--font-display);
+  }
+
+  .login-subtitle::before,
+  .login-subtitle::after {
+    content: '·';
+    margin: 0 var(--sp-2);
+    color: var(--border-ink);
+  }
+
+  /* 表单 */
+  .login-form .form-group {
+    margin-bottom: var(--sp-4);
+  }
+
+  .login-form .form-label {
+    color: var(--ink-muted);
+    font-weight: 500;
+    font-size: var(--fs-sm);
+  }
+
+  .login-form .form-input {
+    padding: 11px 14px;
+    font-size: var(--fs-md);
+  }
+
+  .login-submit {
+    width: 100%;
+    padding: 12px;
+    background: var(--grad-cinnabar);
+    color: #fff;
+    border: none;
+    border-radius: var(--r-md);
+    font-size: var(--fs-md);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--t-fast);
+    font-family: var(--font-body);
+    letter-spacing: 4px;
+    margin-top: var(--sp-2);
+    box-shadow: var(--shadow-cinnabar);
+  }
+
+  .login-submit:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(195,39,43,0.35);
+  }
+
+  .login-submit:active {
+    transform: scale(0.98);
+  }
+
+  /* 错误消息 */
+  .login-error {
+    background: var(--rouge-light);
+    color: var(--rouge);
+    border: 1px solid rgba(157,41,51,0.2);
+    padding: var(--sp-3) var(--sp-4);
+    border-radius: var(--r-md);
+    font-size: var(--fs-sm);
+    margin-bottom: var(--sp-4);
+    text-align: center;
+  }
+
+  /* 演示账号提示 */
+  .login-demo-hint {
+    margin-top: var(--sp-5);
+    padding: var(--sp-3) var(--sp-4);
+    background: var(--azurite-light);
+    border-radius: var(--r-md);
+    font-size: var(--fs-xs);
+    color: var(--azurite);
+    text-align: center;
+    line-height: 1.8;
+    border: 1px dashed rgba(43,108,176,0.3);
+  }
+
+  .login-demo-hint b {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  /* 返回门户链接 */
+  .login-back {
+    text-align: center;
+    margin-top: var(--sp-5);
+    font-size: var(--fs-sm);
+  }
+
+  .login-back a {
+    color: var(--ink-muted);
+    transition: color var(--t-fast);
+  }
+
+  .login-back a:hover {
+    color: var(--cinnabar);
+  }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="login-wrap">
+  <div class="login-card">
+    <!-- 印章 Logo -->
+    <div class="login-seal">
+      <span class="login-seal-text">TNR</span>
+    </div>
+
+    <h1 class="login-title">流浪动物TNR管理系统</h1>
+    <div class="login-subtitle">捕捉 绝育 放养</div>
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="login-error">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+    <form method="post" action="{% url 'accounts:login' %}" class="login-form">
+      {% csrf_token %}
+      <div class="form-group">
+        <label class="form-label" for="id_username">用户名</label>
+        <input type="text" name="username" id="id_username" class="form-input" autofocus required placeholder="请输入用户名">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="id_password">密码</label>
+        <input type="password" name="password" id="id_password" class="form-input" required placeholder="请输入密码">
+      </div>
+      <button type="submit" class="login-submit">登 录</button>
+    </form>
+
+    <div class="login-demo-hint">
+      演示账号 · 统一密码 <b>123456</b><br>
+      收容所 <b>cy_shelter</b> · 医院 <b>aixin_hosp</b> · 领养人 <b>adopter1</b> · 政府 <b>admin</b>
+    </div>
+
+    <div class="login-back">
+      <a href="{% url 'portal' %}">← 返回门户</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

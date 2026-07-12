@@ -1,0 +1,29 @@
+{% extends 'portal/adopter_base.html' %}
+
+{% block title %}领养人端 · 领养大厅{% endblock %}
+
+{% block nav_hall %}active{% endblock %}
+
+{% block page_title %}领养大厅{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">
+      <span class="card-title-bar"></span>
+      欢迎使用
+    </div>
+  </div>
+  <div class="card-body">
+    <div class="table-empty">
+      <div class="table-empty-icon">🐾</div>
+      <div class="table-empty-text">
+        <strong style="font-size:var(--fs-lg);color:var(--ink);display:block;margin-bottom:var(--sp-2);">领养人端 - 欢迎使用</strong>
+        此处为领养大厅占位页面，后续将展示全市待领养动物列表。
+        <br>
+        当前用户：{{ user.username|default:"未登录" }} · 角色：{{ user.get_role_display|default:"访客" }}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

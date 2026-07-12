@@ -1,0 +1,79 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}流浪动物TNR管理系统{% endblock %}</title>
+  <meta name="description" content="流浪动物TNR管理系统 - 捕捉·绝育·放养 全流程电子化留痕、可溯源、可监管、可闭环治理">
+
+  <!-- Google Fonts: Noto Sans SC + Noto Serif SC -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@400;600;700;900&display=swap" rel="stylesheet">
+
+  <!-- 水墨丹青设计系统 -->
+  <link rel="stylesheet" href="{% static 'css/tnr-traditional.css' %}">
+
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="chinese-pattern-bg">
+
+  <!-- 顶部导航条 -->
+  <header class="topbar" style="position:sticky;top:0;z-index:100;">
+    <div class="topbar-left">
+      {% block topbar_toggle %}{% endblock %}
+      <a href="{% url 'portal' %}" style="display:flex;align-items:center;gap:var(--sp-3);">
+        <span class="seal-decoration" style="width:32px;height:32px;font-size:13px;border-radius:var(--r-md);">TNR</span>
+        <span class="topbar-title">流浪动物TNR管理系统</span>
+      </a>
+    </div>
+    <div class="topbar-right">
+      {% if user.is_authenticated %}
+        <div class="topbar-district">
+          <span class="topbar-district-dot"></span>
+          <span>{{ user.get_role_display|default:user.role }}</span>
+        </div>
+        <div class="sidebar-user-avatar" style="width:30px;height:30px;font-size:var(--fs-sm);">
+          {{ user.username|slice:":1"|upper }}
+        </div>
+        <a href="{% url 'accounts:logout' %}" class="btn btn-secondary btn-sm">退出</a>
+      {% else %}
+        <a href="{% url 'accounts:login' %}" class="btn btn-primary btn-sm">登录</a>
+      {% endif %}
+    </div>
+  </header>
+
+  <!-- 主内容区 -->
+  {% block body %}{% endblock %}
+
+  <!-- Toast 消息（Django messages） -->
+  {% if messages %}
+    <div class="toast-container" style="top:calc(var(--header-h) + var(--sp-4));">
+      {% for message in messages %}
+        <div class="toast {% if message.tags %}{% if message.tags == 'error' %}danger{% elif message.tags == 'success' %}success{% elif message.tags == 'warning' %}warning{% elif message.tags == 'info' %}info{% endif %}{% endif %}">
+          <span class="toast-icon">
+            {% if message.tags == 'error' %}✕{% elif message.tags == 'success' %}✓{% elif message.tags == 'warning' %}⚠{% else %}ℹ{% endif %}
+          </span>
+          <span class="toast-text">{{ message }}</span>
+        </div>
+      {% endfor %}
+    </div>
+    <script>
+      // 自动隐藏消息
+      setTimeout(function() {
+        document.querySelectorAll('.toast-container .toast').forEach(function(t) {
+          t.style.transition = 'all 0.3s ease';
+          t.style.opacity = '0';
+          t.style.transform = 'translateX(120%)';
+          setTimeout(function() { t.remove(); }, 300);
+        });
+      }, 4000);
+    </script>
+  {% endif %}
+
+  <!-- 通用脚本 -->
+  <script src="{% static 'js/tnr-common.js' %}"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

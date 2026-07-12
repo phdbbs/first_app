@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}领养人端 · 流浪动物TNR管理系统{% endblock %}
+
+{% block extra_head %}
+<style>
+  body { background: var(--rice-paper); }
+  .topbar { display: none !important; }
+
+  /* 领养人端 - 移动端友好布局，PC 居中显示 */
+  .mobile-frame {
+    max-width: 420px;
+    margin: 0 auto;
+    min-height: 100vh;
+    background: var(--rice-paper);
+    position: relative;
+    padding-bottom: 70px;
+    box-shadow: 0 0 40px rgba(0,0,0,0.08);
+  }
+
+  .mobile-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--grad-sidebar);
+    color: #fff;
+    padding: var(--sp-4) var(--sp-4);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .mobile-header-title {
+    font-family: var(--font-display);
+    font-size: var(--fs-lg);
+    font-weight: 600;
+  }
+
+  .mobile-header-right {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+  }
+
+  .mobile-header-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: var(--r-full);
+    background: var(--grad-cinnabar);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--fs-sm);
+    font-weight: 600;
+  }
+
+  .mobile-content {
+    padding: var(--sp-4);
+  }
+
+  /* 底部导航 */
+  .mobile-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 420px;
+    background: var(--white);
+    border-top: 1px solid var(--border-light);
+    display: flex;
+    justify-content: space-around;
+    padding: var(--sp-2) 0;
+    z-index: 100;
+    box-shadow: 0 -2px 12px rgba(0,0,0,0.06);
+  }
+
+  .mobile-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: var(--sp-1) var(--sp-3);
+    cursor: pointer;
+    color: var(--ink-light);
+    transition: color var(--t-fast);
+    text-decoration: none;
+    flex: 1;
+  }
+
+  .mobile-nav-item.active { color: var(--cinnabar); }
+  .mobile-nav-item:hover { color: var(--cinnabar); }
+
+  .mobile-nav-icon { font-size: 22px; line-height: 1; }
+  .mobile-nav-label { font-size: var(--fs-xs); }
+
+  /* 隐藏 PC 时的 portal-topbar 提示（如果存在） */
+  .pc-only { display: none; }
+
+  @media (min-width: 768px) {
+    .pc-only { display: inline-flex; }
+  }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="mobile-frame">
+
+  <!-- 顶部 Header -->
+  <header class="mobile-header">
+    <div class="mobile-header-title">{% block page_title %}领养人端{% endblock %}</div>
+    <div class="mobile-header-right">
+      <a href="{% url 'portal' %}" class="btn btn-ghost btn-sm" style="color:rgba(255,255,255,0.8);">门户</a>
+      <a href="{% url 'accounts:logout' %}" class="btn btn-ghost btn-sm" style="color:rgba(255,255,255,0.8);">退出</a>
+      <div class="mobile-header-avatar">{{ user.username|slice:":1"|upper }}</div>
+    </div>
+  </header>
+
+  <!-- 主内容 -->
+  <main class="mobile-content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- 底部导航 -->
+  <nav class="mobile-bottom-nav">
+    <a class="mobile-nav-item {% block nav_hall %}active{% endblock %}" href="{% url 'adopter_home' %}">
+      <span class="mobile-nav-icon">🏠</span>
+      <span class="mobile-nav-label">领养大厅</span>
+    </a>
+    <a class="mobile-nav-item {% block nav_my_adopt %}{% endblock %}" href="{% url 'adopter_home' %}">
+      <span class="mobile-nav-icon">🐾</span>
+      <span class="mobile-nav-label">我的领养</span>
+    </a>
+    <a class="mobile-nav-item {% block nav_visit %}{% endblock %}" href="{% url 'adopter_home' %}">
+      <span class="mobile-nav-icon">📍</span>
+      <span class="mobile-nav-label">回访打卡</span>
+    </a>
+    <a class="mobile-nav-item {% block nav_message %}{% endblock %}" href="{% url 'adopter_home' %}">
+      <span class="mobile-nav-icon">💬</span>
+      <span class="mobile-nav-label">消息中心</span>
+    </a>
+    <a class="mobile-nav-item {% block nav_profile %}{% endblock %}" href="{% url 'adopter_home' %}">
+      <span class="mobile-nav-icon">👤</span>
+      <span class="mobile-nav-label">个人中心</span>
+    </a>
+  </nav>
+
+</div>
+{% endblock %}

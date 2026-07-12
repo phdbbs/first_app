@@ -1,0 +1,60 @@
+{% extends 'portal/gov_base.html' %}
+
+{% block title %}政府监管端 · 数据总览{% endblock %}
+
+{% block nav_dashboard %}active{% endblock %}
+
+{% block page_title %}政府监管端 · 数据总览{% endblock %}
+
+{% block content %}
+<div class="stat-grid">
+  <div class="stat-card">
+    <div class="stat-card-icon">🏢</div>
+    <div>
+      <div class="stat-card-value">0</div>
+      <div class="stat-card-label">机构总数</div>
+    </div>
+  </div>
+  <div class="stat-card green">
+    <div class="stat-card-icon">🐾</div>
+    <div>
+      <div class="stat-card-value">0</div>
+      <div class="stat-card-label">累计救助</div>
+    </div>
+  </div>
+  <div class="stat-card gold">
+    <div class="stat-card-icon">📊</div>
+    <div>
+      <div class="stat-card-value">0</div>
+      <div class="stat-card-label">本月业务量</div>
+    </div>
+  </div>
+  <div class="stat-card blue">
+    <div class="stat-card-icon">👥</div>
+    <div>
+      <div class="stat-card-value">0</div>
+      <div class="stat-card-label">系统账号</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">
+      <span class="card-title-bar"></span>
+      欢迎使用
+    </div>
+  </div>
+  <div class="card-body">
+    <div class="table-empty">
+      <div class="table-empty-icon">📈</div>
+      <div class="table-empty-text">
+        <strong style="font-size:var(--fs-lg);color:var(--ink);display:block;margin-bottom:var(--sp-2);">政府监管端 - 欢迎使用</strong>
+        此处为政府监管端数据总览大屏占位页面，后续将接入真实业务数据。
+        <br>
+        当前用户：{{ user.username|default:"未登录" }} · 角色：{{ user.get_role_display|default:"访客" }}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
