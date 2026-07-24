@@ -20,6 +20,7 @@ urlpatterns = [
     path('captures/create/', views_capture.capture_create, name='capture_create'),
     path('captures/<int:pk>/', views_capture.capture_detail, name='capture_detail'),
     path('captures/<int:pk>/owner-return/', views_capture.owner_return_create, name='owner_return_create'),
+    path('owner-returns/', views_capture.owner_return_list, name='owner_return_list'),
 
     # ============================================
     # Task 5: 转运拆分下发
@@ -63,6 +64,7 @@ urlpatterns = [
     path('adoptions/hall/<int:pk>/', views_adoption.adoption_hall_detail, name='adoption_hall_detail'),
     path('adoptions/<int:pk>/edit-info/', views_adoption.adoption_info_edit, name='adoption_info_edit'),
     path('adoptions/register/', views_adoption.adoption_register, name='adoption_register'),
+    path('adoptions/<int:pk>/confirm-claim/', views_adoption.adoption_confirm_claim, name='adoption_confirm_claim'),
 
     # ============================================
     # Task 10: 回访打卡与黑名单
@@ -93,4 +95,9 @@ urlpatterns = [
     # ============================================
     path('pets/', views_portal.hospital_pets, name='hospital_pets'),
     path('hall-listings/', views_portal.hospital_hall_listings, name='hospital_hall_listings'),
+
+    # ============================================
+    # 宠物全生命周期溯源
+    # ============================================
+    path('pets/<int:pet_id>/lifecycle/', views_portal.pet_lifecycle, name='pet_lifecycle'),
 ]

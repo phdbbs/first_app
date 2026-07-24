@@ -9,6 +9,7 @@ class Pet(models.Model):
         ('in_transit', '在途'),
         ('in_treatment', '待诊疗'),
         ('pending_adopt', '待领养'),
+        ('pending_claim', '待领出'),
         ('adopted', '已领养'),
         ('released', '已放养'),
         ('euthanized', '已安乐死'),
@@ -33,7 +34,7 @@ class Pet(models.Model):
     status = models.CharField('状态', max_length=20, choices=STATUS_CHOICES, default='in_transit')
     district = models.ForeignKey('core.District', on_delete=models.PROTECT, related_name='pets', verbose_name='所属区县')
     capture = models.ForeignKey('business.Capture', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='捕捉记录')
-    shelter = models.ForeignKey('core.Institution', on_delete=models.SET_NULL, null=True, blank=True, related_name='pets', verbose_name='收容所')
+    shelter = models.ForeignKey('core.Institution', on_delete=models.SET_NULL, null=True, blank=True, related_name='pets', verbose_name='捕捉点')
     hospital = models.ForeignKey('core.Institution', on_delete=models.SET_NULL, null=True, blank=True, related_name='hospital_pets', verbose_name='医院')
     chip_no = models.CharField('芯片号', max_length=30, blank=True, default='')
     description = models.TextField('描述', blank=True, default='')
@@ -57,8 +58,8 @@ class Pet(models.Model):
 # ============================================
 class Capture(models.Model):
     district = models.ForeignKey('core.District', on_delete=models.PROTECT, related_name='captures', verbose_name='所属区县')
-    shelter = models.ForeignKey('core.Institution', on_delete=models.PROTECT, related_name='captures', verbose_name='收容所')
-    shelter_name = models.CharField('收容所名称', max_length=100, blank=True, default='')
+    shelter = models.ForeignKey('core.Institution', on_delete=models.PROTECT, related_name='captures', verbose_name='捕捉点')
+    shelter_name = models.CharField('捕捉点名称', max_length=100, blank=True, default='')
     community = models.ForeignKey('core.Institution', on_delete=models.SET_NULL, null=True, blank=True, related_name='community_captures', verbose_name='小区')
     community_name = models.CharField('小区名称', max_length=100, blank=True, default='')
     address = models.CharField('捕捉地址', max_length=200, blank=True, default='')
@@ -120,8 +121,8 @@ class Transfer(models.Model):
         ('rejected', '已驳回'),
     ]
     capture = models.ForeignKey('business.Capture', on_delete=models.SET_NULL, null=True, blank=True, related_name='transfers', verbose_name='捕捉记录')
-    from_shelter = models.ForeignKey('core.Institution', on_delete=models.SET_NULL, null=True, blank=True, related_name='sent_transfers', verbose_name='发出收容所')
-    from_shelter_name = models.CharField('发出收容所名称', max_length=100, blank=True, default='')
+    from_shelter = models.ForeignKey('core.Institution', on_delete=models.SET_NULL, null=True, blank=True, related_name='sent_transfers', verbose_name='发出捕捉点')
+    from_shelter_name = models.CharField('发出捕捉点名称', max_length=100, blank=True, default='')
     to_hospital = models.ForeignKey('core.Institution', on_delete=models.SET_NULL, null=True, blank=True, related_name='received_transfers', verbose_name='接收医院')
     to_hospital_name = models.CharField('接收医院名称', max_length=100, blank=True, default='')
     pet_codes = models.TextField('动物编号', blank=True, default='', help_text='逗号分隔')
@@ -179,6 +180,7 @@ class Treatment(models.Model):
     status = models.CharField('状态', max_length=20, choices=STATUS_CHOICES, default='in_progress')
     operator = models.ForeignKey('accounts.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='treatments', verbose_name='操作员')
     operator_name = models.CharField('操作员姓名', max_length=50, blank=True, default='')
+    ledger_no = models.CharField('台账编号', max_length=50, blank=True, default='')
     district = models.ForeignKey('core.District', on_delete=models.PROTECT, related_name='treatments', verbose_name='所属区县')
     created_at = models.DateTimeField('创建时间', auto_now_add=True)
 
@@ -206,7 +208,7 @@ class Material(models.Model):
     specification = models.CharField('规格', max_length=100, blank=True, default='')
     supplier = models.CharField('供应商', max_length=100, blank=True, default='')
     batch_no = models.CharField('批号', max_length=50, blank=True, default='')
-    shelter_stock = models.IntegerField('收容所库存', default=0)
+    shelter_stock = models.IntegerField('捕捉点库存', default=0)
     safety_stock = models.IntegerField('安全库存', default=0)
     expiry_date = models.DateField('过期日期', null=True, blank=True)
     chip_range_start = models.CharField('芯片起始号', max_length=30, blank=True, default='')
@@ -230,6 +232,7 @@ class MaterialTransaction(models.Model):
     TYPE_CHOICES = [
         ('purchase', '采购入库'),
         ('dispatch', '下发'),
+        ('receive', '医院签收'),
         ('consume', '消耗'),
         ('adjustment', '异动'),
     ]
@@ -319,7 +322,9 @@ class Release(models.Model):
 # ============================================
 class Adoption(models.Model):
     STATUS_CHOICES = [
+        ('pending_claim', '待领出'),
         ('completed', '已完成'),
+        ('cancelled', '已取消'),
     ]
     pet = models.ForeignKey('business.Pet', on_delete=models.CASCADE, related_name='adoptions', verbose_name='宠物')
     pet_code = models.CharField('宠物编号', max_length=30, blank=True, default='')

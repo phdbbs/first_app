@@ -8,7 +8,10 @@ from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 
 from accounts.decorators import role_required
-from business.models import Pet, AdoptionHallListing, Adoption, Message
+from business.models import (
+    Pet, AdoptionHallListing, Adoption, Message,
+    Capture, Transfer, Treatment, Release, Euthanasia,
+)
 from business.services import (
     json_ok, json_fail, parse_json_body, serialize_instance,
     get_district_filtered_queryset,
@@ -16,12 +19,12 @@ from business.services import (
 
 
 # ============================================
-# 收容所门户页面
+# 捕捉点门户页面
 # ============================================
 @login_required
 @role_required('shelter', 'gov_city', 'gov_district')
 def shelter_portal(request):
-    """收容所端门户页面。"""
+    """捕捉点端门户页面。"""
     user = request.user
     user_data = {
         'id': user.id,
@@ -95,20 +98,22 @@ def gov_portal(request):
 # ============================================
 @csrf_exempt
 @login_required
-@role_required('hospital', 'gov_city', 'gov_district')
+@role_required('hospital', 'shelter', 'gov_city', 'gov_district')
 def hospital_pets(request):
     """医院在院宠物列表（可按 status 过滤）。
 
     GET /api/business/pets/?status=in_treatment
     """
     user = request.user
-    qs = get_district_filtered_queryset(Pet, user)
 
     if user.role == 'hospital':
+        # 医院只看分配给自己的宠物（不按区县过滤，因为转运可能跨区县）
         if user.institution_id:
-            qs = qs.filter(hospital_id=user.institution_id)
+            qs = Pet.objects.filter(hospital_id=user.institution_id)
         else:
-            qs = qs.none()
+            qs = Pet.objects.none()
+    else:
+        qs = get_district_filtered_queryset(Pet, user)
 
     status = request.GET.get('status')
     if status:
@@ -120,7 +125,7 @@ def hospital_pets(request):
 
 @csrf_exempt
 @login_required
-@role_required('hospital', 'gov_city', 'gov_district')
+@role_required('hospital', 'adopter', 'gov_city', 'gov_district')
 def hospital_hall_listings(request):
     """医院领养大厅上架信息列表（含已下架）。
 
@@ -134,6 +139,9 @@ def hospital_hall_listings(request):
             qs = qs.filter(hospital_id=user.institution_id)
         else:
             qs = qs.none()
+    elif user.role == 'adopter':
+        # 领养人只看已上架的领养信息
+        qs = qs.filter(is_active=True)
     else:
         qs = get_district_filtered_queryset(AdoptionHallListing, user)
 
@@ -240,3 +248,120 @@ def mark_message_read(request, pk):
     msg.is_read = True
     msg.save(update_fields=['is_read'])
     return json_ok(serialize_instance(msg), message='已标记为已读')
+
+
+# ============================================
+# 宠物全生命周期溯源（领养人端）
+# ============================================
+@csrf_exempt
+@login_required
+@role_required('adopter', 'gov_city', 'gov_district', 'shelter', 'hospital')
+def pet_lifecycle(request, pet_id):
+    """返回指定宠物的全生命周期溯源记录。
+
+    按时间顺序返回：收容、转运、诊疗、放养、领养、安乐死记录。
+    """
+    try:
+        pet = Pet.objects.get(id=pet_id)
+    except Pet.DoesNotExist:
+        return json_fail('宠物不存在', status=404)
+
+    events = []
+
+    # 收容记录
+    if pet.capture:
+        cap = pet.capture
+        events.append({
+            'type': 'capture',
+            'type_display': '收容登记',
+            'date': cap.created_at.isoformat() if cap.created_at else '',
+            'ledger_no': cap.ledger_no,
+            'shelter_name': cap.shelter_name,
+            'community_name': cap.community_name,
+            'address': cap.address,
+            'operator_name': cap.operator_name,
+        })
+
+    # 转运记录
+    transfers = Transfer.objects.filter(pet_codes__contains=pet.code).order_by('created_at')
+    for t in transfers:
+        events.append({
+            'type': 'transfer',
+            'type_display': '转运交接',
+            'date': t.created_at.isoformat() if t.created_at else '',
+            'ledger_no': t.ledger_no,
+            'from_shelter_name': t.from_shelter_name,
+            'to_hospital_name': t.to_hospital_name,
+            'status': t.status,
+            'received_at': t.received_at.isoformat() if t.received_at else '',
+            'operator_name': t.operator_name,
+        })
+
+    # 诊疗记录
+    treatments = Treatment.objects.filter(pet=pet).order_by('created_at')
+    for t in treatments:
+        items = []
+        if t.items_sterilization: items.append('绝育')
+        if t.items_vaccine: items.append('疫苗')
+        if t.items_deworming: items.append('驱虫')
+        if t.items_chip: items.append('芯片')
+        events.append({
+            'type': 'treatment',
+            'type_display': '诊疗记录',
+            'date': t.created_at.isoformat() if t.created_at else '',
+            'ledger_no': t.ledger_no,
+            'hospital_name': t.hospital_name,
+            'items': items,
+            'chip_no': t.chip_no,
+            'status': t.status,
+            'operator_name': t.operator_name,
+        })
+
+    # 放养记录
+    releases = Release.objects.filter(pet=pet).order_by('created_at')
+    for r in releases:
+        events.append({
+            'type': 'release',
+            'type_display': '放养记录',
+            'date': r.released_at.isoformat() if r.released_at else (r.created_at.isoformat() if r.created_at else ''),
+            'ledger_no': r.ledger_no,
+            'community_name': r.community_name,
+            'receiver_name': r.receiver_name,
+            'status': r.status,
+            'operator_name': r.operator_name,
+        })
+
+    # 领养记录
+    adoptions = Adoption.objects.filter(pet=pet).order_by('created_at')
+    for a in adoptions:
+        events.append({
+            'type': 'adoption',
+            'type_display': '领养记录',
+            'date': a.adopted_at.isoformat() if a.adopted_at else (a.created_at.isoformat() if a.created_at else ''),
+            'ledger_no': a.ledger_no,
+            'adopter_name': a.adopter_name,
+            'hospital_name': a.hospital_name,
+            'status': a.status,
+            'operator_name': a.operator_name,
+        })
+
+    # 安乐死记录
+    euthanasias = Euthanasia.objects.filter(pet=pet).order_by('created_at')
+    for e in euthanasias:
+        events.append({
+            'type': 'euthanasia',
+            'type_display': '安乐死记录',
+            'date': e.euthanized_at.isoformat() if e.euthanized_at else (e.created_at.isoformat() if e.created_at else ''),
+            'ledger_no': e.ledger_no,
+            'hospital_name': e.hospital_name,
+            'reason': e.reason,
+            'operator_name': e.operator_name,
+        })
+
+    # 按日期排序（空日期排最后）
+    events.sort(key=lambda x: x.get('date') or '', reverse=False)
+
+    return json_ok({
+        'pet': serialize_instance(pet),
+        'events': events,
+    })

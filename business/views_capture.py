@@ -49,12 +49,12 @@ def capture_create(request):
 
     shelter_id = data.get('shelter_id') or getattr(request.user, 'institution_id', None)
     if not shelter_id:
-        return json_fail('缺少收容所信息')
+        return json_fail('缺少捕捉点信息')
 
     try:
         shelter = Institution.objects.get(id=shelter_id, type='shelter')
     except Institution.DoesNotExist:
-        return json_fail('收容所不存在')
+        return json_fail('捕捉点不存在')
 
     pet_count = int(data.get('pet_count', 0))
     if pet_count <= 0:
@@ -110,8 +110,26 @@ def capture_create(request):
 @csrf_exempt
 @login_required
 @role_required('shelter', 'gov_city', 'gov_district')
-def owner_return_create(request):
-    """主人领回登记"""
+def owner_return_list(request):
+    """主人领回记录列表"""
+    qs = get_district_filtered_queryset(OwnerReturn, request.user)
+
+    keyword = request.GET.get('keyword', '').strip()
+    if keyword:
+        qs = qs.filter(pet_code__icontains=keyword) | qs.filter(owner_name__icontains=keyword) | qs.filter(owner_phone__icontains=keyword)
+
+    data = [serialize_instance(r) for r in qs]
+    return json_ok(data)
+
+
+@csrf_exempt
+@login_required
+@role_required('shelter', 'gov_city', 'gov_district')
+def owner_return_create(request, pk=None):
+    """主人领回登记
+
+    URL 中的 pk 可以是 capture_id（兼容旧路由），实际 pet_id 从请求体获取。
+    """
     data = parse_json_body(request)
 
     pet_id = data.get('pet_id')
@@ -122,6 +140,11 @@ def owner_return_create(request):
         pet = Pet.objects.get(id=pet_id)
     except Pet.DoesNotExist:
         return json_fail('宠物不存在')
+
+    # 状态限制：只有刚捕捉（未提交转运单）的宠物可领回
+    # 即：宠物未关联医院（pet.hospital 为空），表示尚未提交转运单
+    if pet.hospital_id is not None:
+        return json_fail('该宠物已提交转运单，不可领回。领回仅限捕捉后、转运前的宠物')
 
     owner_name = data.get('owner_name', '').strip()
     if not owner_name:

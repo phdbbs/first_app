@@ -1,7 +1,16 @@
 venv/
+.venv/
 __pycache__/
 *.pyc
 db.sqlite3
+db.sqlite3-journal
 .env
 media/
 staticfiles/
+
+# 本地调试/测试脚本（不推送至仓库）
+tnr_debug*.py
+tnr_e2e*.py
+tnr_recon*.py
+tnr_test*.py
+tnr_check_db.py

@@ -1,12 +1,13 @@
 """
 Task 7: 物料供应链与双台账
 - 物料列表/采购/下发/签收/异动
-- 收容所台账 / 医院台账
+- 捕捉点台账 / 医院台账
 - 芯片号段管理
 """
 from datetime import datetime
 
 from django.contrib.auth.decorators import login_required
+from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 
 from accounts.decorators import role_required
@@ -88,7 +89,7 @@ def purchase_create(request):
 
     district_id = material.district_id
 
-    # 创建采购流水（收容所侧，hospital=None）
+    # 创建采购流水（捕捉点侧，hospital=None）
     txn = adjust_stock(
         material=material,
         hospital=None,
@@ -171,7 +172,7 @@ def dispatch_create(request):
         return json_fail('下发数量必须大于0')
 
     if material.shelter_stock < quantity:
-        return json_fail(f'收容所库存不足（当前库存 {material.shelter_stock}）')
+        return json_fail(f'捕捉点库存不足（当前库存 {material.shelter_stock}）')
 
     # 检查芯片号是否可用
     chip_numbers = data.get('chip_numbers', [])
@@ -182,7 +183,7 @@ def dispatch_create(request):
         if unavailable > 0:
             return json_fail(f'{unavailable} 个芯片号已被使用')
 
-    # 创建下发流水（收容所侧扣减库存，同时关联目标医院）
+    # 创建下发流水（捕捉点侧扣减库存，不关联医院，医院签收后才增加库存）
     txn = adjust_stock(
         material=material,
         hospital=None,
@@ -191,22 +192,25 @@ def dispatch_create(request):
         operator=user,
         operator_name=user.get_full_name() or user.username,
         from_to=hospital.name,
-        note=f'下发至 {hospital.name}',
+        note=f'下发至 {hospital.name}（待签收）',
         ledger_no=generate_ledger_no('DIS'),
         district_id=material.district_id,
     )
-    # 关联目标医院（用于医院台账统计）
+    # 关联目标医院到流水（用于医院端查看待签收列表），但不影响医院库存
     txn.hospital = hospital
     txn.save(update_fields=['hospital'])
 
-    return json_ok(serialize_instance(txn), message=f'下发成功，数量 {quantity}')
+    return json_ok(serialize_instance(txn), message=f'下发成功，数量 {quantity}（待医院签收后增加库存）')
 
 
 @csrf_exempt
 @login_required
 @role_required('hospital')
 def material_receive(request, pk):
-    """医院确认签收下发物料"""
+    """医院确认签收下发物料
+
+    签收后创建一条 receive 类型流水，增加医院库存。
+    """
     try:
         txn = MaterialTransaction.objects.get(id=pk, type='dispatch')
     except MaterialTransaction.DoesNotExist:
@@ -216,11 +220,40 @@ def material_receive(request, pk):
     if user.institution_id != txn.hospital_id:
         return json_fail('无权签收此物料')
 
-    # 签收：在备注中标记，已有 dispatch 流水即代表在途库存
+    # 检查是否已签收（避免重复签收）
+    already_received = MaterialTransaction.objects.filter(
+        material=txn.material,
+        hospital=txn.hospital,
+        type='receive',
+        ledger_no=txn.ledger_no,
+    ).exists()
+    if already_received:
+        return json_fail('此物料已签收')
+
+    # 标记原 dispatch 流水为已签收
     txn.note = (txn.note + ' [已签收]' if txn.note else '[已签收]').strip()
     txn.save(update_fields=['note'])
 
-    return json_ok(serialize_instance(txn), message='签收成功')
+    # 创建签收流水（增加医院库存）
+    receive_txn = MaterialTransaction.objects.create(
+        type='receive',
+        material=txn.material,
+        material_name=txn.material_name,
+        quantity=txn.quantity,
+        unit=txn.unit,
+        batch_no=txn.batch_no,
+        supplier=txn.supplier,
+        from_to=txn.from_to or '捕捉点下发',
+        hospital=txn.hospital,
+        operator=user,
+        operator_name=user.get_full_name() or user.username,
+        date=timezone.now().date(),
+        ledger_no=txn.ledger_no,  # 复用原 dispatch 单号，便于关联
+        district=txn.district,
+        note=f'签收下发物料（原单号：{txn.ledger_no}）',
+    )
+
+    return json_ok(serialize_instance(receive_txn), message='签收成功，医院库存已增加')
 
 
 @csrf_exempt
@@ -265,7 +298,7 @@ def stock_adjustment(request):
         txn_type='adjustment',
         operator=user,
         operator_name=user.get_full_name() or user.username,
-        from_to=hospital.name if hospital else '收容所',
+        from_to=hospital.name if hospital else '捕捉点',
         note=data.get('reason', '库存异动'),
         ledger_no=generate_ledger_no('ADJ'),
         district_id=material.district_id,
@@ -304,11 +337,11 @@ def material_transactions(request):
 @login_required
 @role_required('shelter', 'gov_city', 'gov_district')
 def shelter_stock_ledger(request):
-    """收容所台账（采购+下发+异动）"""
+    """捕捉点台账（采购+下发+异动）"""
     user = request.user
     qs = get_district_filtered_queryset(MaterialTransaction, user)
 
-    # 收容所台账：所有 hospital=None 的流水 + dispatch 流水
+    # 捕捉点台账：所有 hospital=None 的流水 + dispatch 流水
     qs = qs.filter(hospital__isnull=True) | qs.filter(type='dispatch')
 
     material_id = request.GET.get('material_id')
@@ -336,7 +369,7 @@ def hospital_stock_ledger(request):
         else:
             qs = qs.none()
     else:
-        # 政府/收容所查看时只看有医院关联的流水
+        # 政府/捕捉点查看时只看有医院关联的流水
         qs = qs.filter(hospital__isnull=False)
 
     data = [serialize_instance(t) for t in qs]

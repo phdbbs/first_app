@@ -6,6 +6,7 @@
 {% block nav_dashboard %}active{% endblock %}
 
 {% block extra_head %}
+{{ block.super }}
 <style>
   .photo-placeholder{width:48px;height:48px;border-radius:var(--r-md);background:var(--rice-warm);display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--ink-light);flex-shrink:0}
   .treatment-item-card{border:2px solid var(--border-light);border-radius:var(--r-lg);padding:var(--sp-4);cursor:pointer;transition:all var(--t-base);background:var(--white)}
@@ -345,7 +346,7 @@ const Hospital = {
         '<td><div class="flex gap-2">' + actions + '</div></td></tr>';
     }).join('');
 
-    c.innerHTML = '<div class="table-wrapper"><table class="data-table"><thead><tr><th>交接单号</th><th>宠物信息</th><th>来源收容所</th><th>数量</th><th>状态</th><th>操作</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+    c.innerHTML = '<div class="table-wrapper"><table class="data-table"><thead><tr><th>交接单号</th><th>宠物信息</th><th>来源捕捉点</th><th>数量</th><th>状态</th><th>操作</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
 
     c.querySelectorAll('[data-receive]').forEach(btn => {
       btn.addEventListener('click', () => this.confirmReceive(btn.dataset.receive));
@@ -963,7 +964,7 @@ const Hospital = {
       c.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📊</div><div class="empty-state-text">暂无台账记录</div></div>';
       return;
     }
-    const typeMap = {'purchase': '采购入库', 'dispatch': '收容所下发', 'consume': '诊疗消耗', 'adjustment': '库存异动'};
+    const typeMap = {'purchase': '采购入库', 'dispatch': '捕捉点下发', 'consume': '诊疗消耗', 'adjustment': '库存异动'};
     const typeBadge = {'purchase': 'badge-success', 'dispatch': 'badge-info', 'consume': 'badge-warning', 'adjustment': 'badge-danger'};
     const rows = data.map(t => {
       const sign = (t.type === 'consume' || t.type === 'adjustment') ? '-' : '+';
@@ -1002,13 +1003,34 @@ const Hospital = {
     page.innerHTML = '<div class="loading-state">加载中...</div>';
 
     try {
-      const [pets, listings] = await Promise.all([
+      const [pets, listings, adoptions] = await Promise.all([
         TNR_API.getHospitalPets('pending_adopt'),
-        TNR_API.getHallListings()
+        TNR_API.getHallListings(),
+        TNR_API.getAdoptions()
       ]);
 
-      if (pets.length === 0) {
+      // 待领出确认列表（捕捉点已登记领养，等待医院确认领出）
+      const pendingClaims = adoptions.filter(a => a.status === 'pending_claim');
+      let claimsHtml = '';
+      if (pendingClaims.length > 0) {
+        claimsHtml = '<div class="card mb-4"><div class="card-header"><div class="card-title"><span class="card-title-bar"></span>待领出确认</div><span class="badge badge-cinnabar">' + pendingClaims.length + ' 条待处理</span></div><div class="card-body" style="padding:0;"><div class="table-wrapper"><table class="table"><thead><tr><th>领养单号</th><th>宠物编号</th><th>领养人</th><th>电话</th><th>登记时间</th><th>操作</th></tr></thead><tbody>';
+        pendingClaims.forEach(a => {
+          claimsHtml += '<tr><td><span class="font-mono fs-sm">' + this.escape(a.ledger_no || a.id) + '</span></td><td><span class="pet-code-chip">' + this.escape(a.pet_code || '') + '</span></td><td>' + this.escape(a.adopter_name || '') + '</td><td>' + this.escape(a.adopter_phone || '') + '</td><td>' + this.escape((a.created_at || '').substring(0, 16)) + '</td><td><button class="btn btn-primary btn-sm" data-confirm-claim="' + a.id + '">确认领出</button></td></tr>';
+        });
+        claimsHtml += '</tbody></table></div></div></div>';
+      }
+
+      if (pets.length === 0 && pendingClaims.length === 0) {
         page.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🐾</div><div class="empty-state-text">暂无待领养动物</div><div class="empty-state-desc">诊疗完成5天后，动物状态将自动变更为「待领养」</div></div>';
+        return;
+      }
+
+      if (pets.length === 0) {
+        page.innerHTML = claimsHtml + '<div class="empty-state"><div class="empty-state-icon">🐾</div><div class="empty-state-text">暂无待领养动物</div><div class="empty-state-desc">诊疗完成5天后，动物状态将自动变更为「待领养」</div></div>';
+        // 绑定确认领出按钮
+        page.querySelectorAll('[data-confirm-claim]').forEach(btn => {
+          btn.addEventListener('click', () => this.confirmClaim(btn.dataset.confirmClaim));
+        });
         return;
       }
 
@@ -1046,8 +1068,11 @@ const Hospital = {
           '</div></div></div>';
       }).join('');
 
-      page.innerHTML = html;
+      page.innerHTML = claimsHtml + html;
 
+      page.querySelectorAll('[data-confirm-claim]').forEach(btn => {
+        btn.addEventListener('click', () => this.confirmClaim(btn.dataset.confirmClaim));
+      });
       page.querySelectorAll('[data-save-info]').forEach(btn => {
         btn.addEventListener('click', () => this.saveAdoptionInfo(btn.dataset.saveInfo));
       });
@@ -1105,6 +1130,19 @@ const Hospital = {
             TNR_UI.toast(e.message || '上传失败', 'danger');
           }
         };
+      }
+    });
+  },
+
+  async confirmClaim(adoptionId) {
+    TNR_UI.confirm('确认该领养人已到院领出动物？<br>确认后领养流程完成，宠物状态变为「已领养」。', '确认领出').then(async ok => {
+      if (!ok) return;
+      try {
+        const res = await TNR_API.confirmAdoptionClaim(adoptionId);
+        TNR_UI.toast(res.message || '领出确认成功', 'success');
+        this.render_adoption_info();
+      } catch (e) {
+        TNR_UI.toast('确认失败：' + e.message, 'danger');
       }
     });
   },
@@ -1294,7 +1332,7 @@ const Hospital = {
         const codes = this.parsePetCodes(t.pet_codes);
         return '<tr><td>' + this.escape(t.ledger_no || '') + '</td><td>' + this.formatDateTime(t.created_at) + '</td><td>' + this.escape(t.from_shelter_name || '') + '</td><td>' + (t.pet_count || 0) + '</td><td>' + this.escape(codes.join(', ')) + '</td><td>' + this.transferStatusBadge(t.status) + '</td><td>' + this.formatDate(t.received_at) + '</td></tr>';
       }).join('');
-      c.innerHTML = '<div class="table-wrapper"><table class="data-table"><thead><tr><th>单据编号</th><th>创建时间</th><th>来源收容所</th><th>动物数量</th><th>宠物编号</th><th>状态</th><th>接收时间</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+      c.innerHTML = '<div class="table-wrapper"><table class="data-table"><thead><tr><th>单据编号</th><th>创建时间</th><th>来源捕捉点</th><th>动物数量</th><th>宠物编号</th><th>状态</th><th>接收时间</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
     } else if (tab === 'treatment') {
       const data = treatments.slice().sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
       if (data.length === 0) { c.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📊</div><div class="empty-state-text">暂无诊疗台账</div></div>'; return; }
@@ -1310,7 +1348,7 @@ const Hospital = {
     } else if (tab === 'material') {
       const data = txns.slice().sort((a, b) => (b.date || '').localeCompare(a.date || ''));
       if (data.length === 0) { c.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📊</div><div class="empty-state-text">暂无物料台账</div></div>'; return; }
-      const typeMap = {'purchase': '采购入库', 'dispatch': '收容所下发', 'consume': '诊疗消耗', 'adjustment': '库存异动'};
+      const typeMap = {'purchase': '采购入库', 'dispatch': '捕捉点下发', 'consume': '诊疗消耗', 'adjustment': '库存异动'};
       const typeBadge = {'purchase': 'badge-success', 'dispatch': 'badge-info', 'consume': 'badge-warning', 'adjustment': 'badge-danger'};
       const rows = data.map(t => {
         const sign = (t.type === 'consume' || t.type === 'adjustment') ? '-' : '+';
@@ -1347,7 +1385,7 @@ const Hospital = {
       '<div style="font-size:var(--fs-sm);color:var(--ink-muted);line-height:1.8;">' +
       '· 医院端负责动物接收、诊疗操作、物料管理、领养信息维护及安乐死处置。<br>' +
       '· 诊疗完成后5天，系统自动将动物状态变更为「待领养」。<br>' +
-      '· 领养出库登记由收容所端完成，医院端仅维护领养大厅信息。<br>' +
+      '· 领养出库登记由捕捉点端完成，医院端仅维护领养大厅信息。<br>' +
       '· 物料库存联动：疫苗/驱虫/芯片在诊疗时自动扣减医院库存。<br>' +
       '· 如需修改密码，请联系系统管理员。' +
       '</div></div></div>';

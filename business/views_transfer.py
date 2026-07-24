@@ -20,20 +20,21 @@ from core.models import Institution
 @login_required
 @role_required('shelter', 'gov_city', 'gov_district', 'hospital')
 def transfer_list(request):
-    """转运列表（收容所看发出，医院看接收）"""
+    """转运列表（捕捉点看发出，医院看接收）"""
     user = request.user
-    qs = get_district_filtered_queryset(Transfer, user)
 
     if user.role == 'hospital':
-        # 医院只看发给自己的
+        # 医院只看发给自己的（不按区县过滤，因为转运可能跨区县）
         if user.institution_id:
-            qs = qs.filter(to_hospital_id=user.institution_id)
+            qs = Transfer.objects.filter(to_hospital_id=user.institution_id)
         else:
-            qs = qs.none()
-    elif user.role == 'shelter':
-        # 收容所只看自己发出的
-        if user.institution_id:
-            qs = qs.filter(from_shelter_id=user.institution_id)
+            qs = Transfer.objects.none()
+    else:
+        qs = get_district_filtered_queryset(Transfer, user)
+        if user.role == 'shelter':
+            # 捕捉点只看自己发出的
+            if user.institution_id:
+                qs = qs.filter(from_shelter_id=user.institution_id)
 
     status = request.GET.get('status')
     if status:
@@ -47,9 +48,9 @@ def transfer_list(request):
 @login_required
 @role_required('shelter', 'gov_city', 'gov_district')
 def transfer_create(request):
-    """创建转运记录（支持拆分至多家医院）
+    """创建转运记录（支持拆分至多家医院 / 简单单医院两种格式）
 
-    请求体示例:
+    格式一（拆分多家医院）:
     {
         "capture_id": 1,
         "items": [
@@ -57,38 +58,52 @@ def transfer_create(request):
             {"hospital_id": 4, "pet_ids": [3]}
         ]
     }
+
+    格式二（单医院 + 编号数组，前端默认使用此格式）:
+    {
+        "from_shelter_id": 11,
+        "to_hospital_id": 13,
+        "pet_codes": ["TNR2501001", "TNR2501002"],
+        "pet_count": 2,
+        "note": "备注"
+    }
     """
     data = parse_json_body(request)
     user = request.user
 
-    capture_id = data.get('capture_id')
-    items = data.get('items', [])
-    if not items:
-        return json_fail('缺少转运明细')
-
-    # 获取来源收容所
+    # 获取来源捕捉点
     shelter_id = data.get('from_shelter_id') or getattr(user, 'institution_id', None)
     if not shelter_id:
-        return json_fail('缺少收容所信息')
+        return json_fail('缺少捕捉点信息')
 
     try:
         shelter = Institution.objects.get(id=shelter_id, type='shelter')
     except Institution.DoesNotExist:
-        return json_fail('收容所不存在')
+        return json_fail('捕捉点不存在')
 
     district_id = data.get('district_id') or getattr(user, 'district_id', None)
     if not district_id:
         return json_fail('缺少区县信息')
 
-    capture = None
-    if capture_id:
-        capture = Capture.objects.filter(id=capture_id).first()
+    capture_id = data.get('capture_id')
+    capture = Capture.objects.filter(id=capture_id).first() if capture_id else None
+
+    # 统一构造 items 列表：支持两种格式
+    items = data.get('items')
+    if not items:
+        # 格式二：单医院 + pet_codes（字符串编号）
+        to_hospital_id = data.get('to_hospital_id')
+        pet_codes_raw = data.get('pet_codes', [])
+        if isinstance(pet_codes_raw, str):
+            pet_codes_raw = [c.strip() for c in pet_codes_raw.split(',') if c.strip()]
+        if not to_hospital_id or not pet_codes_raw:
+            return json_fail('缺少转运明细（items 或 to_hospital_id+pet_codes）')
+        items = [{'hospital_id': to_hospital_id, 'pet_codes': pet_codes_raw}]
 
     created = []
     for item in items:
         hospital_id = item.get('hospital_id')
-        pet_ids = item.get('pet_ids', [])
-        if not hospital_id or not pet_ids:
+        if not hospital_id:
             continue
 
         try:
@@ -96,19 +111,28 @@ def transfer_create(request):
         except Institution.DoesNotExist:
             continue
 
-        pets = Pet.objects.filter(id__in=pet_ids, status='in_transit')
+        # 优先使用 pet_ids（数字ID），否则用 pet_codes（字符串编号）
+        pet_ids = item.get('pet_ids', [])
+        pet_codes = item.get('pet_codes', [])
+        if pet_ids:
+            pets = Pet.objects.filter(id__in=pet_ids, status='in_transit')
+        elif pet_codes:
+            pets = Pet.objects.filter(code__in=pet_codes, status='in_transit')
+        else:
+            continue
+
         if not pets.exists():
             continue
 
-        pet_codes = [p.code for p in pets]
+        pet_code_list = [p.code for p in pets]
         transfer = Transfer.objects.create(
             capture=capture,
             from_shelter=shelter,
             from_shelter_name=shelter.name,
             to_hospital=hospital,
             to_hospital_name=hospital.name,
-            pet_codes=','.join(pet_codes),
-            pet_count=len(pet_codes),
+            pet_codes=','.join(pet_code_list),
+            pet_count=len(pet_code_list),
             status='pending',
             operator=user,
             operator_name=user.get_full_name() or user.username,

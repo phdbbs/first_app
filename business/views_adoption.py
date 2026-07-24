@@ -6,6 +6,7 @@ Task 9: 领养业务
 - 领养记录列表
 """
 from django.contrib.auth.decorators import login_required
+from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 
 from accounts.decorators import role_required
@@ -112,7 +113,7 @@ def adoption_info_edit(request, pk):
 
 
 # ============================================
-# 线下领养登记（收容所）
+# 线下领养登记（捕捉点）
 # ============================================
 @csrf_exempt
 @login_required
@@ -198,7 +199,7 @@ def adoption_register(request):
         adoption_agreement=data.get('adoption_agreement', ''),
         hospital=hospital,
         hospital_name=hospital.name if hospital else '',
-        status='completed',
+        status='pending_claim',
         adopted_at=adopted_at,
         operator=user,
         operator_name=user.get_full_name() or user.username,
@@ -206,8 +207,8 @@ def adoption_register(request):
         district_id=district_id,
     )
 
-    # 更新宠物状态
-    pet.status = 'adopted'
+    # 更新宠物状态为待领出（等待医院确认领出）
+    pet.status = 'pending_claim'
     pet.save(update_fields=['status'])
 
     # 下架领养大厅
@@ -219,10 +220,62 @@ def adoption_register(request):
             user=adopter,
             type='approval',
             title='领养审核通过',
-            content=f'您的领养申请已通过审核，{pet.code} 已成功领养。',
+            content=f'您的领养申请已通过审核，{pet.code} 已登记。请前往医院领取动物，医院确认领出后领养完成。',
         )
 
-    return json_ok(serialize_instance(adoption), message='领养登记成功')
+    return json_ok(serialize_instance(adoption), message='领养登记成功，待医院确认领出')
+
+
+@csrf_exempt
+@login_required
+@role_required('hospital')
+def adoption_confirm_claim(request, pk):
+    """医院确认领出动物
+
+    领养人在捕捉点办理好手续后，到医院领取动物。
+    医院确认领出后，宠物状态变为已领养，领养记录状态变为已完成。
+
+    请求体示例:
+    {
+        "note": "动物已领出"
+    }
+    """
+    data = parse_json_body(request)
+    user = request.user
+
+    try:
+        adoption = Adoption.objects.get(id=pk)
+    except Adoption.DoesNotExist:
+        return json_fail('领养记录不存在', status=404)
+
+    if adoption.status != 'pending_claim':
+        return json_fail(f'当前领养状态({adoption.status})不可确认领出')
+
+    # 验证医院权限
+    if user.institution_id and adoption.hospital_id and user.institution_id != adoption.hospital_id:
+        return json_fail('无权确认此领养记录')
+
+    # 确认领出
+    adoption.status = 'completed'
+    if not adoption.adopted_at:
+        adoption.adopted_at = timezone.now().date()
+    adoption.save(update_fields=['status', 'adopted_at'])
+
+    # 更新宠物状态为已领养
+    pet = adoption.pet
+    pet.status = 'adopted'
+    pet.save(update_fields=['status'])
+
+    # 通知领养人
+    if adoption.adopter:
+        Message.objects.create(
+            user=adoption.adopter,
+            type='approval',
+            title='领养完成',
+            content=f'医院已确认领出，{pet.code} 领养流程完成。',
+        )
+
+    return json_ok(serialize_instance(adoption), message='领出确认成功，领养流程已完成')
 
 
 @csrf_exempt

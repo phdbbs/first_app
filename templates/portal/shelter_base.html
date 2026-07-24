@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}收容所端 · 流浪动物TNR管理系统{% endblock %}
+{% block title %}捕捉点端 · 流浪动物TNR管理系统{% endblock %}
 
 {% block extra_head %}
 <style>
-  /* 收容所端布局 - 复用 admin-layout */
+  /* 捕捉点端布局 - 复用 admin-layout */
   body { background: var(--rice-paper); }
   .topbar { display: none !important; }
 
@@ -175,7 +175,7 @@
     <div class="portal-sidebar-brand">
       <div class="seal-icon">收</div>
       <div>
-        <div class="portal-sidebar-brand-text">收容所端</div>
+        <div class="portal-sidebar-brand-text">捕捉点端</div>
         <div class="portal-sidebar-brand-sub">Shelter Portal</div>
       </div>
     </div>
@@ -221,7 +221,7 @@
         <div class="sidebar-user-avatar">{{ user.username|slice:":1"|upper }}</div>
         <div class="sidebar-user-info">
           <div class="sidebar-user-name">{{ user.username|default:"未登录" }}</div>
-          <div class="sidebar-user-role">{{ user.get_role_display|default:"收容所操作员" }}</div>
+          <div class="sidebar-user-role">{{ user.get_role_display|default:"捕捉点操作员" }}</div>
         </div>
       </div>
     </div>
@@ -234,7 +234,7 @@
     <header class="portal-topbar">
       <div class="portal-topbar-left">
         <button class="portal-topbar-toggle" id="portalSidebarToggle">☰</button>
-        <div class="portal-topbar-title">{% block page_title %}收容所端{% endblock %}</div>
+        <div class="portal-topbar-title">{% block page_title %}捕捉点端{% endblock %}</div>
       </div>
       <div class="portal-topbar-right">
         <a href="{% url 'portal' %}" class="btn btn-ghost btn-sm">门户</a>

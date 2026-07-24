@@ -100,7 +100,7 @@ class Command(BaseCommand):
     def _seed_institutions(self, districts):
         self.stdout.write('创建机构...')
         data = [
-            # 收容所（捕捉点）
+            # 捕捉点（捕捉点）
             ('I001', '朝阳区流浪动物捕捉点', 'shelter', 'D001', '朝阳区建国路88号', '王主任', '13800001001'),
             ('I002', '海淀区流浪动物捕捉点', 'shelter', 'D002', '海淀区中关村大街15号', '李主任', '13800001002'),
             # 医院

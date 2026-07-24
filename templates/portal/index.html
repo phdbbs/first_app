@@ -661,7 +661,7 @@
     <div class="portal-hero-subtitle">水墨丹青 · 善治有方</div>
     <p class="portal-hero-desc">
       以 <span class="tnr-expand">TNR</span>（Trap 捕捉 - Neuter 绝育 - Return 放养）治理模式为核心，
-      打通收容所、宠物医院、领养人、政府监管四方业务闭环，
+      打通捕捉点、宠物医院、领养人、政府监管四方业务闭环，
       实现流浪动物管理 <b style="color:var(--cinnabar)">可溯源、可监管、可闭环</b> 的全流程电子化治理。
     </p>
 
@@ -690,7 +690,7 @@
 
     <div class="portal-grid">
 
-      <!-- 1. 收容所端 -->
+      <!-- 1. 捕捉点端 -->
       <a class="portal-card {% if user.is_authenticated and user.role == 'shelter' %}current-role{% endif %}"
          data-accent="cinnabar" href="{% url 'shelter_home' %}">
         <span class="portal-card-current-badge">我的端口</span>
@@ -702,10 +702,10 @@
             <path d="M13 27v-7h6v7"/>
           </svg>
         </div>
-        <div class="portal-card-name">收容所端</div>
+        <div class="portal-card-name">捕捉点端</div>
         <div class="portal-card-name-en">Shelter</div>
         <p class="portal-card-desc">
-          收容所工作人员录入物业信息、转运交接、签字流程，物料统一管控、统一下发。
+          捕捉点工作人员录入物业信息、转运交接、签字流程，物料统一管控、统一下发。
         </p>
         <div class="portal-card-tags">
           <span class="portal-card-tag">现场录入</span>
@@ -813,7 +813,7 @@
       <div class="flow-node">
         <div class="flow-node-icon">①</div>
         <div class="flow-node-title">现场捕捉</div>
-        <div class="flow-node-desc">收容所录入</div>
+        <div class="flow-node-desc">捕捉点录入</div>
       </div>
       <div class="flow-arrow">›</div>
       <div class="flow-node">

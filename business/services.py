@@ -44,10 +44,19 @@ def serialize_instance(instance, fields=None):
     - 外键返回 pk
     - 日期/时间返回 ISO 格式字符串
     - ImageField/FileField 返回 URL（有文件时）或空字符串
+    - 同时返回蛇形命名（Python 惯例）和驼峰命名（前端 JS 惯例）字段
+    - pet_codes 字符串自动转为数组
     """
     if instance is None:
         return None
     from django.db.models.fields.files import FieldFile
+
+    def _to_camel(snake):
+        """snake_case → camelCase"""
+        parts = str(snake).split('_')
+        if len(parts) == 1:
+            return parts[0]
+        return parts[0] + ''.join(p.title() for p in parts[1:])
 
     data = {}
     for f in instance._meta.concrete_fields:
@@ -63,6 +72,22 @@ def serialize_instance(instance, fields=None):
             data[f.name] = value.isoformat()
         else:
             data[f.name] = value
+
+        # 添加驼峰命名别名（前端 JS 使用）
+        camel_key = _to_camel(f.name)
+        if camel_key != f.name:
+            if f.name == 'pet_codes' and isinstance(data[f.name], str) and data[f.name]:
+                # pet_codes 字符串转数组
+                data[camel_key] = [p.strip() for p in data[f.name].split(',') if p.strip()]
+            else:
+                data[camel_key] = data[f.name]
+
+    # 特殊处理：pet_codes 如果是字符串，也转数组放驼峰字段
+    if 'pet_codes' in data and isinstance(data['pet_codes'], str) and data['pet_codes']:
+        data['petCodes'] = [p.strip() for p in data['pet_codes'].split(',') if p.strip()]
+    elif 'pet_codes' in data and (data['pet_codes'] is None or data['pet_codes'] == ''):
+        data['petCodes'] = []
+
     return data
 
 
@@ -155,11 +180,11 @@ def use_chip(chip_no, pet):
 def adjust_stock(material, hospital, quantity, txn_type, **extra):
     """创建物资流水并调整库存。
 
-    - hospital=None: 收容所侧，直接调整 material.shelter_stock
+    - hospital=None: 捕捉点侧，直接调整 material.shelter_stock
     - hospital!=None: 医院侧，库存通过流水计算，不直接修改字段
 
     :param material: 物料对象
-    :param hospital: 机构对象（医院），None 表示收容所
+    :param hospital: 机构对象（医院），None 表示捕捉点
     :param quantity: 数量（正整数）
     :param txn_type: 流水类型 purchase/dispatch/consume/adjustment
     :param extra: 额外字段，如 operator/batch_no/supplier/from_to/note/ledger_no/district
@@ -187,7 +212,7 @@ def adjust_stock(material, hospital, quantity, txn_type, **extra):
         note=extra.get('note', ''),
     )
 
-    # 收容所侧直接调整库存字段
+    # 捕捉点侧直接调整库存字段
     if hospital is None:
         if txn_type in ('purchase',):
             material.shelter_stock += quantity
@@ -201,8 +226,11 @@ def adjust_stock(material, hospital, quantity, txn_type, **extra):
 def get_hospital_stock(material, hospital):
     """计算指定医院的物资库存。
 
-    库存 = 采购入库 + 收容所下发 - 诊疗消耗 - 异动调整
+    库存 = 采购入库 + 医院签收 - 诊疗消耗 - 异动调整
     （以上均针对同一医院）
+
+    注意：dispatch（下发）流水不直接增加医院库存，
+    医院签收后才创建 receive 流水增加库存。
     """
     if hospital is None:
         return 0
@@ -213,7 +241,7 @@ def get_hospital_stock(material, hospital):
         total=Sum('quantity')
     )['total'] or 0
 
-    dispatch_total = base_qs.filter(type='dispatch').aggregate(
+    receive_total = base_qs.filter(type='receive').aggregate(
         total=Sum('quantity')
     )['total'] or 0
 
@@ -225,7 +253,7 @@ def get_hospital_stock(material, hospital):
         total=Sum('quantity')
     )['total'] or 0
 
-    return purchase_total + dispatch_total - consume_total - adjustment_total
+    return purchase_total + receive_total - consume_total - adjustment_total
 
 
 # ============================================
@@ -269,7 +297,7 @@ def check_blacklist(id_card, phone):
 def get_district_filtered_queryset(model, user):
     """根据用户角色返回区县过滤后的 QuerySet。
 
-    - gov_city: 返回全部数据
+    - gov_city 或所属区县为市级 (is_city=True): 返回全部数据
     - 其他角色: 仅返回所属区县数据
 
     :param model: 模型类
@@ -277,6 +305,11 @@ def get_district_filtered_queryset(model, user):
     :return: QuerySet
     """
     if user.role == 'gov_city':
+        return model.objects.all()
+
+    # 市级用户（如捕捉点操作员）可见全部数据
+    district = getattr(user, 'district', None)
+    if district and getattr(district, 'is_city', False):
         return model.objects.all()
 
     district_id = getattr(user, 'district_id', None)
@@ -289,14 +322,19 @@ def get_district_scope(request):
     """从 request 中获取区县范围。
 
     优先使用中间件设置的 user_district_scope，其次从 user.district_id 获取。
-    None 表示可见全部（市级管理员）。
+    None 表示可见全部（市级管理员或所属区县为市级的用户）。
     """
-    scope = getattr(request, 'user_district_scope', None)
-    if scope is not None:
-        return scope
+    # 中间件已设置 user_district_scope（可能为 None 表示可见全部）
+    if hasattr(request, 'user_district_scope'):
+        return request.user_district_scope
+    # 兜底：中间件未设置时手动计算
     user = getattr(request, 'user', None)
     if user and user.is_authenticated:
         if user.role == 'gov_city':
+            return None
+        # 所属区县为市级的用户可见全部
+        district = getattr(user, 'district', None)
+        if district and getattr(district, 'is_city', False):
             return None
         return user.district_id
     return None

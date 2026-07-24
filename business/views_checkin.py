@@ -21,7 +21,7 @@ from business.services import (
 @login_required
 @role_required('adopter', 'shelter', 'gov_city', 'gov_district')
 def checkin_list(request):
-    """回访打卡列表（领养人看自己，收容所看全区）"""
+    """回访打卡列表（领养人看自己，捕捉点看全区）"""
     user = request.user
 
     if user.role == 'adopter':
@@ -203,7 +203,7 @@ def blacklist_create(request):
 
 @csrf_exempt
 @login_required
-@role_required('shelter', 'hospital', 'gov_city', 'gov_district')
+@role_required('shelter', 'hospital', 'adopter', 'gov_city', 'gov_district')
 def blacklist_check(request):
     """检查身份证/电话是否在黑名单中（前端拦截用）
 

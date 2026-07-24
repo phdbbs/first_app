@@ -65,11 +65,12 @@ def dashboard_stats(request):
         'total': inst_qs.count(),
     }
 
-    # 物资消耗统计
+    # 物料消耗统计
     txn_qs = _scope_filter(MaterialTransaction.objects.all(), request)
     material_stats = {
         'total_purchased': txn_qs.filter(type='purchase').aggregate(t=Sum('quantity'))['t'] or 0,
         'total_dispatched': txn_qs.filter(type='dispatch').aggregate(t=Sum('quantity'))['t'] or 0,
+        'total_received': txn_qs.filter(type='receive').aggregate(t=Sum('quantity'))['t'] or 0,
         'total_consumed': txn_qs.filter(type='consume').aggregate(t=Sum('quantity'))['t'] or 0,
         'total_adjustment': txn_qs.filter(type='adjustment').aggregate(t=Sum('quantity'))['t'] or 0,
     }
@@ -98,9 +99,11 @@ def dashboard_stats(request):
 # ============================================
 @csrf_exempt
 @login_required
-@role_required('gov_city', 'gov_district')
 def institution_list(request):
-    """机构列表（支持 ?type 过滤，按区县范围过滤）"""
+    """机构列表（支持 ?type 过滤，按区县范围过滤）
+
+    基础数据，所有登录用户均可查询（用于下拉选择等）。
+    """
     qs = _scope_filter(Institution.objects.all(), request)
     inst_type = request.GET.get('type')
     if inst_type:
@@ -148,9 +151,9 @@ def institution_create(request):
     except District.DoesNotExist:
         return json_fail('区县不存在')
 
-    # 捕捉点/医院必须挂具体区县，不能挂市级
-    if inst_type in ('shelter', 'hospital') and district.is_city:
-        return json_fail('捕捉点/医院必须挂具体区县，不能挂市级')
+    # 医院必须挂具体区县，不能挂市级；捕捉点可以挂市级或区县
+    if inst_type == 'hospital' and district.is_city:
+        return json_fail('医院必须挂具体区县，不能挂市级')
 
     phone = (data.get('phone') or '').strip()
     if phone and not phone.replace('-', '').replace('+', '').isdigit():
@@ -238,9 +241,8 @@ def institution_toggle_status(request, pk):
 # ============================================
 @csrf_exempt
 @login_required
-@role_required('gov_city', 'gov_district')
 def district_list(request):
-    """区县列表"""
+    """区县列表（基础数据，所有登录用户可查询）"""
     qs = District.objects.all()
     data = [serialize_instance(d) for d in qs]
     return json_ok(data)
@@ -383,8 +385,9 @@ def user_create(request):
     """创建用户
 
     强制逻辑约束：
-    - gov_city / shelter：所属区域必须是市级（is_city=True）
+    - gov_city：所属区域必须是市级（is_city=True）
     - gov_district / hospital：必须选具体区县（is_city=False），不能选市级
+    - shelter：可挂市级或区县（归属市级的捕捉点，各区县管理账号无权查看其数据）
     - adopter：不在政府端创建（由捕捉点在领养登记时自动创建）
     - hospital：必须关联医院机构（institution.type='hospital'）
     - shelter：必须关联捕捉点机构（institution.type='shelter'）
@@ -427,14 +430,15 @@ def user_create(request):
     if district.status != 'active':
         return json_fail('所选区县已停用')
 
-    # 市级角色（gov_city / shelter）必须选市级区县
-    if role in ('gov_city', 'shelter'):
+    # 市级角色（gov_city）必须选市级区县
+    if role == 'gov_city':
         if not district.is_city:
-            return json_fail('市管理员/捕捉点操作员的所属区域必须为市级')
+            return json_fail('市管理员的所属区域必须为市级')
     # 区县级角色（gov_district / hospital）必须选具体区县，不能选市级
-    else:
+    elif role in ('gov_district', 'hospital'):
         if district.is_city:
             return json_fail('区级管理员/医院操作员必须选择具体区县，不能选市级')
+    # shelter 可挂市级或区县，不做限制
 
     # 机构关联校验
     institution = None
@@ -579,6 +583,7 @@ def business_supervision(request):
         for t in qs:
             item = serialize_instance(t)
             item['district_name'] = t.district.name if t.district else ''
+            item['ledger_no'] = f'TRE-{t.id:06d}'
             # 聚合诊疗项目为可读字段
             item['treatment_items'] = _treatment_items(t)
             item['items'] = {
@@ -693,6 +698,7 @@ def material_supervision(request):
     stats = {
         'total_purchased': txn_qs.filter(type='purchase').aggregate(t=Sum('quantity'))['t'] or 0,
         'total_dispatched': txn_qs.filter(type='dispatch').aggregate(t=Sum('quantity'))['t'] or 0,
+        'total_received': txn_qs.filter(type='receive').aggregate(t=Sum('quantity'))['t'] or 0,
         'total_consumed': txn_qs.filter(type='consume').aggregate(t=Sum('quantity'))['t'] or 0,
         'total_adjustment': txn_qs.filter(type='adjustment').aggregate(t=Sum('quantity'))['t'] or 0,
         'material_count': material_qs.count(),
@@ -807,7 +813,7 @@ def ledger_center(request):
         for t in qs:
             records.append({
                 'business_type': 'treatment',
-                'ledger_no': t.ledger_no or f'TRE-{t.id:06d}',
+                'ledger_no': f'TRE-{t.id:06d}',
                 'id': t.id,
                 'date': t.created_at.isoformat() if t.created_at else '',
                 'pet_code': t.pet_code,

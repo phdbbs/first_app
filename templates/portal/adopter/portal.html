@@ -4,6 +4,7 @@
 {% block title %}领养人端 · 流浪动物TNR管理系统{% endblock %}
 
 {% block extra_head %}
+{{ block.super }}
 <style>
   body { background: #e8e4de; }
   .topbar { display: none !important; }
@@ -1070,7 +1071,15 @@ async function showLifecycle(adoptionId) {
   const pet = adoption.pet;
   const photoClass = getPhotoClass(pet.species);
   const emoji = getPetEmoji(pet.species);
-  const adoptedAt = adoption.adopted_at ? adoption.adopted_at.substring(0, 10) : '—';
+  const petId = pet.id || adoption.pet;
+
+  // 拉取全生命周期数据
+  let lifecycleData = null;
+  try {
+    lifecycleData = await TNR_API.getPetLifecycle(petId);
+  } catch (e) {
+    // 接口失败时降级为仅展示领养记录
+  }
 
   let html = '';
 
@@ -1087,12 +1096,40 @@ async function showLifecycle(adoptionId) {
   html += '<div class="detail-section-title">全生命周期溯源</div>';
   html += '<div class="timeline">';
 
-  // 领养记录
-  html += `<div class="timeline-item done">
-    <div class="timeline-time">${TNR_UI.escape(adoptedAt)}</div>
-    <div class="timeline-title">领养完成</div>
-    <div class="timeline-desc">领养人：${TNR_UI.escape(adoption.adopter_name || '—')}<br>医院：${TNR_UI.escape(adoption.hospital_name || '—')}<br>协议：${TNR_UI.escape(adoption.adoption_agreement || '线下已签')}</div>
-  </div>`;
+  const events = (lifecycleData && lifecycleData.events) || [];
+  if (events.length === 0) {
+    // 降级：至少展示领养记录
+    const adoptedAt = adoption.adopted_at ? adoption.adopted_at.substring(0, 10) : '—';
+    html += `<div class="timeline-item done">
+      <div class="timeline-time">${TNR_UI.escape(adoptedAt)}</div>
+      <div class="timeline-title">领养完成</div>
+      <div class="timeline-desc">领养人：${TNR_UI.escape(adoption.adopter_name || '—')}<br>医院：${TNR_UI.escape(adoption.hospital_name || '—')}<br>协议：${TNR_UI.escape(adoption.adoption_agreement || '线下已签')}</div>
+    </div>`;
+  } else {
+    events.forEach(ev => {
+      const dateStr = ev.date ? ev.date.substring(0, 10) : '—';
+      let desc = '';
+      if (ev.type === 'capture') {
+        desc = `捕捉点：${TNR_UI.escape(ev.shelter_name || '—')}<br>小区：${TNR_UI.escape(ev.community_name || '—')}<br>地址：${TNR_UI.escape(ev.address || '—')}`;
+      } else if (ev.type === 'transfer') {
+        desc = `发出：${TNR_UI.escape(ev.from_shelter_name || '—')}<br>接收：${TNR_UI.escape(ev.to_hospital_name || '—')}<br>状态：${TNR_UI.escape(ev.status === 'received' ? '已签收' : (ev.status === 'rejected' ? '已驳回' : '待签收'))}`;
+      } else if (ev.type === 'treatment') {
+        desc = `医院：${TNR_UI.escape(ev.hospital_name || '—')}<br>项目：${TNR_UI.escape((ev.items || []).join('、') || '—')}<br>状态：${TNR_UI.escape(ev.status === 'completed' ? '已完成' : '进行中')}`;
+        if (ev.chip_no) desc += `<br>芯片号：${TNR_UI.escape(ev.chip_no)}`;
+      } else if (ev.type === 'release') {
+        desc = `小区：${TNR_UI.escape(ev.community_name || '—')}<br>接收人：${TNR_UI.escape(ev.receiver_name || '—')}<br>状态：${TNR_UI.escape(ev.status === 'released' ? '已放养' : '待放养')}`;
+      } else if (ev.type === 'adoption') {
+        desc = `领养人：${TNR_UI.escape(ev.adopter_name || '—')}<br>医院：${TNR_UI.escape(ev.hospital_name || '—')}`;
+      } else if (ev.type === 'euthanasia') {
+        desc = `医院：${TNR_UI.escape(ev.hospital_name || '—')}<br>原因：${TNR_UI.escape(ev.reason || '—')}`;
+      }
+      html += `<div class="timeline-item done">
+        <div class="timeline-time">${TNR_UI.escape(dateStr)}</div>
+        <div class="timeline-title">${TNR_UI.escape(ev.type_display || ev.type)}</div>
+        <div class="timeline-desc">${desc}</div>
+      </div>`;
+    });
+  }
 
   html += '</div>';
   html += '</div>';

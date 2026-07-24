@@ -9,16 +9,20 @@ from django.utils import timezone
 from business.models import Treatment, Pet, AdoptionHallListing
 
 
-def auto_promote_to_adoptable():
+def auto_promote_to_adoptable(force=False):
     """诊疗完成5天后宠物自动转'待领养'并上架领养大厅。
 
     此函数可由 django-q2 定时调度执行，也可通过 management command 手动触发。
+    :param force: True 时跳过5天时间限制，处理所有已完成诊疗记录（用于测试或补偿）
     """
-    cutoff = timezone.now() - timedelta(days=5)
-    treatments = Treatment.objects.filter(
-        status='completed',
-        created_at__lte=cutoff
-    )
+    if force:
+        treatments = Treatment.objects.filter(status='completed')
+    else:
+        cutoff = timezone.now() - timedelta(days=5)
+        treatments = Treatment.objects.filter(
+            status='completed',
+            created_at__lte=cutoff
+        )
     count = 0
     for t in treatments:
         pet = t.pet

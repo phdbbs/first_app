@@ -108,6 +108,7 @@ const TNR_API = {
   async getCapture(id) { return this._get(`/api/business/captures/${id}/`); },
   async createCapture(data) { return this._post('/api/business/captures/create/', data); },
   async ownerReturn(captureId, data) { return this._post(`/api/business/captures/${captureId}/owner-return/`, data); },
+  async getOwnerReturns() { return this._get('/api/business/owner-returns/'); },
   async getTransfers() { return this._get('/api/business/transfers/'); },
   async createTransfer(data) { return this._post('/api/business/transfers/create/', data); },
   async receiveTransfer(id) { return this._post(`/api/business/transfers/${id}/receive/`, {}); },
@@ -127,6 +128,7 @@ const TNR_API = {
   async confirmRelease(id, data) { return this._post(`/api/business/releases/${id}/confirm/`, data); },
   async getAdoptions() { return this._get('/api/business/adoptions/'); },
   async registerAdoption(data) { return this._post('/api/business/adoptions/register/', data); },
+  async confirmAdoptionClaim(id, data) { return this._post(`/api/business/adoptions/${id}/confirm-claim/`, data || {}); },
   async getCheckins() { return this._get('/api/business/checkins/'); },
   async reviewCheckin(id, data) { return this._post(`/api/business/checkins/${id}/review/`, data); },
   async getBlacklist() { return this._get('/api/business/blacklist/'); },
@@ -145,7 +147,13 @@ const TNR_API = {
     const url = status ? `/api/business/pets/?status=${status}` : '/api/business/pets/';
     return this._get(url);
   },
+  // getPets: getHospitalPets 的别名（捕捉点端也使用此接口获取在途宠物列表）
+  async getPets(status) {
+    const url = status ? `/api/business/pets/?status=${status}` : '/api/business/pets/';
+    return this._get(url);
+  },
   async getHallListings() { return this._get('/api/business/hall-listings/'); },
+  async getPetLifecycle(petId) { return this._get(`/api/business/pets/${petId}/lifecycle/`); },
   async editAdoptionInfo(petId, data) { return this._post(`/api/business/adoptions/${petId}/edit-info/`, data); },
   async uploadPetPhoto(petId, photoField, file) {
     const fd = new FormData();
@@ -198,11 +206,11 @@ const TNR_API = {
     return Array.from({length: count}, (_, i) => 'TNR' + yearStr + String(i+1).padStart(3,'0'));
   },
   getPetStatusText(status) {
-    const map = {'in_transit':'在途','in_treatment':'待诊疗/诊疗中','pending_adopt':'待领养','adopted':'已领养','released':'已放养','euthanized':'已安乐死','owner_returned':'主人领回'};
+    const map = {'in_transit':'在途','in_treatment':'待诊疗/诊疗中','pending_adopt':'待领养','pending_claim':'待领出','adopted':'已领养','released':'已放养','euthanized':'已安乐死','owner_returned':'主人领回'};
     return map[status] || status;
   },
   getPetStatusBadge(status) {
-    const map = {'in_transit':'badge-warning','in_treatment':'badge-info','pending_adopt':'badge-cinnabar','adopted':'badge-success','released':'badge-success','euthanized':'badge-danger','owner_returned':'badge-default'};
+    const map = {'in_transit':'badge-warning','in_treatment':'badge-info','pending_adopt':'badge-cinnabar','pending_claim':'badge-cinnabar','adopted':'badge-success','released':'badge-success','euthanized':'badge-danger','owner_returned':'badge-default'};
     return map[status] || 'badge-default';
   },
   getMaterialCategoryText(cat) {

@@ -1,10 +1,10 @@
 {% extends 'portal/shelter_base.html' %}
 
-{% block title %}收容所端 · 首页看板{% endblock %}
+{% block title %}捕捉点端 · 首页看板{% endblock %}
 
 {% block nav_dashboard %}active{% endblock %}
 
-{% block page_title %}收容所端 · 首页看板{% endblock %}
+{% block page_title %}捕捉点端 · 首页看板{% endblock %}
 
 {% block content %}
 <div class="stat-grid">
@@ -49,8 +49,8 @@
     <div class="table-empty">
       <div class="table-empty-icon">🐾</div>
       <div class="table-empty-text">
-        <strong style="font-size:var(--fs-lg);color:var(--ink);display:block;margin-bottom:var(--sp-2);">收容所端 - 欢迎使用</strong>
-        此处为收容所端首页看板占位页面，后续将接入真实业务数据。
+        <strong style="font-size:var(--fs-lg);color:var(--ink);display:block;margin-bottom:var(--sp-2);">捕捉点端 - 欢迎使用</strong>
+        此处为捕捉点端首页看板占位页面，后续将接入真实业务数据。
         <br>
         当前用户：{{ user.username|default:"未登录" }} · 角色：{{ user.get_role_display|default:"访客" }}
       </div>

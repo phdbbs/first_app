@@ -25,13 +25,15 @@ from business.services import (
 def treatment_list(request):
     """诊疗列表"""
     user = request.user
-    qs = get_district_filtered_queryset(Treatment, user)
 
     if user.role == 'hospital':
+        # 医院只看本院诊疗记录（不按区县过滤，因为宠物可能跨区县转运）
         if user.institution_id:
-            qs = qs.filter(hospital_id=user.institution_id)
+            qs = Treatment.objects.filter(hospital_id=user.institution_id)
         else:
-            qs = qs.none()
+            qs = Treatment.objects.none()
+    else:
+        qs = get_district_filtered_queryset(Treatment, user)
 
     status = request.GET.get('status')
     if status:

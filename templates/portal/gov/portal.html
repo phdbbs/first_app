@@ -1181,7 +1181,7 @@ const GovPortal = {
                   <thead><tr>
                     <th>物料名称</th>
                     <th>分类</th>
-                    <th>收容所库存</th>
+                    <th>捕捉点库存</th>
                     <th>安全库存</th>
                     <th>单位</th>
                     <th>区县</th>
@@ -1302,7 +1302,6 @@ const GovPortal = {
   },
 
   async renderLedgerTable() {
-    const filters = TNR_UI.getFilterValues();
     // 注意：getFilterValues 返回小写的值，但 ledger API 需要 institution_id 和 business_type
     const rawFilters = {};
     document.querySelectorAll('[data-filter]').forEach(input => {
@@ -1316,41 +1315,270 @@ const GovPortal = {
       end_date: rawFilters.end_date || '',
       institution_id: rawFilters.institution_id || ''
     };
-    if (rawFilters.district) {
-      // 区县筛选 - 由于 ledger_center 通过 institution_id 筛选，区县筛选仅作为客户端二次过滤
-    }
 
     const result = await TNR_API.getLedger(params);
     let records = (result && result.records) || [];
     if (rawFilters.district) {
-      records = records.filter(r => r.district_name && r.district_name === (document.querySelector('[data-filter="district"]')?.selectedOptions[0]?.textContent || ''));
+      const sel = document.querySelector('[data-filter="district"]');
+      const districtName = sel?.selectedOptions[0]?.textContent || '';
+      records = records.filter(r => r.district_name && r.district_name === districtName);
     }
 
+    const tab = this.ledgerState.tab;
     const typeLabelMap = { capture: '捕捉', transfer: '转运', treatment: '诊疗', release: '放养', adoption: '领养', material: '物料', euthanasia: '安乐死' };
-    const columns = [
-      { key: 'business_type', title: '类型', width: '80px', render: r => `<span class="badge badge-default">${typeLabelMap[r.business_type] || r.business_type}</span>` },
-      { key: 'ledger_no', title: '单据号', render: r => TNR_UI.escape(r.ledger_no || '—') },
-      { key: 'date', title: '日期', width: '140px', render: r => TNR_UI.formatDateTime(r.date) },
-      { key: 'district_name', title: '区县', render: r => TNR_UI.escape(r.district_name || '—') },
-      { key: 'operator_name', title: '操作人', render: r => TNR_UI.escape(r.operator_name || '—') },
-      { key: 'detail', title: '详情', render: r => {
-        const parts = [];
-        if (r.pet_code) parts.push('编号：' + r.pet_code);
-        if (r.shelter_name) parts.push(r.shelter_name);
-        if (r.community_name) parts.push(r.community_name);
-        if (r.from_shelter_name) parts.push(r.from_shelter_name + ' → ' + (r.to_hospital_name || ''));
-        if (r.hospital_name) parts.push(r.hospital_name);
-        if (r.adopter_name) parts.push('领养人：' + r.adopter_name);
-        if (r.receiver_name) parts.push('接收人：' + r.receiver_name);
-        if (r.material_name) parts.push(r.material_name + ' ' + (r.quantity || '') + (r.unit || ''));
-        if (r.reason) parts.push('原因：' + r.reason);
-        return TNR_UI.escape(parts.join(' · ')) || '—';
-      } }
-    ];
+    const typeBadge = r => `<span class="badge badge-default">${typeLabelMap[r.business_type] || r.business_type}</span>`;
+    const dateRender = r => TNR_UI.formatDateTime(r.date);
+    const esc = v => TNR_UI.escape(v || '—');
+
+    // 按业务类型定义不同的列
+    let columns;
+    if (tab === 'capture') {
+      columns = [
+        { key: 'business_type', title: '类型', width: '80px', render: typeBadge },
+        { key: 'ledger_no', title: '单据号', render: r => esc(r.ledger_no) },
+        { key: 'date', title: '日期', width: '140px', render: dateRender },
+        { key: 'district_name', title: '区县', render: r => esc(r.district_name) },
+        { key: 'shelter_name', title: '捕捉点', render: r => esc(r.shelter_name) },
+        { key: 'community_name', title: '来源地点', render: r => esc(r.community_name) },
+        { key: 'pet_count', title: '数量', width: '80px', render: r => `<strong>${r.pet_count || 0}</strong>` },
+        { key: 'operator_name', title: '操作人', render: r => esc(r.operator_name) },
+      ];
+    } else if (tab === 'transfer') {
+      columns = [
+        { key: 'business_type', title: '类型', width: '80px', render: typeBadge },
+        { key: 'ledger_no', title: '单据号', render: r => esc(r.ledger_no) },
+        { key: 'date', title: '日期', width: '140px', render: dateRender },
+        { key: 'district_name', title: '区县', render: r => esc(r.district_name) },
+        { key: 'from_shelter_name', title: '出发捕捉点', render: r => esc(r.from_shelter_name) },
+        { key: 'to_hospital_name', title: '接收医院', render: r => esc(r.to_hospital_name) },
+        { key: 'pet_count', title: '数量', width: '80px', render: r => `<strong>${r.pet_count || 0}</strong>` },
+        { key: 'status', title: '状态', width: '90px', render: r => {
+          const m = { pending: { t: '待接收', b: 'badge-warning' }, received: { t: '已接收', b: 'badge-success' }, rejected: { t: '已驳回', b: 'badge-danger' } };
+          const v = m[r.status] || { t: r.status || '—', b: 'badge-default' };
+          return `<span class="badge ${v.b}">${v.t}</span>`;
+        } },
+        { key: 'operator_name', title: '操作人', render: r => esc(r.operator_name) },
+      ];
+    } else if (tab === 'treatment') {
+      columns = [
+        { key: 'business_type', title: '类型', width: '80px', render: typeBadge },
+        { key: 'ledger_no', title: '单据号', render: r => esc(r.ledger_no) },
+        { key: 'pet_code', title: '编号', render: r => `<strong>${esc(r.pet_code)}</strong>` },
+        { key: 'date', title: '日期', width: '140px', render: dateRender },
+        { key: 'district_name', title: '区县', render: r => esc(r.district_name) },
+        { key: 'hospital_name', title: '接收医院', render: r => esc(r.hospital_name) },
+        { key: 'treatment_items', title: '诊疗内容', render: r => {
+          const items = r.treatment_items || [];
+          if (!items.length) return '—';
+          const colorMap = { '绝育': 'badge-cinnabar', '疫苗': 'badge-success', '驱虫': 'badge-info', '芯片': 'badge-warning' };
+          return items.map(i => `<span class="badge ${colorMap[i] || 'badge-default'}" style="margin-right:4px;">${TNR_UI.escape(i)}</span>`).join('');
+        } },
+        { key: 'status', title: '状态', width: '90px', render: r => {
+          const m = { in_progress: { t: '进行中', b: 'badge-warning' }, completed: { t: '已完成', b: 'badge-success' } };
+          const v = m[r.status] || { t: r.status || '—', b: 'badge-default' };
+          return `<span class="badge ${v.b}">${v.t}</span>`;
+        } },
+        { key: 'operator_name', title: '操作人', render: r => esc(r.operator_name) },
+      ];
+    } else if (tab === 'release') {
+      columns = [
+        { key: 'business_type', title: '类型', width: '80px', render: typeBadge },
+        { key: 'ledger_no', title: '单据号', render: r => esc(r.ledger_no) },
+        { key: 'pet_code', title: '编号', render: r => `<strong>${esc(r.pet_code)}</strong>` },
+        { key: 'date', title: '日期', width: '140px', render: dateRender },
+        { key: 'district_name', title: '区县', render: r => esc(r.district_name) },
+        { key: 'community_name', title: '放养地点', render: r => esc(r.community_name) },
+        { key: 'pet_count', title: '数量', width: '80px', render: r => `<strong>${r.pet_count || 1}</strong>` },
+        { key: 'receiver_name', title: '接收人', render: r => esc(r.receiver_name) },
+        { key: 'operator_name', title: '操作人', render: r => esc(r.operator_name) },
+      ];
+    } else if (tab === 'adoption') {
+      columns = [
+        { key: 'business_type', title: '类型', width: '80px', render: typeBadge },
+        { key: 'ledger_no', title: '单据号', render: r => esc(r.ledger_no) },
+        { key: 'pet_code', title: '编号', render: r => `<strong>${esc(r.pet_code)}</strong>` },
+        { key: 'date', title: '日期', width: '140px', render: dateRender },
+        { key: 'district_name', title: '区县', render: r => esc(r.district_name) },
+        { key: 'adopter_name', title: '领养人', render: r => esc(r.adopter_name) },
+        { key: 'adopter_phone', title: '联系电话', render: r => esc(r.adopter_phone) },
+        { key: 'hospital_name', title: '所属医院', render: r => esc(r.hospital_name) },
+        { key: 'operator_name', title: '操作人', render: r => esc(r.operator_name) },
+      ];
+    } else if (tab === 'material') {
+      columns = [
+        { key: 'business_type', title: '类型', width: '80px', render: typeBadge },
+        { key: 'ledger_no', title: '单据号', render: r => esc(r.ledger_no) },
+        { key: 'date', title: '日期', width: '140px', render: dateRender },
+        { key: 'district_name', title: '区县', render: r => esc(r.district_name) },
+        { key: 'material_name', title: '物资种类名称', render: r => `<strong>${esc(r.material_name)}</strong>` },
+        { key: 'material_category_display', title: '分类', render: r => esc(r.material_category_display) },
+        { key: 'quantity', title: '数量', width: '90px', render: r => `<strong>${r.quantity || 0}</strong> ${TNR_UI.escape(r.unit || '')}` },
+        { key: 'batch_no', title: '批号', render: r => esc(r.batch_no) },
+        { key: 'from_to', title: '来源/去向', render: r => esc(r.from_to) },
+        { key: 'operator_name', title: '操作人', render: r => esc(r.operator_name) },
+      ];
+    } else { // euthanasia
+      columns = [
+        { key: 'business_type', title: '类型', width: '80px', render: typeBadge },
+        { key: 'ledger_no', title: '单据号', render: r => esc(r.ledger_no) },
+        { key: 'pet_code', title: '编号', render: r => `<strong>${esc(r.pet_code)}</strong>` },
+        { key: 'date', title: '日期', width: '140px', render: dateRender },
+        { key: 'district_name', title: '区县', render: r => esc(r.district_name) },
+        { key: 'hospital_name', title: '处置医院', render: r => esc(r.hospital_name) },
+        { key: 'reason', title: '处置原因', render: r => esc(r.reason) },
+        { key: 'operator_name', title: '操作人', render: r => esc(r.operator_name) },
+      ];
+    }
+
+    // 通用：添加详情操作列
+    columns.push({ key: '_action', title: '操作', width: '90px', render: r => `<button class="btn btn-secondary btn-sm" data-ledger-detail="${r.id}">详情</button>` });
 
     document.getElementById('ledgerTableWrapper').innerHTML =
       '<div style="margin-bottom:var(--sp-3);font-size:var(--fs-sm);color:var(--ink-muted);">共 ' + records.length + ' 条记录</div>' +
       TNR_UI.renderTable({ columns, data: records, emptyText: '暂无台账数据' });
+
+    document.querySelectorAll('[data-ledger-detail]').forEach(b => {
+      b.addEventListener('click', () => this.showLedgerDetail(records, b.dataset.ledgerDetail));
+    });
+  },
+
+  /* 台账详情抽屉 */
+  showLedgerDetail(records, id) {
+    const r = records.find(x => String(x.id) === String(id));
+    if (!r) { TNR_UI.toast('记录不存在', 'warning'); return; }
+    const tab = r.business_type;
+    const d = r.detail || {};
+    const esc = v => TNR_UI.escape(v || '—');
+    let items = [];
+    let extraHtml = '';
+
+    if (tab === 'capture') {
+      items = [
+        { label: '单据号', value: r.ledger_no },
+        { label: '捕捉点', value: r.shelter_name },
+        { label: '来源地点', value: r.community_name || '—' },
+        { label: '详细地址', value: d.address || '—' },
+        { label: '物业交接人', value: d.contact_person || '—' },
+        { label: '联系电话', value: d.contact_phone || '—' },
+        { label: '动物数量', value: r.pet_count },
+        { label: '宠物编号', value: (d.pet_codes || []).join('、') || '—' },
+        { label: '操作人', value: r.operator_name || '—' },
+        { label: '区县', value: r.district_name || '—' },
+        { label: '日期', value: TNR_UI.formatDateTime(r.date) },
+      ];
+      if (d.group_photo) {
+        extraHtml += `<div class="mt-4"><h4 class="font-display mb-3">合照</h4><img src="${d.group_photo}" style="max-width:100%;border-radius:var(--r-md);border:1px solid var(--border-light);"></div>`;
+      }
+      if (d.pets && d.pets.length) extraHtml += this.renderPetsList(d.pets);
+    } else if (tab === 'transfer') {
+      items = [
+        { label: '单据号', value: r.ledger_no },
+        { label: '出发捕捉点', value: r.from_shelter_name },
+        { label: '接收医院', value: r.to_hospital_name },
+        { label: '动物数量', value: r.pet_count },
+        { label: '宠物编号', value: (d.pet_codes || []).join('、') || '—' },
+        { label: '状态', value: r.status || '—' },
+        { label: '接收时间', value: d.received_at ? TNR_UI.formatDateTime(d.received_at) : '—' },
+        { label: '驳回原因', value: d.reject_reason || '—' },
+        { label: '操作人', value: r.operator_name || '—' },
+        { label: '区县', value: r.district_name || '—' },
+        { label: '日期', value: TNR_UI.formatDateTime(r.date) },
+      ];
+      if (d.pets && d.pets.length) extraHtml += this.renderPetsList(d.pets);
+    } else if (tab === 'treatment') {
+      const ti = d.items || {};
+      items = [
+        { label: '单据号', value: r.ledger_no },
+        { label: '宠物编号', value: r.pet_code },
+        { label: '接收医院', value: r.hospital_name },
+        { label: '诊疗内容', value: (r.treatment_items || []).join('、') || '—' },
+        { label: '绝育', value: ti.sterilization ? '是' : '否' },
+        { label: '绝育日期', value: d.sterilization_surgery_date ? TNR_UI.formatDateTime(d.sterilization_surgery_date) : '—' },
+        { label: '主刀医生', value: d.sterilization_surgeon || '—' },
+        { label: '诊断', value: d.sterilization_diagnosis || '—' },
+        { label: '麻醉方式', value: d.sterilization_anesthesia || '—' },
+        { label: '手术过程', value: d.sterilization_procedure || '—' },
+        { label: '术后恢复', value: d.sterilization_recovery || '—' },
+        { label: '疫苗', value: ti.vaccine ? '是' : '否' },
+        { label: '疫苗类型', value: d.vaccine_type || '—' },
+        { label: '疫苗批号', value: d.vaccine_batch_no || '—' },
+        { label: '疫苗日期', value: d.vaccine_date ? TNR_UI.formatDateTime(d.vaccine_date) : '—' },
+        { label: '驱虫', value: ti.deworming ? '是' : '否' },
+        { label: '驱虫类型', value: d.deworming_type || '—' },
+        { label: '驱虫批号', value: d.deworming_batch_no || '—' },
+        { label: '芯片', value: ti.chip ? '是' : '否' },
+        { label: '芯片号', value: d.chip_no || '—' },
+        { label: '植入日期', value: d.chip_date ? TNR_UI.formatDateTime(d.chip_date) : '—' },
+        { label: '操作人', value: r.operator_name || '—' },
+        { label: '区县', value: r.district_name || '—' },
+        { label: '日期', value: TNR_UI.formatDateTime(r.date) },
+      ];
+      if (d.pet) extraHtml += this.renderPetPhotos(d.pet, '动物照片');
+    } else if (tab === 'release') {
+      items = [
+        { label: '单据号', value: r.ledger_no },
+        { label: '宠物编号', value: r.pet_code },
+        { label: '动物数量', value: r.pet_count || 1 },
+        { label: '放养地点', value: r.community_name || '—' },
+        { label: '接收人', value: r.receiver_name || '—' },
+        { label: '接收电话', value: d.receiver_phone || '—' },
+        { label: '操作人', value: r.operator_name || '—' },
+        { label: '区县', value: r.district_name || '—' },
+        { label: '放养时间', value: d.released_at ? TNR_UI.formatDateTime(d.released_at) : '—' },
+      ];
+      if (d.pet) extraHtml += this.renderPetPhotos(d.pet, '放养动物照片');
+    } else if (tab === 'adoption') {
+      items = [
+        { label: '单据号', value: r.ledger_no },
+        { label: '宠物编号', value: r.pet_code },
+        { label: '领养人', value: r.adopter_name },
+        { label: '联系电话', value: r.adopter_phone || '—' },
+        { label: '身份证号', value: d.adopter_id_card || '—' },
+        { label: '地址', value: d.adopter_address || '—' },
+        { label: '资质情况', value: d.qualification || '—' },
+        { label: '所属医院', value: r.hospital_name || '—' },
+        { label: '操作人', value: r.operator_name || '—' },
+        { label: '区县', value: r.district_name || '—' },
+        { label: '领养时间', value: TNR_UI.formatDateTime(r.date) },
+      ];
+      if (d.pet) extraHtml += this.renderPetPhotos(d.pet, '领养动物照片');
+    } else if (tab === 'material') {
+      items = [
+        { label: '单据号', value: r.ledger_no },
+        { label: '物资种类名称', value: r.material_name },
+        { label: '分类', value: r.material_category_display || '—' },
+        { label: '数量', value: (r.quantity || 0) + ' ' + (r.unit || '') },
+        { label: '批号', value: r.batch_no || '—' },
+        { label: '类型', value: r.type_display || '—' },
+        { label: '来源/去向', value: r.from_to || '—' },
+        { label: '供应商', value: d.supplier || '—' },
+        { label: '接收医院', value: d.hospital_name || '—' },
+        { label: '备注', value: d.note || '—' },
+        { label: '操作人', value: r.operator_name || '—' },
+        { label: '区县', value: r.district_name || '—' },
+        { label: '日期', value: TNR_UI.formatDateTime(r.date) },
+      ];
+    } else if (tab === 'euthanasia') {
+      items = [
+        { label: '单据号', value: r.ledger_no },
+        { label: '宠物编号', value: r.pet_code },
+        { label: '处置医院', value: r.hospital_name },
+        { label: '处置原因', value: r.reason },
+        { label: '动物状况', value: d.condition || '—' },
+        { label: '遗体已领取', value: d.body_received ? '是' : '否' },
+        { label: '遗体领取人', value: d.body_received_by_name || '—' },
+        { label: '领取时间', value: d.body_received_at ? TNR_UI.formatDateTime(d.body_received_at) : '—' },
+        { label: '操作人', value: r.operator_name || '—' },
+        { label: '区县', value: r.district_name || '—' },
+        { label: '处置时间', value: TNR_UI.formatDateTime(r.date) },
+      ];
+      if (d.pet) extraHtml += this.renderPetPhotos(d.pet, '动物照片');
+    }
+
+    TNR_UI.drawer({
+      title: '台账详情 · ' + (typeLabelMap[tab] || tab),
+      body: bodyEl => { bodyEl.innerHTML = TNR_UI.renderDescList(items) + extraHtml; }
+    });
   },
 
   /* ========== 7. 系统配置 ========== */
