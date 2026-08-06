@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import (
     Pet, Capture, OwnerReturn, Transfer, Treatment, Material, MaterialTransaction,
-    Chip, Release, Adoption, CheckIn, Blacklist, Euthanasia, Message, AdoptionHallListing,
+    Chip, Release, Adoption, AdoptionApplication, CheckIn, Blacklist, Euthanasia, Message, AdoptionHallListing,
 )
 
 
@@ -82,6 +82,31 @@ class AdoptionAdmin(admin.ModelAdmin):
     list_filter = ('status', 'district')
     search_fields = ('pet_code', 'adopter_name', 'adopter_phone', 'adopter_id_card', 'ledger_no')
     date_hierarchy = 'adopted_at'
+
+
+@admin.register(AdoptionApplication)
+class AdoptionApplicationAdmin(admin.ModelAdmin):
+    list_display = ('id', 'pet_code', 'applicant_name', 'applicant_phone', 'hospital_name', 'status', 'applied_at', 'created_at')
+    list_filter = ('status', 'hospital')
+    search_fields = ('pet_code', 'applicant_name', 'applicant_phone', 'applicant_id_card', 'reason')
+    date_hierarchy = 'created_at'
+    actions = ['approve_selected', 'reject_selected']
+
+    def approve_selected(self, request, queryset):
+        from django.utils import timezone
+        updated = queryset.filter(status='pending').update(
+            status='approved', reviewed_by=request.user, reviewed_at=timezone.now())
+        if updated:
+            self.message_user(request, f'已通过 {updated} 条申请')
+    approve_selected.short_description = '通过选中的申请'
+
+    def reject_selected(self, request, queryset):
+        from django.utils import timezone
+        updated = queryset.filter(status='pending').update(
+            status='rejected', reviewed_by=request.user, reviewed_at=timezone.now())
+        if updated:
+            self.message_user(request, f'已拒绝 {updated} 条申请')
+    reject_selected.short_description = '拒绝选中的申请'
 
 
 @admin.register(CheckIn)

@@ -67,6 +67,11 @@ urlpatterns = [
     path('adoptions/<int:pk>/edit-info/', views_adoption.adoption_info_edit, name='adoption_info_edit'),
     path('adoptions/register/', views_adoption.adoption_register, name='adoption_register'),
     path('adoptions/<int:pk>/confirm-claim/', views_adoption.adoption_confirm_claim, name='adoption_confirm_claim'),
+    # 在线领养申请
+    path('adoptions/apply/', views_adoption.adoption_apply, name='adoption_apply'),
+    path('adoptions/my-applications/', views_adoption.my_applications, name='my_applications'),
+    path('adoptions/applications/', views_adoption.adoption_application_list, name='adoption_application_list'),
+    path('adoptions/applications/<int:pk>/review/', views_adoption.adoption_application_review, name='adoption_application_review'),
 
     # ============================================
     # Task 10: 回访打卡与黑名单

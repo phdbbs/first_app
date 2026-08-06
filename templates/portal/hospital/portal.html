@@ -1003,11 +1003,24 @@ const Hospital = {
     page.innerHTML = '<div class="loading-state">加载中...</div>';
 
     try {
-      const [pets, listings, adoptions] = await Promise.all([
+      const [pets, listings, adoptions, appJson] = await Promise.all([
         TNR_API.getHospitalPets('pending_adopt'),
         TNR_API.getHallListings(),
-        TNR_API.getAdoptions()
+        TNR_API.getAdoptions(),
+        TNR_API.get(TNR_API.BASE + 'adoptions/applications/')
       ]);
+
+      // 待审核领养申请（领养人在线提交）
+      const applications = appJson.data || [];
+      const pendingAppls = applications.filter(a => a.status === 'pending');
+      let applHtml = '';
+      if (pendingAppls.length > 0) {
+        applHtml = '<div class="card mb-4"><div class="card-header"><div class="card-title"><span class="card-title-bar"></span>待审核领养申请</div><span class="badge badge-cinnabar">' + pendingAppls.length + ' 条待处理</span></div><div class="card-body" style="padding:0;"><div class="table-wrapper"><table class="table"><thead><tr><th>宠物编号</th><th>申请人</th><th>电话</th><th>资质说明</th><th>申请时间</th><th>操作</th></tr></thead><tbody>';
+        pendingAppls.forEach(a => {
+          applHtml += '<tr><td><span class="pet-code-chip">' + this.escape(a.pet_code || '') + '</span></td><td>' + this.escape(a.applicant_name || '') + '</td><td>' + this.escape(a.applicant_phone || '') + '</td><td style="max-width:220px;">' + this.escape((a.qualification || '').substring(0, 40)) + '</td><td>' + this.escape((a.applied_at || '').substring(0, 16)) + '</td><td><button class="btn btn-success btn-sm" data-review-apply="' + a.id + '" data-action="approve">通过</button> <button class="btn btn-danger btn-sm" data-review-apply="' + a.id + '" data-action="reject">拒绝</button></td></tr>';
+        });
+        applHtml += '</tbody></table></div></div></div>';
+      }
 
       // 待领出确认列表（捕捉点已登记领养，等待医院确认领出）
       const pendingClaims = adoptions.filter(a => a.status === 'pending_claim');
@@ -1021,15 +1034,21 @@ const Hospital = {
       }
 
       if (pets.length === 0 && pendingClaims.length === 0) {
-        page.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🐾</div><div class="empty-state-text">暂无待领养动物</div><div class="empty-state-desc">诊疗完成5天后，动物状态将自动变更为「待领养」</div></div>';
+        page.innerHTML = applHtml + '<div class="empty-state"><div class="empty-state-icon">🐾</div><div class="empty-state-text">暂无待领养动物</div><div class="empty-state-desc">诊疗完成5天后，动物状态将自动变更为「待领养」</div></div>';
+        page.querySelectorAll('[data-review-apply]').forEach(btn => {
+          btn.addEventListener('click', () => this.reviewApplication(btn.dataset.reviewApply, btn.dataset.action));
+        });
         return;
       }
 
       if (pets.length === 0) {
-        page.innerHTML = claimsHtml + '<div class="empty-state"><div class="empty-state-icon">🐾</div><div class="empty-state-text">暂无待领养动物</div><div class="empty-state-desc">诊疗完成5天后，动物状态将自动变更为「待领养」</div></div>';
+        page.innerHTML = claimsHtml + applHtml + '<div class="empty-state"><div class="empty-state-icon">🐾</div><div class="empty-state-text">暂无待领养动物</div><div class="empty-state-desc">诊疗完成5天后，动物状态将自动变更为「待领养」</div></div>';
         // 绑定确认领出按钮
         page.querySelectorAll('[data-confirm-claim]').forEach(btn => {
           btn.addEventListener('click', () => this.confirmClaim(btn.dataset.confirmClaim));
+        });
+        page.querySelectorAll('[data-review-apply]').forEach(btn => {
+          btn.addEventListener('click', () => this.reviewApplication(btn.dataset.reviewApply, btn.dataset.action));
         });
         return;
       }
@@ -1068,10 +1087,13 @@ const Hospital = {
           '</div></div></div>';
       }).join('');
 
-      page.innerHTML = claimsHtml + html;
+      page.innerHTML = claimsHtml + applHtml + html;
 
       page.querySelectorAll('[data-confirm-claim]').forEach(btn => {
         btn.addEventListener('click', () => this.confirmClaim(btn.dataset.confirmClaim));
+      });
+      page.querySelectorAll('[data-review-apply]').forEach(btn => {
+        btn.addEventListener('click', () => this.reviewApplication(btn.dataset.reviewApply, btn.dataset.action));
       });
       page.querySelectorAll('[data-save-info]').forEach(btn => {
         btn.addEventListener('click', () => this.saveAdoptionInfo(btn.dataset.saveInfo));
@@ -1143,6 +1165,24 @@ const Hospital = {
         this.render_adoption_info();
       } catch (e) {
         TNR_UI.toast('确认失败：' + e.message, 'danger');
+      }
+    });
+  },
+
+  async reviewApplication(applicationId, action) {
+    const label = action === 'approve' ? '通过' : '拒绝';
+    TNR_UI.confirm('确认' + label + '该领养申请？', '审核申请').then(async ok => {
+      if (!ok) return;
+      try {
+        const reviewNote = action === 'reject' ? (window.prompt('请输入拒绝原因：') || '') : '';
+        const res = await TNR_API.post(TNR_API.BASE + 'adoptions/applications/' + applicationId + '/review/', {
+          action,
+          review_note: reviewNote
+        });
+        TNR_UI.toast(res.message || '审核完成', 'success');
+        this.render_adoption_info();
+      } catch (e) {
+        TNR_UI.toast('审核失败：' + e.message, 'danger');
       }
     });
   },

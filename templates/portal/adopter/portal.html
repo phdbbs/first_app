@@ -645,6 +645,16 @@
   </div>
   <div class="mobile-content" id="messageDetailContent"></div>
 </div>
+
+<!-- ========== 领养申请表单（覆盖层） ========== -->
+<div class="mobile-overlay" id="applyOverlay">
+  <div class="mobile-header">
+    <span class="mobile-header-back" onclick="closeOverlay('applyOverlay')">‹</span>
+    <span class="mobile-header-title">在线领养申请</span>
+    <span></span>
+  </div>
+  <div class="mobile-content" id="applyFormContent"></div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -664,6 +674,7 @@ let selectedCheckinPet = null;
 let uploadedPhotoFile = null;
 let hallCache = [];          // 领养大厅列表缓存
 let myAdoptionCache = [];    // 我的领养缓存
+let activeApplyPet = null;   // 当前申请领养的宠物
 
 // === 工具函数 ===
 
@@ -698,6 +709,21 @@ function getCheckinStatusBadge(status) {
     'approved': '<span class="badge badge-success">已通过</span>',
     'rejected': '<span class="badge badge-danger">已驳回</span>',
     'pending': '<span class="badge badge-warning">待审核</span>'
+  };
+  return map[status] || '<span class="badge badge-default">未知</span>';
+}
+
+function getApplyStatusText(status) {
+  const map = { 'pending': '待审核', 'approved': '已通过', 'rejected': '已拒绝', 'cancelled': '已取消' };
+  return map[status] || status;
+}
+
+function getApplyStatusBadge(status) {
+  const map = {
+    'pending': '<span class="badge badge-warning">待审核</span>',
+    'approved': '<span class="badge badge-success">已通过</span>',
+    'rejected': '<span class="badge badge-danger">已拒绝</span>',
+    'cancelled': '<span class="badge badge-default">已取消</span>'
   };
   return map[status] || '<span class="badge badge-default">未知</span>';
 }
@@ -995,9 +1021,85 @@ async function showPetDetail(listingId) {
   html += '</div>';
 
   content.innerHTML = html;
+
+  // 在线申请领养按钮（登录后可申请）
+  if (!PUBLIC_MODE && getCurrentUser()) {
+    const applyBtn = document.createElement('div');
+    applyBtn.style.cssText = 'position:sticky;bottom:0;padding:12px;background:var(--bg, #fff);border-top:1px solid var(--line, rgba(0,0,0,0.06));';
+    applyBtn.innerHTML = '<button class="btn btn-primary w-full" onclick="openApplyForm(\'' + listingId + '\')">🐾 申请领养</button>';
+    content.appendChild(applyBtn);
+  }
 }
 
-// === 3. 我的领养 ===
+// === 2.1 在线领养申请 ===
+
+function openApplyForm(listingId) {
+  const item = hallCache.find(l => String(l.id) === String(listingId));
+  const pet = (item && item.pet) ? item.pet : null;
+  activeApplyPet = { listingId, petId: item ? item.pet_id || item.pet || listingId : null, petName: pet ? pet.name : '', petCode: pet ? pet.code : '' };
+
+  const user = getCurrentUser();
+  const content = document.getElementById('applyFormContent');
+  content.innerHTML = `
+    <div class="detail-section">
+      <div class="detail-section-title">申请领养</div>
+      <div style="font-size:13px;color:var(--ink-muted);margin-bottom:12px;">
+        宠物：${TNR_UI.escape(activeApplyPet.petName || '未命名')}（${TNR_UI.escape(activeApplyPet.petCode || '')}）
+      </div>
+      <div class="form-group">
+        <label class="form-label">姓名 *</label>
+        <input type="text" class="form-input" id="applyName" value="${TNR_UI.escape(user.name || '')}" placeholder="请输入真实姓名">
+      </div>
+      <div class="form-group">
+        <label class="form-label">联系电话 *</label>
+        <input type="tel" class="form-input" id="applyPhone" value="${TNR_UI.escape(user.phone || '')}" placeholder="请输入联系电话">
+      </div>
+      <div class="form-group">
+        <label class="form-label">身份证号</label>
+        <input type="text" class="form-input" id="applyIdCard" placeholder="请输入身份证号">
+      </div>
+      <div class="form-group">
+        <label class="form-label">居住地址</label>
+        <input type="text" class="form-input" id="applyAddress" placeholder="请输入居住地址">
+      </div>
+      <div class="form-group">
+        <label class="form-label">领养资质说明</label>
+        <textarea class="form-textarea" id="applyQualification" rows="2" placeholder="如：有稳定住所、稳定收入、有养宠经验等"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">领养理由</label>
+        <textarea class="form-textarea" id="applyReason" rows="3" placeholder="请简要说明领养理由（必填）"></textarea>
+      </div>
+      <button class="btn btn-primary w-full" onclick="submitApply()">提交申请</button>
+    </div>`;
+  showOverlay('applyOverlay');
+}
+
+async function submitApply() {
+  const name = (document.getElementById('applyName')?.value || '').trim();
+  const phone = (document.getElementById('applyPhone')?.value || '').trim();
+  const reason = (document.getElementById('applyReason')?.value || '').trim();
+  if (!name) { TNR_UI.toast('请填写姓名', 'warning'); return; }
+  if (!phone) { TNR_UI.toast('请填写联系电话', 'warning'); return; }
+  if (!reason) { TNR_UI.toast('请填写领养理由', 'warning'); return; }
+
+  try {
+    const json = await TNR_API.post('adoptions/apply/', {
+      pet_id: activeApplyPet.petId,
+      applicant_name: name,
+      applicant_phone: phone,
+      applicant_id_card: (document.getElementById('applyIdCard')?.value || '').trim(),
+      applicant_address: (document.getElementById('applyAddress')?.value || '').trim(),
+      qualification: (document.getElementById('applyQualification')?.value || '').trim(),
+      reason: reason,
+    });
+    TNR_UI.toast(json.message || '领养申请提交成功', 'success');
+    closeOverlay('applyOverlay');
+    closeOverlay('petDetailOverlay');
+  } catch (e) {
+    TNR_UI.toast(e.message || '提交失败', 'danger');
+  }
+}
 
 async function renderMyAdoption() {
   if (PUBLIC_MODE || !getCurrentUser()) {
@@ -1008,20 +1110,65 @@ async function renderMyAdoption() {
   container.innerHTML = loadingHtml();
 
   try {
-    const adoptions = await TNR_API.getAllRaw('adoptions');
+    const [adoptions, appJson] = await Promise.all([
+      TNR_API.getAllRaw('adoptions'),
+      TNR_API.get(TNR_API.BASE + 'adoptions/my-applications/'),
+    ]);
     myAdoptionCache = adoptions;
+    const applications = appJson.data || [];
 
+    let html = '';
+
+    // 我的领养申请（在线申请状态）
+    html += '<div class="section-header-mobile"><div class="section-header-title">我的领养申请</div></div>';
+    if (applications.length === 0) {
+      html += `
+        <div class="empty-state" style="padding:16px;">
+          <div class="empty-state-icon" style="font-size:28px;">📝</div>
+          <div class="empty-state-text" style="font-size:13px;">暂无领养申请</div>
+          <div class="empty-state-hint">前往领养大厅选择宠物，在线提交领养申请</div>
+        </div>`;
+    } else {
+      applications.forEach(app => {
+        const pet = app.pet;
+        const petName = pet ? (pet.name || '未命名') : '';
+        const petCode = pet ? pet.code : (app.pet_code || '');
+        const statusBadge = getApplyStatusBadge(app.status);
+        const appliedAt = app.applied_at ? app.applied_at.substring(0, 10) : '—';
+        html += `
+          <div class="adoption-card" style="margin-bottom:10px;">
+            <div class="adoption-card-header">
+              <div class="pet-card-info" style="padding-left:0;">
+                <div class="pet-card-name">${TNR_UI.escape(petName)} <span class="pet-card-code" style="font-family:var(--font-mono);">${TNR_UI.escape(petCode)}</span></div>
+                <div class="pet-card-meta">
+                  <span class="pet-card-meta-item">申请时间：${TNR_UI.escape(appliedAt)}</span>
+                  <span class="pet-card-meta-item">受理：${TNR_UI.escape(app.hospital_name || '—')}</span>
+                </div>
+                ${app.review_note ? `<div class="pet-card-desc" style="margin-top:6px;color:var(--ink-muted);">审核意见：${TNR_UI.escape(app.review_note)}</div>` : ''}
+              </div>
+            </div>
+            <div class="adoption-card-footer">
+              <span>状态：${statusBadge}</span>
+              <span style="margin-left:auto;color:var(--ink-light);font-size:12px;">${TNR_UI.escape(getApplyStatusText(app.status))}</span>
+            </div>
+          </div>`;
+      });
+    }
+
+    // 领养记录
+    html += '<div class="section-header-mobile" style="margin-top:8px;"><div class="section-header-title">领养记录</div></div>';
     if (adoptions.length === 0) {
-      container.innerHTML = `
+      html += `
         <div class="empty-state">
           <div class="empty-state-icon">🐾</div>
           <div class="empty-state-text">暂无领养记录</div>
-          <div class="empty-state-hint">前往领养大厅查看可领养宠物</div>
+          <div class="empty-state-hint">申请审核通过后，可前往医院办理领养</div>
         </div>`;
+      container.innerHTML = html;
       return;
     }
 
-    let html = '<div style="font-size:12px;color:var(--ink-light);margin-bottom:8px;">共 ' + adoptions.length + ' 条领养记录</div>';
+    html += '<div style="font-size:12px;color:var(--ink-light);margin-bottom:8px;">共 ' + adoptions.length + ' 条领养记录</div>';
     adoptions.forEach(adoption => {
       const pet = adoption.pet;
       if (!pet) return;

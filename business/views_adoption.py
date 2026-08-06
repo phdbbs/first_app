@@ -3,6 +3,7 @@ Task 9: 领养业务
 - 领养大厅列表/详情（公开）
 - 领养信息编辑
 - 线下领养登记（含创建领养人账号）
+- 在线领养申请（领养人提交 / 机构审核）
 - 领养记录列表
 """
 from django.contrib.auth.decorators import login_required
@@ -12,7 +13,7 @@ from django.views.decorators.csrf import csrf_exempt
 from accounts.decorators import role_required
 from accounts.models import User
 from business.models import (
-    Adoption, Pet, AdoptionHallListing, Message,
+    Adoption, AdoptionApplication, Pet, AdoptionHallListing, Message,
 )
 from business.services import (
     json_ok, json_fail, parse_json_body, serialize_instance,
@@ -295,6 +296,176 @@ def adoption_list(request):
 
     data = [serialize_instance(a) for a in qs]
     return json_ok(data)
+
+
+# ============================================
+# 在线领养申请（领养人提交 / 机构审核）
+# ============================================
+@csrf_exempt
+@login_required
+@role_required('adopter', 'gov_city', 'gov_district')
+def adoption_apply(request):
+    """领养人在线提交领养申请。
+
+    请求体示例:
+    {
+        "pet_id": 1,
+        "applicant_name": "王领养",
+        "applicant_phone": "13800000009",
+        "applicant_id_card": "110105199001011234",
+        "applicant_address": "朝阳区某某小区",
+        "qualification": "有稳定住所与稳定收入",
+        "reason": "非常喜欢这只猫，希望给它一个温暖的家"
+    }
+    """
+    data = parse_json_body(request)
+
+    pet_id = data.get('pet_id')
+    if not pet_id:
+        return json_fail('缺少宠物ID')
+
+    try:
+        pet = Pet.objects.get(id=pet_id)
+    except Pet.DoesNotExist:
+        return json_fail('宠物不存在')
+
+    # 仅待领养 / 待诊疗（已绝育可领养）宠物可申请
+    if pet.status not in ('pending_adopt', 'in_treatment'):
+        return json_fail(f'该宠物当前状态({pet.get_status_display()})不可申请领养')
+
+    # 黑名单检查
+    bl = check_blacklist(data.get('applicant_id_card', ''), data.get('applicant_phone', ''))
+    if bl:
+        return json_fail(f'您已被列入领养黑名单，无法申请：{bl.reason}')
+
+    # 检查是否已对该宠物提交处理中的申请
+    if AdoptionApplication.objects.filter(
+        applicant=request.user, pet=pet,
+    ).exclude(status='rejected').exists():
+        return json_fail('您已提交过该宠物的领养申请，请勿重复提交')
+
+    applicant_name = data.get('applicant_name', '').strip()
+    applicant_phone = data.get('applicant_phone', '').strip()
+    if not applicant_name:
+        return json_fail('请填写姓名')
+    if not applicant_phone:
+        return json_fail('请填写联系电话')
+
+    hospital = pet.hospital
+    application = AdoptionApplication.objects.create(
+        pet=pet,
+        pet_code=pet.code,
+        applicant=request.user,
+        applicant_name=applicant_name,
+        applicant_phone=applicant_phone,
+        applicant_id_card=data.get('applicant_id_card', ''),
+        applicant_address=data.get('applicant_address', ''),
+        qualification=data.get('qualification', ''),
+        reason=data.get('reason', ''),
+        status='pending',
+        hospital=hospital,
+        hospital_name=hospital.name if hospital else '',
+    )
+
+    return json_ok(serialize_instance(application), message='领养申请已提交，请等待机构审核')
+
+
+@csrf_exempt
+@login_required
+@role_required('adopter', 'gov_city', 'gov_district')
+def my_applications(request):
+    """领养人 - 我的领养申请列表。"""
+    qs = AdoptionApplication.objects.filter(applicant=request.user).order_by('-id')
+    data = []
+    for a in qs:
+        item = serialize_instance(a)
+        if a.pet_id:
+            item['pet'] = serialize_instance(a.pet)
+        data.append(item)
+    return json_ok(data)
+
+
+@csrf_exempt
+@login_required
+@role_required('hospital', 'shelter', 'gov_city', 'gov_district')
+def adoption_application_list(request):
+    """机构 - 领养申请列表（可按状态筛选）。"""
+    user = request.user
+    qs = AdoptionApplication.objects.select_related('pet').order_by('-id')
+
+    # 机构数据权限：医院只看到本机构；区级看本区；市级看全部
+    if user.role == 'hospital':
+        if user.institution_id:
+            qs = qs.filter(hospital_id=user.institution_id)
+        else:
+            qs = qs.none()
+    elif user.role == 'gov_district':
+        qs = qs.filter(pet__district_id=user.district_id)
+    elif user.role == 'shelter':
+        qs = qs.filter(pet__shelter_id=user.institution_id)
+
+    status = request.GET.get('status')
+    if status:
+        qs = qs.filter(status=status)
+
+    data = []
+    for a in qs:
+        item = serialize_instance(a)
+        if a.pet_id:
+            item['pet'] = serialize_instance(a.pet)
+        data.append(item)
+    return json_ok(data)
+
+
+@csrf_exempt
+@login_required
+@role_required('hospital', 'shelter', 'gov_city', 'gov_district')
+def adoption_application_review(request, pk):
+    """机构审核领养申请（通过 / 拒绝）。
+
+    请求体示例:
+    {
+        "action": "approve",   // approve | reject
+        "review_note": "资质符合，同意领养"
+    }
+    """
+    data = parse_json_body(request)
+    user = request.user
+
+    try:
+        application = AdoptionApplication.objects.get(id=pk)
+    except AdoptionApplication.DoesNotExist:
+        return json_fail('申请不存在', status=404)
+
+    if application.status != 'pending':
+        return json_fail(f'该申请已处理（{application.get_status_display()}）')
+
+    action = data.get('action', '')
+    if action not in ('approve', 'reject'):
+        return json_fail('无效的审核操作')
+
+    # 权限校验：医院仅能处理本机构申请
+    if user.role == 'hospital' and user.institution_id and application.hospital_id \
+            and user.institution_id != application.hospital_id:
+        return json_fail('无权处理此申请')
+
+    application.status = 'approved' if action == 'approve' else 'rejected'
+    application.review_note = data.get('review_note', '')
+    application.reviewed_by = user
+    application.reviewed_at = timezone.now()
+    application.save(update_fields=['status', 'review_note', 'reviewed_by', 'reviewed_at'])
+
+    # 通知申请人
+    if application.applicant:
+        Message.objects.create(
+            user=application.applicant,
+            type='approval',
+            title='领养申请审核通知',
+            content='您的领养申请已通过，请前往医院办理领养手续。' if action == 'approve'
+            else f'您的领养申请未通过：{application.review_note or "资质不符合要求"}',
+        )
+
+    return json_ok(serialize_instance(application), message='审核完成')
 
 
 # ============================================

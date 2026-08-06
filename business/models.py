@@ -356,6 +356,47 @@ class Adoption(models.Model):
 
 
 # ============================================
+# 在线领养申请单
+# ============================================
+class AdoptionApplication(models.Model):
+    """领养人在线提交的领养申请单。
+
+    流程：领养人在领养大厅在线提交申请 → 机构审核（通过/拒绝） → 通过后转入线下领养登记。
+    """
+    STATUS_CHOICES = [
+        ('pending', '待审核'),
+        ('approved', '已通过'),
+        ('rejected', '已拒绝'),
+        ('cancelled', '已取消'),
+    ]
+    pet = models.ForeignKey('business.Pet', on_delete=models.CASCADE, related_name='adoption_applications', verbose_name='宠物')
+    pet_code = models.CharField('宠物编号', max_length=30, blank=True, default='')
+    applicant = models.ForeignKey('accounts.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='adoption_applications', verbose_name='申请人')
+    applicant_name = models.CharField('申请人姓名', max_length=50, blank=True, default='')
+    applicant_phone = models.CharField('联系电话', max_length=20, blank=True, default='')
+    applicant_id_card = models.CharField('身份证号', max_length=30, blank=True, default='')
+    applicant_address = models.CharField('居住地址', max_length=200, blank=True, default='')
+    qualification = models.TextField('领养资质说明', blank=True, default='')
+    reason = models.TextField('领养理由', blank=True, default='')
+    status = models.CharField('状态', max_length=20, choices=STATUS_CHOICES, default='pending')
+    hospital = models.ForeignKey('core.Institution', on_delete=models.SET_NULL, null=True, blank=True, related_name='adoption_applications', verbose_name='受理机构')
+    hospital_name = models.CharField('受理机构名称', max_length=100, blank=True, default='')
+    review_note = models.TextField('审核意见', blank=True, default='')
+    reviewed_by = models.ForeignKey('accounts.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='adoption_applications_reviewed', verbose_name='审核人')
+    reviewed_at = models.DateTimeField('审核时间', null=True, blank=True)
+    applied_at = models.DateTimeField('申请时间', auto_now_add=True)
+    created_at = models.DateTimeField('创建时间', auto_now_add=True)
+
+    class Meta:
+        ordering = ['-id']
+        verbose_name = '领养申请单'
+        verbose_name_plural = verbose_name
+
+    def __str__(self):
+        return f'{self.pet_code} - {self.applicant_name} ({self.get_status_display()})'
+
+
+# ============================================
 # 领养后回访打卡
 # ============================================
 class CheckIn(models.Model):
