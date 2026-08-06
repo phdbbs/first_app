@@ -743,10 +743,10 @@ function renderAdoptionInfo(){
       '<div class="flex gap-2">'+(inHall?'<span class="badge badge-success">已上架领养大厅</span>':'<span class="badge badge-warning">未上架</span>')+'<span class="badge '+TNR_DB.getPetStatusBadge(p.status)+'">'+TNR_DB.getPetStatusText(p.status)+'</span></div></div>'+
       '<div class="card-body">'+
       '<div class="form-hint mb-4" style="padding:var(--sp-3);background:var(--azurite-light);border-radius:var(--r-md);color:var(--azurite);font-size:var(--fs-sm);">📅 诊疗完成时间：'+TNR_UI.escape(treatmentDate||'—')+'（诊疗完成5天后自动变更为待领养状态）</div>'+
-      '<div class="detail-section"><div class="detail-section-title">照片管理（收容前/收容后/诊疗后）</div>'+
+      '<div class="detail-section"><div class="detail-section-title">照片管理（捕捉前/捕捉后/诊疗后）</div>'+
       '<div class="photo-grid" style="grid-template-columns:repeat(3,1fr);">'+
-      '<div onclick="uploadPhoto(\''+p.id+'\',\'before\')" style="cursor:pointer;"><div class="photo-placeholder-lg">'+(photos.before?'<img src="'+photos.before+'" style="width:100%;height:100%;object-fit:cover;border-radius:var(--r-lg);">':'📷')+'</div><div style="text-align:center;font-size:var(--fs-sm);color:var(--ink-muted);margin-top:4px;">收容前</div></div>'+
-      '<div onclick="uploadPhoto(\''+p.id+'\',\'after\')" style="cursor:pointer;"><div class="photo-placeholder-lg">'+(photos.after?'<img src="'+photos.after+'" style="width:100%;height:100%;object-fit:cover;border-radius:var(--r-lg);">':'📷')+'</div><div style="text-align:center;font-size:var(--fs-sm);color:var(--ink-muted);margin-top:4px;">收容后</div></div>'+
+      '<div onclick="uploadPhoto(\''+p.id+'\',\'before\')" style="cursor:pointer;"><div class="photo-placeholder-lg">'+(photos.before?'<img src="'+photos.before+'" style="width:100%;height:100%;object-fit:cover;border-radius:var(--r-lg);">':'📷')+'</div><div style="text-align:center;font-size:var(--fs-sm);color:var(--ink-muted);margin-top:4px;">捕捉前</div></div>'+
+      '<div onclick="uploadPhoto(\''+p.id+'\',\'after\')" style="cursor:pointer;"><div class="photo-placeholder-lg">'+(photos.after?'<img src="'+photos.after+'" style="width:100%;height:100%;object-fit:cover;border-radius:var(--r-lg);">':'📷')+'</div><div style="text-align:center;font-size:var(--fs-sm);color:var(--ink-muted);margin-top:4px;">捕捉后</div></div>'+
       '<div onclick="uploadPhoto(\''+p.id+'\',\'treatment\')" style="cursor:pointer;"><div class="photo-placeholder-lg">'+(photos.treatment?'<img src="'+photos.treatment+'" style="width:100%;height:100%;object-fit:cover;border-radius:var(--r-lg);">':'📷')+'</div><div style="text-align:center;font-size:var(--fs-sm);color:var(--ink-muted);margin-top:4px;">诊疗后</div></div>'+
       '</div></div>'+
       '<div class="detail-section"><div class="detail-section-title">宠物简介</div>'+
@@ -770,7 +770,7 @@ function renderAdoptionInfo(){
   page.innerHTML=cards;
 }
 function uploadPhoto(petId,photoType){
-  TNR_UI.modal({title:'上传照片（'+{before:'收容前',after:'收容后',treatment:'诊疗后'}[photoType]+'）',body:function(bodyEl,closeFn){
+  TNR_UI.modal({title:'上传照片（'+{before:'捕捉前',after:'捕捉后',treatment:'诊疗后'}[photoType]+'）',body:function(bodyEl,closeFn){
     bodyEl.innerHTML='<div class="form-group"><label class="form-label">选择图片文件</label><input type="file" accept="image/*" id="photoFileInput" class="form-input" style="padding:4px;" /></div>'+
       '<div id="photoPreview" style="margin-top:var(--sp-3);"></div>'+
       '<div style="display:flex;gap:var(--sp-3);justify-content:flex-end;margin-top:var(--sp-4);"><button class="btn btn-secondary" onclick="'+closeFn+'">取消</button><button class="btn btn-primary" id="photoUploadBtn">上传</button></div>';
@@ -791,7 +791,7 @@ function uploadPhoto(petId,photoType){
         if(!pet.photos) pet.photos={group:'',before:'',after:'',treatment:''};
         pet.photos[photoType]=ev.target.result;
         TNR_DB.update(TNR_DB.KEYS.pets,petId,{photos:pet.photos});
-        logOperation('上传照片：'+pet.code+' ('+{before:'收容前',after:'收容后',treatment:'诊疗后'}[photoType]+')');
+        logOperation('上传照片：'+pet.code+' ('+{before:'捕捉前',after:'捕捉后',treatment:'诊疗后'}[photoType]+')');
         TNR_UI.toast('照片上传成功','success'); closeFn(); renderAdoptionInfo();
       };
       reader.readAsDataURL(file);

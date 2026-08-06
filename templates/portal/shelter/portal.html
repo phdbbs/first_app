@@ -224,7 +224,7 @@ const Shelter = {
   bindSidebarNav() {
     const navMap = {
       '首页看板': 'dashboard',
-      '收容管理': 'capture-list',
+      '捕捉管理': 'capture-list',
       '转运交接': 'transfer',
       '物料供应链': 'material',
       '动物回收放养': 'release',
@@ -292,7 +292,7 @@ const Shelter = {
     const adoptions = await TNR_API.getAdoptions();
     const materials = await TNR_API.getMaterials();
 
-    const pendingCapture = captures.filter(c => c.status === 'pending' || c.status === 'in_transit').length;
+    const totalCaptures = captures.length;
     const pendingTransfer = transfers.filter(t => t.status === 'pending').length;
     const pendingRelease = releases.filter(r => r.status === 'pending').length;
     const pendingAdoption = adoptions.filter(a => a.status === 'pending').length;
@@ -314,7 +314,7 @@ const Shelter = {
 
     let html = '';
     html += '<div class="stat-grid">';
-    html += '<div class="stat-card"><div class="stat-card-icon">📋</div><div><div class="stat-card-value">' + pendingCapture + '</div><div class="stat-card-label">待捕捉登记</div></div></div>';
+    html += '<div class="stat-card"><div class="stat-card-icon">📋</div><div><div class="stat-card-value">' + totalCaptures + '</div><div class="stat-card-label">累计捕捉</div></div></div>';
     html += '<div class="stat-card blue"><div class="stat-card-icon">🚚</div><div><div class="stat-card-value">' + pendingTransfer + '</div><div class="stat-card-label">待转运</div></div></div>';
     html += '<div class="stat-card green"><div class="stat-card-icon">🌿</div><div><div class="stat-card-value">' + pendingRelease + '</div><div class="stat-card-label">待回收放养</div></div></div>';
     html += '<div class="stat-card gold"><div class="stat-card-icon">👤</div><div><div class="stat-card-value">' + pendingAdoption + '</div><div class="stat-card-label">待领养审核</div></div></div>';
@@ -578,10 +578,10 @@ const Shelter = {
       if (!addrInput.value) addrInput.value = opt.dataset.address || '';
     });
 
-    document.getElementById('btnGenCodes').addEventListener('click', () => {
+    document.getElementById('btnGenCodes').addEventListener('click', async () => {
       const count = parseInt(document.getElementById('ca_petCount').value) || 0;
       if (count < 1) { TNR_UI.toast('请输入有效数量', 'warning'); return; }
-      const codes = TNR_API.generatePetCodes(count);
+      const codes = await TNR_API.generatePetCodes(count);
       this._pendingCodes = codes;
       document.getElementById('ca_petCodes').innerHTML = codes.map(c => '<span class="pet-code-chip">' + c + '</span>').join('');
       const grid = document.getElementById('ca_petPhotos');
@@ -620,7 +620,9 @@ const Shelter = {
       };
       const res = await TNR_API.createCapture(payload);
       if (res && res.success !== false) {
-        TNR_UI.toast('捕捉登记成功！单号：' + (res.data?.ledger_no || res.data?.ledgerNo || ''), 'success');
+        const data = res.data || {};
+        const ledger = data.capture?.ledger_no || data.capture?.ledgerNo || data.ledger_no || data.ledgerNo || '';
+        TNR_UI.toast('捕捉登记成功！单号：' + ledger, 'success');
         this._pendingCodes = null;
         this.navigate('capture-list');
       } else {
@@ -910,8 +912,17 @@ const Shelter = {
               { label: '创建时间', value: rec.createdAt }
             ]) });
           } else if (btn.dataset.act === 'resend') {
-            // TODO: 后端暂无 transfer 重新下发接口，可通过 createTransfer 重建
-            TNR_UI.toast('重新下发功能待后端接口支持', 'warning');
+            TNR_UI.confirm('确认重新下发该转运单？宠物将重新进入待签收状态。', '重新下发').then(async ok => {
+              if (!ok) return;
+              const res = await TNR_API.resendTransfer(btn.dataset.id);
+              if (res && res.success !== false) {
+                TNR_UI.toast('重新下发成功：' + (res.data?.ledger_no || ''), 'success');
+                this._transfers = await TNR_API.getTransfers();
+                this.renderTransferTab(tab);
+              } else {
+                TNR_UI.toast('重新下发失败：' + (res?.message || '未知错误'), 'danger');
+              }
+            });
           }
         });
       });

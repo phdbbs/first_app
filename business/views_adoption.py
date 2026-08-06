@@ -280,7 +280,7 @@ def adoption_confirm_claim(request, pk):
 
 @csrf_exempt
 @login_required
-@role_required('shelter', 'gov_city', 'gov_district')
+@role_required('shelter', 'hospital', 'gov_city', 'gov_district')
 def adoption_list(request):
     """领养记录列表"""
     qs = get_district_filtered_queryset(Adoption, request.user)

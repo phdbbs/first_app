@@ -32,7 +32,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=100, verbose_name='机构名称')),
-                ('type', models.CharField(choices=[('shelter', '收容所'), ('hospital', '医院'), ('community', '小区')], max_length=20, verbose_name='机构类型')),
+                ('type', models.CharField(choices=[('shelter', '捕捉点'), ('hospital', '医院'), ('community', '小区')], max_length=20, verbose_name='机构类型')),
                 ('address', models.CharField(blank=True, default='', max_length=200, verbose_name='地址')),
                 ('contact', models.CharField(blank=True, default='', max_length=50, verbose_name='联系人')),
                 ('phone', models.CharField(blank=True, default='', max_length=20, verbose_name='联系电话')),

@@ -14,9 +14,10 @@ app_name = 'business'
 
 urlpatterns = [
     # ============================================
-    # Task 4: 收容登记与主人领回
+    # Task 4: 捕捉登记与主人领回
     # ============================================
     path('captures/', views_capture.capture_list, name='capture_list'),
+    path('captures/codes-preview/', views_capture.pet_codes_preview, name='capture_codes_preview'),
     path('captures/create/', views_capture.capture_create, name='capture_create'),
     path('captures/<int:pk>/', views_capture.capture_detail, name='capture_detail'),
     path('captures/<int:pk>/owner-return/', views_capture.owner_return_create, name='owner_return_create'),
@@ -29,6 +30,7 @@ urlpatterns = [
     path('transfers/create/', views_transfer.transfer_create, name='transfer_create'),
     path('transfers/<int:pk>/receive/', views_transfer.transfer_receive, name='transfer_receive'),
     path('transfers/<int:pk>/reject/', views_transfer.transfer_reject, name='transfer_reject'),
+    path('transfers/<int:pk>/resend/', views_transfer.transfer_resend, name='transfer_resend'),
 
     # ============================================
     # Task 6: 诊疗与物料库存联动

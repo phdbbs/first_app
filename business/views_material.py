@@ -75,13 +75,35 @@ def purchase_create(request):
     user = request.user
 
     material_id = data.get('material_id')
-    if not material_id:
-        return json_fail('缺少物料ID')
+    material = None
+    if material_id:
+        try:
+            material = Material.objects.get(id=material_id)
+        except Material.DoesNotExist:
+            material = None
 
-    try:
-        material = Material.objects.get(id=material_id)
-    except Material.DoesNotExist:
-        return json_fail('物料不存在')
+    if material is None:
+        # 前端直接以名称/类别新增物料（如采购入库表单未选择已有物料）
+        name = str(data.get('name', '')).strip()
+        category = str(data.get('category', '')).strip()
+        if not name or category not in dict(Material.CATEGORY_CHOICES):
+            return json_fail('缺少物料ID或物料名称/类别')
+        shelter = user.institution if user.institution and user.institution.type == 'shelter' else None
+        district_id = shelter.district_id if shelter else (getattr(user, 'district_id', None) or None)
+        if not district_id:
+            return json_fail('缺少区县信息')
+        material = Material.objects.filter(name=name, category=category, district_id=district_id).first()
+        if not material:
+            material = Material.objects.create(
+                name=name,
+                category=category,
+                unit=str(data.get('unit', '') or '支'),
+                specification=str(data.get('specification', '') or ''),
+                supplier=str(data.get('supplier', '') or ''),
+                batch_no=str(data.get('batch_no', '') or ''),
+                safety_stock=0,
+                district_id=district_id,
+            )
 
     quantity = int(data.get('quantity', 0))
     if quantity <= 0:
@@ -122,10 +144,10 @@ def purchase_create(request):
     if update_fields:
         material.save(update_fields=update_fields)
 
-    # 芯片采购：创建芯片号段
+    # 芯片采购：创建芯片号段（兼容前端 chip_start/chip_end 与后端 chip_range_* 两种命名）
     if material.category == 'chip':
-        range_start = data.get('chip_range_start', '')
-        range_end = data.get('chip_range_end', '')
+        range_start = data.get('chip_range_start', '') or data.get('chip_start', '')
+        range_end = data.get('chip_range_end', '') or data.get('chip_end', '')
         if range_start and range_end:
             _create_chip_range(range_start, range_end, material)
             material.chip_range_start = range_start
@@ -153,7 +175,7 @@ def dispatch_create(request):
     user = request.user
 
     material_id = data.get('material_id')
-    hospital_id = data.get('hospital_id')
+    hospital_id = data.get('hospital_id') or data.get('to_hospital_id')
     if not material_id or not hospital_id:
         return json_fail('缺少物料或医院信息')
 
@@ -183,6 +205,12 @@ def dispatch_create(request):
         if unavailable > 0:
             return json_fail(f'{unavailable} 个芯片号已被使用')
 
+    # 兼容前端 chip_range（如 "1000010001-1000010010"）号段输入
+    note = f'下发至 {hospital.name}（待签收）'
+    chip_range = str(data.get('chip_range', '') or '').strip()
+    if material.category == 'chip' and chip_range:
+        note += f'，芯片号段 {chip_range}'
+
     # 创建下发流水（捕捉点侧扣减库存，不关联医院，医院签收后才增加库存）
     txn = adjust_stock(
         material=material,
@@ -192,7 +220,7 @@ def dispatch_create(request):
         operator=user,
         operator_name=user.get_full_name() or user.username,
         from_to=hospital.name,
-        note=f'下发至 {hospital.name}（待签收）',
+        note=note,
         ledger_no=generate_ledger_no('DIS'),
         district_id=material.district_id,
     )

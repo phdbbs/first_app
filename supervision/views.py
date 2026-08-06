@@ -338,6 +338,49 @@ def district_toggle_status(request, pk):
 
 
 # ============================================
+# 7.3 删除区县
+# ============================================
+@csrf_exempt
+@login_required
+@role_required('gov_city')
+def district_delete(request, pk):
+    """删除区县（仅市级管理员，且未被业务数据引用）"""
+    try:
+        district = District.objects.get(id=pk)
+    except District.DoesNotExist:
+        return json_fail('区县不存在', status=404)
+
+    from accounts.models import User
+    from business.models import (
+        Pet, Capture, OwnerReturn, Transfer, Treatment, Material,
+        MaterialTransaction, Release, Adoption, Blacklist, Euthanasia,
+    )
+
+    references = {
+        '用户账号': User.objects.filter(district_id=pk).count(),
+        '机构': Institution.objects.filter(district_id=pk).count(),
+        '宠物档案': Pet.objects.filter(district_id=pk).count(),
+        '捕捉记录': Capture.objects.filter(district_id=pk).count(),
+        '主人领回': OwnerReturn.objects.filter(district_id=pk).count(),
+        '转运记录': Transfer.objects.filter(district_id=pk).count(),
+        '诊疗记录': Treatment.objects.filter(district_id=pk).count(),
+        '物料': Material.objects.filter(district_id=pk).count(),
+        '物料流水': MaterialTransaction.objects.filter(district_id=pk).count(),
+        '放养记录': Release.objects.filter(district_id=pk).count(),
+        '领养记录': Adoption.objects.filter(district_id=pk).count(),
+        '黑名单': Blacklist.objects.filter(district_id=pk).count(),
+        '安乐死记录': Euthanasia.objects.filter(district_id=pk).count(),
+    }
+    used = {k: v for k, v in references.items() if v > 0}
+    if used:
+        detail = '、'.join(f'{k}{v}条' for k, v in used.items())
+        return json_fail(f'该区县已被业务数据引用（{detail}），不可删除，请改为停用')
+
+    district.delete()
+    return json_ok({'id': pk}, message='区县删除成功')
+
+
+# ============================================
 # 8. 用户列表
 # ============================================
 @csrf_exempt

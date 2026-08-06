@@ -31,7 +31,7 @@ class Migration(migrations.Migration):
                 ('is_staff', models.BooleanField(default=False, help_text='Designates whether the user can log into this admin site.', verbose_name='staff status')),
                 ('is_active', models.BooleanField(default=True, help_text='Designates whether this user should be treated as active. Unselect this instead of deleting accounts.', verbose_name='active')),
                 ('date_joined', models.DateTimeField(default=django.utils.timezone.now, verbose_name='date joined')),
-                ('role', models.CharField(choices=[('gov_city', '市级政府管理员'), ('gov_district', '区级政府管理员'), ('shelter', '收容所操作员'), ('hospital', '医院操作员'), ('adopter', '领养人')], default='adopter', max_length=20, verbose_name='角色')),
+                ('role', models.CharField(choices=[('gov_city', '市级政府管理员'), ('gov_district', '区级政府管理员'), ('shelter', '捕捉点操作员'), ('hospital', '医院操作员'), ('adopter', '领养人')], default='adopter', max_length=20, verbose_name='角色')),
                 ('phone', models.CharField(blank=True, default='', max_length=20, verbose_name='电话')),
                 ('status', models.CharField(default='active', max_length=10, verbose_name='状态')),
                 ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='创建时间')),

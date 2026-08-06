@@ -82,6 +82,15 @@ def serialize_instance(instance, fields=None):
             else:
                 data[camel_key] = data[f.name]
 
+        # 外键额外输出 attname（如 district_id），供前端筛选/映射使用
+        if f.is_relation and f.many_to_one:
+            fk_key = f.attname
+            fk_value = getattr(instance, fk_key, None)
+            data[fk_key] = fk_value
+            fk_camel = _to_camel(fk_key)
+            if fk_camel != fk_key:
+                data[fk_camel] = fk_value
+
     # 特殊处理：pet_codes 如果是字符串，也转数组放驼峰字段
     if 'pet_codes' in data and isinstance(data['pet_codes'], str) and data['pet_codes']:
         data['petCodes'] = [p.strip() for p in data['pet_codes'].split(',') if p.strip()]

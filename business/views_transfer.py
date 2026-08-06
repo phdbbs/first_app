@@ -206,3 +206,54 @@ def transfer_reject(request, pk):
     Pet.objects.filter(code__in=pet_codes).update(status='in_transit')
 
     return json_ok(serialize_instance(transfer), message='已驳回')
+
+
+@csrf_exempt
+@login_required
+@role_required('shelter', 'gov_city', 'gov_district')
+def transfer_resend(request, pk):
+    """重新下发被驳回的转运单。
+
+    以原转运单的宠物/医院重建一张待签收转运单，并将宠物状态回退为在途、
+    重新绑定医院，供医院再次签收或驳回。
+    """
+    try:
+        transfer = Transfer.objects.get(id=pk)
+    except Transfer.DoesNotExist:
+        return json_fail('转运记录不存在', status=404)
+
+    if transfer.status != 'rejected':
+        return json_fail(f'当前状态({transfer.status})不可重新下发')
+
+    user = request.user
+    if user.role == 'shelter' and user.institution_id and user.institution_id != transfer.from_shelter_id:
+        return json_fail('无权重新下发此转运记录')
+
+    pet_codes = [c.strip() for c in transfer.pet_codes.split(',') if c.strip()]
+    pets = Pet.objects.filter(code__in=pet_codes)
+    if not pets.exists():
+        return json_fail('原转运单关联的宠物不存在，无法重新下发')
+
+    district_id = transfer.district_id or getattr(user, 'district_id', None)
+    new_transfer = Transfer.objects.create(
+        capture=transfer.capture,
+        from_shelter=transfer.from_shelter,
+        from_shelter_name=transfer.from_shelter_name,
+        to_hospital=transfer.to_hospital,
+        to_hospital_name=transfer.to_hospital_name,
+        pet_codes=','.join(pet_codes),
+        pet_count=len(pet_codes),
+        status='pending',
+        operator=user,
+        operator_name=user.get_full_name() or user.username,
+        ledger_no=generate_ledger_no('TRF'),
+        district_id=district_id or transfer.district_id,
+    )
+
+    # 重新绑定医院，宠物状态保持/回退为在途
+    for pet in pets:
+        pet.hospital = transfer.to_hospital
+        pet.status = 'in_transit'
+        pet.save(update_fields=['hospital', 'status'])
+
+    return json_ok(serialize_instance(new_transfer), message='重新下发成功')

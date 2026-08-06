@@ -1045,10 +1045,10 @@ const Hospital = {
           '<div class="flex gap-2">' + (inHall ? '<span class="badge badge-success">已上架领养大厅</span>' : '<span class="badge badge-warning">未上架</span>') +
           '<span class="badge ' + TNR_API.getPetStatusBadge(p.status) + '">' + TNR_API.getPetStatusText(p.status) + '</span></div></div>' +
           '<div class="card-body">' +
-          '<div class="detail-section"><div class="detail-section-title">照片管理（收容前/收容后/诊疗后）</div>' +
+          '<div class="detail-section"><div class="detail-section-title">照片管理（捕捉前/捕捉后/诊疗后）</div>' +
           '<div style="grid-template-columns:repeat(3,1fr);display:grid;gap:var(--sp-3);">' +
-          this.renderPhotoSlot(p, 'photo_before', '收容前') +
-          this.renderPhotoSlot(p, 'photo_after', '收容后') +
+          this.renderPhotoSlot(p, 'photo_before', '捕捉前') +
+          this.renderPhotoSlot(p, 'photo_after', '捕捉后') +
           this.renderPhotoSlot(p, 'photo_treatment', '诊疗后') +
           '</div></div>' +
           '<div class="detail-section"><div class="detail-section-title">宠物简介</div>' +
@@ -1097,7 +1097,7 @@ const Hospital = {
   },
 
   uploadPhoto(petId, photoField) {
-    const labels = {photo_before: '收容前', photo_after: '收容后', photo_treatment: '诊疗后', photo_group: '合照'};
+    const labels = {photo_before: '捕捉前', photo_after: '捕捉后', photo_treatment: '诊疗后', photo_group: '合照'};
     TNR_UI.modal({
       title: '上传照片（' + (labels[photoField] || '') + '）',
       body: (bodyEl, closeFn) => {

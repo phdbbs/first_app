@@ -1,6 +1,6 @@
 """
-Task 4: 收容登记与主人领回
-- 收容登记列表/详情/创建
+Task 4: 捕捉登记与主人领回
+- 捕捉登记列表/详情/创建
 - 主人领回登记
 """
 from django.contrib.auth.decorators import login_required
@@ -20,7 +20,7 @@ from core.models import Institution
 @login_required
 @role_required('shelter', 'gov_city', 'gov_district')
 def capture_list(request):
-    """收容登记列表（按区县过滤）"""
+    """捕捉登记列表（按区县过滤）"""
     qs = get_district_filtered_queryset(Capture, request.user)
     status = request.GET.get('status')
     if status:
@@ -39,8 +39,22 @@ def capture_list(request):
 @csrf_exempt
 @login_required
 @role_required('shelter', 'gov_city', 'gov_district')
+def pet_codes_preview(request):
+    """预览即将生成的宠物编号（与提交后实际生成规则一致）。"""
+    try:
+        count = int(request.GET.get('count', 0))
+    except (TypeError, ValueError):
+        count = 0
+    if count <= 0:
+        return json_fail('数量必须大于0')
+    return json_ok(generate_pet_codes(count))
+
+
+@csrf_exempt
+@login_required
+@role_required('shelter', 'gov_city', 'gov_district')
 def capture_create(request):
-    """创建收容登记（批量生成宠物档案）"""
+    """创建捕捉登记（批量生成宠物档案）"""
     data = parse_json_body(request)
 
     district_id = data.get('district_id') or getattr(request.user, 'district_id', None)
@@ -63,7 +77,7 @@ def capture_create(request):
     # 批量生成宠物编号
     pet_codes = generate_pet_codes(pet_count)
 
-    # 创建收容记录
+    # 创建捕捉记录
     capture = Capture.objects.create(
         district_id=district_id,
         shelter=shelter,
@@ -104,7 +118,7 @@ def capture_create(request):
     return json_ok({
         'capture': serialize_instance(capture),
         'pet_codes': pet_codes,
-    }, message=f'收容登记成功，生成 {pet_count} 条宠物档案')
+    }, message=f'捕捉登记成功，生成 {pet_count} 条宠物档案')
 
 
 @csrf_exempt
@@ -187,11 +201,11 @@ def owner_return_create(request, pk=None):
 @login_required
 @role_required('shelter', 'gov_city', 'gov_district', 'hospital')
 def capture_detail(request, pk):
-    """收容登记详情（含关联宠物列表）"""
+    """捕捉登记详情（含关联宠物列表）"""
     try:
         capture = Capture.objects.get(id=pk)
     except Capture.DoesNotExist:
-        return json_fail('收容记录不存在', status=404)
+        return json_fail('捕捉记录不存在', status=404)
 
     data = serialize_instance(capture)
     pets = Pet.objects.filter(capture=capture)

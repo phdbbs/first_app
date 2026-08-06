@@ -21,7 +21,7 @@ from business.services import (
 
 @csrf_exempt
 @login_required
-@role_required('hospital', 'gov_city', 'gov_district')
+@role_required('hospital', 'shelter', 'gov_city', 'gov_district')
 def treatment_list(request):
     """诊疗列表"""
     user = request.user

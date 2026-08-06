@@ -39,7 +39,7 @@ class Migration(migrations.Migration):
             name='Capture',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('shelter_name', models.CharField(blank=True, default='', max_length=100, verbose_name='收容所名称')),
+                ('shelter_name', models.CharField(blank=True, default='', max_length=100, verbose_name='捕捉点名称')),
                 ('community_name', models.CharField(blank=True, default='', max_length=100, verbose_name='小区名称')),
                 ('address', models.CharField(blank=True, default='', max_length=200, verbose_name='捕捉地址')),
                 ('property_name', models.CharField(blank=True, default='', max_length=100, verbose_name='物业名称')),
@@ -56,7 +56,7 @@ class Migration(migrations.Migration):
                 ('community', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='community_captures', to='core.institution', verbose_name='小区')),
                 ('district', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='captures', to='core.district', verbose_name='所属区县')),
                 ('operator', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='captures', to=settings.AUTH_USER_MODEL, verbose_name='操作员')),
-                ('shelter', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='captures', to='core.institution', verbose_name='收容所')),
+                ('shelter', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='captures', to='core.institution', verbose_name='捕捉点')),
             ],
             options={
                 'verbose_name': '捕捉记录',
@@ -74,7 +74,7 @@ class Migration(migrations.Migration):
                 ('specification', models.CharField(blank=True, default='', max_length=100, verbose_name='规格')),
                 ('supplier', models.CharField(blank=True, default='', max_length=100, verbose_name='供应商')),
                 ('batch_no', models.CharField(blank=True, default='', max_length=50, verbose_name='批号')),
-                ('shelter_stock', models.IntegerField(default=0, verbose_name='收容所库存')),
+                ('shelter_stock', models.IntegerField(default=0, verbose_name='捕捉点库存')),
                 ('safety_stock', models.IntegerField(default=0, verbose_name='安全库存')),
                 ('expiry_date', models.DateField(blank=True, null=True, verbose_name='过期日期')),
                 ('chip_range_start', models.CharField(blank=True, default='', max_length=30, verbose_name='芯片起始号')),
@@ -155,7 +155,7 @@ class Migration(migrations.Migration):
                 ('capture', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='business.capture', verbose_name='捕捉记录')),
                 ('district', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='pets', to='core.district', verbose_name='所属区县')),
                 ('hospital', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='hospital_pets', to='core.institution', verbose_name='医院')),
-                ('shelter', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='pets', to='core.institution', verbose_name='收容所')),
+                ('shelter', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='pets', to='core.institution', verbose_name='捕捉点')),
             ],
             options={
                 'verbose_name': '宠物档案',
@@ -330,7 +330,7 @@ class Migration(migrations.Migration):
             name='Transfer',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('from_shelter_name', models.CharField(blank=True, default='', max_length=100, verbose_name='发出收容所名称')),
+                ('from_shelter_name', models.CharField(blank=True, default='', max_length=100, verbose_name='发出捕捉点名称')),
                 ('to_hospital_name', models.CharField(blank=True, default='', max_length=100, verbose_name='接收医院名称')),
                 ('pet_codes', models.TextField(blank=True, default='', help_text='逗号分隔', verbose_name='动物编号')),
                 ('pet_count', models.IntegerField(default=0, verbose_name='动物数量')),
@@ -342,7 +342,7 @@ class Migration(migrations.Migration):
                 ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='创建时间')),
                 ('capture', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='transfers', to='business.capture', verbose_name='捕捉记录')),
                 ('district', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='transfers', to='core.district', verbose_name='所属区县')),
-                ('from_shelter', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='sent_transfers', to='core.institution', verbose_name='发出收容所')),
+                ('from_shelter', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='sent_transfers', to='core.institution', verbose_name='发出捕捉点')),
                 ('operator', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='transfers', to=settings.AUTH_USER_MODEL, verbose_name='操作员')),
                 ('to_hospital', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='received_transfers', to='core.institution', verbose_name='接收医院')),
             ],

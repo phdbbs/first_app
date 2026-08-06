@@ -22,6 +22,7 @@ urlpatterns = [
     path('districts/create/', views.district_create, name='district_create'),
     path('districts/<int:pk>/edit/', views.district_edit, name='district_edit'),
     path('districts/<int:pk>/toggle/', views.district_toggle_status, name='district_toggle_status'),
+    path('districts/<int:pk>/delete/', views.district_delete, name='district_delete'),
 
     # 用户管理
     path('users/', views.user_list, name='user_list'),

@@ -410,10 +410,28 @@ const GovPortal = {
     const rowActions = canManage ? (r => `
       <button class="btn-link" data-edit-dist="${r.id}">编辑</button>
       <button class="btn-link ${r.status === 'active' ? 'danger' : 'success'}" data-toggle-dist="${r.id}">${r.status === 'active' ? '停用' : '启用'}</button>
+      <button class="btn-link danger" data-del-dist="${r.id}">删除</button>
     `) : (() => '');
     document.getElementById('distTableWrapper').innerHTML = TNR_UI.renderTable({ columns, data, rowActions, emptyText: '暂无区县数据' });
     document.querySelectorAll('[data-edit-dist]').forEach(b => b.addEventListener('click', () => this.showDistrictModal(b.dataset.editDist)));
     document.querySelectorAll('[data-toggle-dist]').forEach(b => b.addEventListener('click', () => this.toggleDistrictStatus(b.dataset.toggleDist)));
+    document.querySelectorAll('[data-del-dist]').forEach(b => b.addEventListener('click', () => this.deleteDistrict(b.dataset.delDist)));
+  },
+
+  async deleteDistrict(id) {
+    const dists = await TNR_API.getDistricts();
+    const dist = (dists || []).find(d => String(d.id) === String(id));
+    const ok = await TNR_UI.confirm(
+      '确定要删除区县 <b>' + TNR_UI.escape(dist ? dist.name : id) + '</b> 吗？<br>若该区县已有关联业务数据将无法删除（建议停用）。', '删除确认'
+    );
+    if (!ok) return;
+    try {
+      const res = await TNR_API.deleteDistrict(id);
+      TNR_UI.toast(res.message || '区县删除成功', 'success');
+      await this.renderDistrictsTable();
+    } catch (e) {
+      TNR_UI.toast(e.message || '删除失败', 'danger');
+    }
   },
 
   async showDistrictModal(id) {
@@ -879,6 +897,10 @@ const GovPortal = {
     const filters = TNR_UI.getFilterValues();
     const type = this.supState.tab;
     const sup = await TNR_API.getBusinessSupervision(type);
+    const districts = await TNR_API.getDistricts();
+    const districtMap = {};
+    (districts || []).forEach(d => { districtMap[d.id] = d.name; });
+    const districtRender = r => TNR_UI.escape(districtMap[r.district_id] || r.district_name || '—');
     let data, columns;
 
     if (type === 'capture') {
@@ -890,7 +912,7 @@ const GovPortal = {
         { key: 'shelter_name', title: '捕捉点', render: r => TNR_UI.escape(r.shelter_name) },
         { key: 'community_name', title: '来源地点', render: r => TNR_UI.escape(r.community_name || '—') },
         { key: 'pet_count', title: '数量', width: '70px' },
-        { key: 'district_id', title: '区县', render: r => TNR_UI.escape(r.district_name || r.district_id || '—') },
+        { key: 'district_id', title: '区县', render: districtRender },
         { key: 'created_at', title: '时间', width: '140px', render: r => TNR_UI.formatDateTime(r.created_at) },
         { key: 'status', title: '状态', render: () => `<span class="badge badge-success">已完成</span>` }
       ];
@@ -903,7 +925,7 @@ const GovPortal = {
         { key: 'from_shelter_name', title: '出发捕捉点', render: r => TNR_UI.escape(r.from_shelter_name) },
         { key: 'to_hospital_name', title: '接收医院', render: r => TNR_UI.escape(r.to_hospital_name) },
         { key: 'pet_count', title: '数量', width: '70px' },
-        { key: 'district_id', title: '区县', render: r => TNR_UI.escape(r.district_name || r.district_id || '—') },
+        { key: 'district_id', title: '区县', render: districtRender },
         { key: 'created_at', title: '时间', width: '140px', render: r => TNR_UI.formatDateTime(r.created_at) },
         { key: 'status', title: '状态', render: r => {
           const m = { pending: { t: '待接收', b: 'badge-warning' }, received: { t: '已接收', b: 'badge-success' }, rejected: { t: '已驳回', b: 'badge-danger' } };
@@ -922,7 +944,7 @@ const GovPortal = {
           const items = r.treatment_items || [];
           return items.map(i => `<span class="badge badge-info" style="margin-right:4px;">${i}</span>`).join('') || '—';
         } },
-        { key: 'district_id', title: '区县', render: r => TNR_UI.escape(r.district_name || r.district_id || '—') },
+        { key: 'district_id', title: '区县', render: districtRender },
         { key: 'created_at', title: '时间', width: '140px', render: r => TNR_UI.formatDateTime(r.created_at) },
         { key: 'status', title: '状态', render: r => {
           const m = { in_progress: { t: '诊疗中', b: 'badge-info' }, completed: { t: '已完成', b: 'badge-success' } };
@@ -940,7 +962,7 @@ const GovPortal = {
         { key: 'community_name', title: '放养地点', render: r => TNR_UI.escape(r.community_name) },
         { key: 'pet_count', title: '数量', width: '70px', render: () => '1' },
         { key: 'receiver_name', title: '接收人', render: r => TNR_UI.escape(r.receiver_name || '—') },
-        { key: 'district_id', title: '区县', render: r => TNR_UI.escape(r.district_name || r.district_id || '—') },
+        { key: 'district_id', title: '区县', render: districtRender },
         { key: 'released_at', title: '放养时间', width: '120px', render: r => TNR_UI.formatDateTime(r.released_at) },
         { key: 'status', title: '状态', render: r => r.status === 'released' ? `<span class="badge badge-success">已放养</span>` : `<span class="badge badge-warning">待放养</span>` }
       ];
@@ -959,7 +981,7 @@ const GovPortal = {
           const cnt = checkIns.filter(c => c.pet_id === r.pet_id).length;
           return `<span class="badge ${cnt > 0 ? 'badge-success' : 'badge-warning'}">${cnt}次</span>`;
         } },
-        { key: 'district_id', title: '区县', render: r => TNR_UI.escape(r.district_name || r.district_id || '—') },
+        { key: 'district_id', title: '区县', render: districtRender },
         { key: 'adopted_at', title: '领养时间', width: '120px', render: r => TNR_UI.formatDateTime(r.adopted_at) }
       ];
     } else if (type === 'euthanasia') {
@@ -971,7 +993,7 @@ const GovPortal = {
         { key: 'pet_code', title: '编号', width: '130px' },
         { key: 'hospital_name', title: '处置医院', render: r => TNR_UI.escape(r.hospital_name) },
         { key: 'reason', title: '处置原因', render: r => TNR_UI.escape(r.reason || '—') },
-        { key: 'district_id', title: '区县', render: r => TNR_UI.escape(r.district_name || r.district_id || '—') },
+        { key: 'district_id', title: '区县', render: districtRender },
         { key: 'euthanized_at', title: '处置时间', width: '120px', render: r => TNR_UI.formatDateTime(r.euthanized_at) }
       ];
     }

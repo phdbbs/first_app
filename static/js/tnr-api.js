@@ -113,6 +113,7 @@ const TNR_API = {
   async createTransfer(data) { return this._post('/api/business/transfers/create/', data); },
   async receiveTransfer(id) { return this._post(`/api/business/transfers/${id}/receive/`, {}); },
   async rejectTransfer(id, reason) { return this._post(`/api/business/transfers/${id}/reject/`, {reason}); },
+  async resendTransfer(id) { return this._post(`/api/business/transfers/${id}/resend/`, {}); },
   async getTreatments() { return this._get('/api/business/treatments/'); },
   async createTreatment(data) { return this._post('/api/business/treatments/create/', data); },
   async getMaterials() { return this._get('/api/business/materials/'); },
@@ -173,6 +174,7 @@ const TNR_API = {
   async createDistrict(data) { return this._post('/api/supervision/districts/create/', data); },
   async editDistrict(id, data) { return this._post(`/api/supervision/districts/${id}/edit/`, data); },
   async toggleDistrict(id) { return this._post(`/api/supervision/districts/${id}/toggle/`, {}); },
+  async deleteDistrict(id) { return this._post(`/api/supervision/districts/${id}/delete/`, {}); },
   async getUsers(role) {
     const url = role ? `/api/supervision/users/?role=${role}` : '/api/supervision/users/';
     return this._get(url);
@@ -200,7 +202,12 @@ const TNR_API = {
   },
   async getSystemConfig() { return this._get('/api/supervision/config/'); },
   async updateSystemConfig(data) { return this._post('/api/supervision/config/', data); },
-  generatePetCodes(count) {
+  async generatePetCodes(count) {
+    try {
+      const res = await fetch('/api/business/captures/codes-preview/?count=' + count, { credentials: 'same-origin' });
+      const json = await res.json();
+      if (json.success && Array.isArray(json.data)) return json.data;
+    } catch (e) { /* 接口不可用时回退到本地预览 */ }
     const d = new Date();
     const yearStr = String(d.getFullYear()).substr(-2) + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0');
     return Array.from({length: count}, (_, i) => 'TNR' + yearStr + String(i+1).padStart(3,'0'));

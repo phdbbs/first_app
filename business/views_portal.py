@@ -259,7 +259,7 @@ def mark_message_read(request, pk):
 def pet_lifecycle(request, pet_id):
     """返回指定宠物的全生命周期溯源记录。
 
-    按时间顺序返回：收容、转运、诊疗、放养、领养、安乐死记录。
+    按时间顺序返回：捕捉、转运、诊疗、放养、领养、安乐死记录。
     """
     try:
         pet = Pet.objects.get(id=pet_id)
@@ -268,12 +268,12 @@ def pet_lifecycle(request, pet_id):
 
     events = []
 
-    # 收容记录
+    # 捕捉记录
     if pet.capture:
         cap = pet.capture
         events.append({
             'type': 'capture',
-            'type_display': '收容登记',
+            'type_display': '捕捉登记',
             'date': cap.created_at.isoformat() if cap.created_at else '',
             'ledger_no': cap.ledger_no,
             'shelter_name': cap.shelter_name,
