@@ -11,11 +11,11 @@ set -e
 # === 配置区 ===
 PROJECT_NAME="tnr_system"
 PROJECT_DIR="/opt/tnr"
-DOMAIN="your-domain.com"  # 修改为你的域名
+DOMAIN="${DOMAIN:-100.99.98.71}"  # 默认使用服务器IP，可改为域名: DOMAIN=example.com sudo bash deploy.sh
 PYTHON_VERSION="python3"
 DB_NAME="tnr_system"
 DB_USER="tnr"
-DB_PASS="ChangeMeInProduction!"  # 修改密码
+DB_PASS="${DB_PASS:-ChangeMeInProduction!}"  # 建议通过环境变量覆盖: DB_PASS=xxx
 
 echo "============================================"
 echo "  TNR 流浪动物管理系统 - 部署脚本"
@@ -55,7 +55,7 @@ echo "[5/8] 生成 .env..."
 cat > "$PROJECT_DIR/.env" <<EOF
 DEBUG=False
 SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_urlsafe(50))")
-ALLOWED_HOSTS=$DOMAIN,localhost,127.0.0.1
+ALLOWED_HOSTS=$DOMAIN,localhost,127.0.0.1,100.99.98.71
 DB_ENGINE=mysql
 DB_NAME=$DB_NAME
 DB_USER=$DB_USER
