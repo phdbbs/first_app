@@ -15,7 +15,7 @@ from business.models import Treatment, Pet, Material, Chip
 from business.services import (
     json_ok, json_fail, parse_json_body, serialize_instance,
     generate_ledger_no, get_district_filtered_queryset,
-    adjust_stock, use_chip,
+    adjust_stock, use_chip, get_hospital_stock,
 )
 
 
@@ -128,6 +128,8 @@ def treatment_create(request):
         if material_id:
             try:
                 material = Material.objects.get(id=material_id, category='vaccine')
+                if get_hospital_stock(material, hospital) < treatment.vaccine_quantity:
+                    return json_fail(f'疫苗库存不足（{material.name}），请先补充库存')
                 adjust_stock(
                     material=material,
                     hospital=hospital,
@@ -155,6 +157,8 @@ def treatment_create(request):
         if material_id:
             try:
                 material = Material.objects.get(id=material_id, category='dewormer')
+                if get_hospital_stock(material, hospital) < treatment.deworming_quantity:
+                    return json_fail(f'驱虫药库存不足（{material.name}），请先补充库存')
                 adjust_stock(
                     material=material,
                     hospital=hospital,

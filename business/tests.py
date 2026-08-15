@@ -156,8 +156,23 @@ class CaptureTransferTreatmentFlowTest(TNRBaseTestCase):
         pet = Pet.objects.filter(code__in=pet_codes).first()
         vaccine = Material.objects.filter(category='vaccine').first()
         dewormer = Material.objects.filter(category='dewormer').first()
+
+        # 真实补货流程：捕捉点先向医院下发疫苗/驱虫药，医院签收后才有库存
+        self.login('cy_shelter')
+        for mat, qty in ((vaccine, 10), (dewormer, 10)):
+            resp = self.api('/api/business/materials/dispatch/', {
+                'material_id': mat.id, 'hospital_id': hospital.id, 'quantity': qty,
+            })
+            self.assertEqual(resp.status_code, 200, resp.content)
+            txn_id = resp.json()['data']['id']
+            self.login('aixin_hosp')
+            resp = self.api(f'/api/business/materials/{txn_id}/receive/')
+            self.assertEqual(resp.status_code, 200, resp.content)
+            self.login('cy_shelter')
+
         # 找一个未使用芯片
         chip = Chip.objects.filter(status='available').first()
+        self.login('aixin_hosp')
         resp = self.api('/api/business/treatments/create/', {
             'pet_id': pet.id,
             'items': {'sterilization': True, 'vaccine': True, 'deworming': True, 'chip': True},
@@ -462,6 +477,117 @@ class ScheduledTaskTest(TNRBaseTestCase):
         auto_promote_to_adoptable()
         pet.refresh_from_db()
         self.assertEqual(pet.status, before, '未满5天不应自动转待领养')
+
+
+class BoundaryConditionTest(TNRBaseTestCase):
+    """边界情况：状态机越权操作、数值边界、重复提交"""
+
+    def test_adopted_pet_cannot_be_euthanized(self):
+        """已领养宠物不可安乐死"""
+        pet = Pet.objects.filter(status='adopted').first()
+        self.login('aixin_hosp')
+        resp = self.api('/api/business/euthanasia/create/', {
+            'pet_id': pet.id, 'reason': '误操作测试',
+        })
+        self.assertFalse(resp.json()['success'])
+        pet.refresh_from_db()
+        self.assertEqual(pet.status, 'adopted')
+
+    def test_capture_count_upper_bound(self):
+        """单批捕捉数量超100被拒"""
+        self.login('cy_shelter')
+        shelter = Institution.objects.get(name='朝阳区流浪动物捕捉点')
+        resp = self.api('/api/business/captures/create/', {
+            'shelter_id': shelter.id, 'pet_count': 101,
+        })
+        self.assertFalse(resp.json()['success'])
+
+    def test_transfer_split_no_duplicate_pet(self):
+        """拆分转运时同一宠物不可进入两张转运单"""
+        self.login('cy_shelter')
+        shelter = Institution.objects.get(name='朝阳区流浪动物捕捉点')
+        community = Institution.objects.filter(type='community').first()
+        resp = self.api('/api/business/captures/create/', {
+            'shelter_id': shelter.id, 'community_id': community.id,
+            'pet_count': 1, 'species': '猫',
+        })
+        pet = Pet.objects.get(code=resp.json()['data']['pet_codes'][0])
+        h1 = Institution.objects.get(name='爱心宠物医院')
+        h2 = Institution.objects.get(name='瑞鹏宠物医院')
+        # 两家医院都填同一只宠物
+        resp = self.api('/api/business/transfers/create/', {
+            'from_shelter_id': shelter.id,
+            'items': [
+                {'hospital_id': h1.id, 'pet_ids': [pet.id]},
+                {'hospital_id': h2.id, 'pet_ids': [pet.id]},
+            ],
+        })
+        transfers = resp.json()['data']
+        self.assertEqual(len(transfers), 1, '同一宠物只能进入一张转运单')
+        self.assertEqual(transfers[0]['pet_count'], 1)
+        pet.refresh_from_db()
+        self.assertEqual(pet.hospital_id, transfers[0]['to_hospital_id'])
+
+    def test_shelter_stock_cannot_go_negative(self):
+        """捕捉点库存不足时异动被拒"""
+        self.login('cy_shelter')
+        material = Material.objects.filter(category='vaccine').first()
+        resp = self.api('/api/business/materials/adjustment/', {
+            'material_id': material.id,
+            'quantity': material.shelter_stock + 999,
+            'reason': '超额报废测试',
+        })
+        self.assertFalse(resp.json()['success'])
+        material.refresh_from_db()
+        self.assertGreaterEqual(material.shelter_stock, 0)
+
+    def test_blacklist_no_false_positive_by_prefix(self):
+        """黑名单身份证前6位相同（同区县）不误伤他人"""
+        self.login('cy_shelter')
+        # 种子黑名单 BLK001: id_card=110102****5678, phone=13900000001
+        # 换一个前6位相同但尾号不同的身份证 → 不应被拦截
+        pet = Pet.objects.filter(status='pending_adopt').first()
+        resp = self.api('/api/business/adoptions/register/', {
+            'pet_id': pet.id, 'adopter_name': '无辜市民',
+            'adopter_phone': '13877776666', 'adopter_id_card': '110102199001019999',
+        })
+        self.assertTrue(resp.json()['success'], '同区县前缀不同人不应被黑名单误伤')
+
+    def test_checkin_cannot_be_reviewed_twice(self):
+        """回访打卡不可重复审核"""
+        adopter = User.objects.get(username='adopter1')
+        pet = Pet.objects.filter(adoptions__adopter=adopter).first()
+        self.login('adopter1')
+        resp = self.api('/api/business/checkins/create/', {
+            'pet_id': pet.id, 'month': '2025-06',
+        })
+        checkin_id = resp.json()['data']['id']
+        self.login('cy_shelter')
+        resp = self.api(f'/api/business/checkins/{checkin_id}/review/', {'status': 'approved'})
+        self.assertTrue(resp.json()['success'])
+        # 第二次审核应被拒
+        resp = self.api(f'/api/business/checkins/{checkin_id}/review/', {'status': 'rejected'})
+        self.assertFalse(resp.json()['success'])
+
+    def test_treatment_rejected_when_vaccine_out_of_stock(self):
+        """医院疫苗库存不足时诊疗被拒（库存联动保护）"""
+        pet = Pet.objects.filter(status='in_treatment').first()
+        hospital_user = 'aixin_hosp' if pet.hospital.name == '爱心宠物医院' else 'babitang_hosp'
+        # 选用从未向该医院下发的疫苗（库存为0）
+        stocked_ids = MaterialTransaction.objects.filter(
+            hospital=pet.hospital, type='receive', material__category='vaccine',
+        ).values_list('material_id', flat=True)
+        unused = Material.objects.filter(category='vaccine').exclude(id__in=stocked_ids).first()
+        if unused is None:
+            self.skipTest('所有疫苗均有库存')
+        self.login(hospital_user)
+        resp = self.api('/api/business/treatments/create/', {
+            'pet_id': pet.id,
+            'items': {'vaccine': True},
+            'vaccine': {'type': unused.name, 'material_id': unused.id, 'quantity': 1},
+            'status': 'in_progress',
+        })
+        self.assertFalse(resp.json()['success'], '库存不足应拒绝诊疗提交')
 
 
 class SupervisionTest(TNRBaseTestCase):

@@ -239,14 +239,22 @@
     var toggle = document.getElementById('portalSidebarToggle');
     var sidebar = document.getElementById('portalSidebar');
     var overlay = document.getElementById('portalSidebarOverlay');
+    function closeSidebar() {
+      if (sidebar) sidebar.classList.remove('show');
+      if (overlay) overlay.classList.remove('show');
+    }
     if (toggle && sidebar && overlay) {
       toggle.addEventListener('click', function() {
         sidebar.classList.toggle('show');
         overlay.classList.toggle('show');
       });
-      overlay.addEventListener('click', function() {
-        sidebar.classList.remove('show');
-        overlay.classList.remove('show');
+      overlay.addEventListener('click', closeSidebar);
+    }
+    // 手机上点击菜单项后自动收起侧边栏，避免遮挡内容
+    var nav = document.querySelector('.portal-sidebar-nav');
+    if (nav) {
+      nav.addEventListener('click', function(e) {
+        if (e.target.closest('a, .nav-item')) closeSidebar();
       });
     }
   })();

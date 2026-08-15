@@ -101,6 +101,7 @@ def transfer_create(request):
         items = [{'hospital_id': to_hospital_id, 'pet_codes': pet_codes_raw}]
 
     created = []
+    assigned_pet_ids = set()  # 防止同一宠物被拆分进多家医院
     for item in items:
         hospital_id = item.get('hospital_id')
         if not hospital_id:
@@ -112,17 +113,20 @@ def transfer_create(request):
             continue
 
         # 优先使用 pet_ids（数字ID），否则用 pet_codes（字符串编号）
-        pet_ids = item.get('pet_ids', [])
+        pet_ids = [pid for pid in item.get('pet_ids', []) if pid not in assigned_pet_ids]
         pet_codes = item.get('pet_codes', [])
         if pet_ids:
-            pets = Pet.objects.filter(id__in=pet_ids, status='in_transit')
+            pets = list(Pet.objects.filter(id__in=pet_ids, status='in_transit'))
         elif pet_codes:
-            pets = Pet.objects.filter(code__in=pet_codes, status='in_transit')
+            pets = list(Pet.objects.filter(code__in=pet_codes, status='in_transit'))
         else:
             continue
 
-        if not pets.exists():
+        # 拆分场景：剔除已分配给前一家医院的宠物
+        pets = [p for p in pets if p.id not in assigned_pet_ids]
+        if not pets:
             continue
+        assigned_pet_ids.update(p.id for p in pets)
 
         pet_code_list = [p.code for p in pets]
         transfer = Transfer.objects.create(

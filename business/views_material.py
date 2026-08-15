@@ -212,18 +212,21 @@ def dispatch_create(request):
         note += f'，芯片号段 {chip_range}'
 
     # 创建下发流水（捕捉点侧扣减库存，不关联医院，医院签收后才增加库存）
-    txn = adjust_stock(
-        material=material,
-        hospital=None,
-        quantity=quantity,
-        txn_type='dispatch',
-        operator=user,
-        operator_name=user.get_full_name() or user.username,
-        from_to=hospital.name,
-        note=note,
-        ledger_no=generate_ledger_no('DIS'),
-        district_id=material.district_id,
-    )
+    try:
+        txn = adjust_stock(
+            material=material,
+            hospital=None,
+            quantity=quantity,
+            txn_type='dispatch',
+            operator=user,
+            operator_name=user.get_full_name() or user.username,
+            from_to=hospital.name,
+            note=note,
+            ledger_no=generate_ledger_no('DIS'),
+            district_id=material.district_id,
+        )
+    except ValueError as e:
+        return json_fail(str(e))
     # 关联目标医院到流水（用于医院端查看待签收列表），但不影响医院库存
     txn.hospital = hospital
     txn.save(update_fields=['hospital'])
@@ -319,18 +322,22 @@ def stock_adjustment(request):
         if not hospital:
             return json_fail('缺少医院机构信息')
 
-    txn = adjust_stock(
-        material=material,
-        hospital=hospital,
-        quantity=quantity,
-        txn_type='adjustment',
-        operator=user,
-        operator_name=user.get_full_name() or user.username,
-        from_to=hospital.name if hospital else '捕捉点',
-        note=data.get('reason', '库存异动'),
-        ledger_no=generate_ledger_no('ADJ'),
-        district_id=material.district_id,
-    )
+    txn = None
+    try:
+        txn = adjust_stock(
+            material=material,
+            hospital=hospital,
+            quantity=quantity,
+            txn_type='adjustment',
+            operator=user,
+            operator_name=user.get_full_name() or user.username,
+            from_to=hospital.name if hospital else '捕捉点',
+            note=data.get('reason', '库存异动'),
+            ledger_no=generate_ledger_no('ADJ'),
+            district_id=material.district_id,
+        )
+    except ValueError as e:
+        return json_fail(str(e))
 
     return json_ok(serialize_instance(txn), message=f'异动登记成功，扣减 {quantity}')
 

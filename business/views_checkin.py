@@ -118,6 +118,9 @@ def checkin_review(request, pk):
     except CheckIn.DoesNotExist:
         return json_fail('打卡记录不存在', status=404)
 
+    if checkin.status != 'pending':
+        return json_fail(f'该打卡已审核（{checkin.get_status_display()}），不可重复审核')
+
     new_status = data.get('status')
     if new_status not in ('approved', 'rejected'):
         return json_fail('status 必须为 approved 或 rejected')

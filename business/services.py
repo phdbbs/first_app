@@ -148,7 +148,7 @@ def generate_ledger_no(prefix):
     """
     today = timezone.now()
     date_str = today.strftime('%y%m%d')
-    rand = f'{random.randint(1, 999):03d}'
+    rand = f'{random.randint(0, 9999):04d}'
     return f'{prefix}-{date_str}-{rand}'
 
 
@@ -221,11 +221,13 @@ def adjust_stock(material, hospital, quantity, txn_type, **extra):
         note=extra.get('note', ''),
     )
 
-    # 捕捉点侧直接调整库存字段
+    # 捕捉点侧直接调整库存字段（扣减类操作不允许库存为负）
     if hospital is None:
         if txn_type in ('purchase',):
             material.shelter_stock += quantity
         elif txn_type in ('dispatch', 'consume', 'adjustment'):
+            if material.shelter_stock < quantity:
+                raise ValueError(f'捕捉点库存不足（当前 {material.shelter_stock}，需 {quantity}）')
             material.shelter_stock -= quantity
         material.save(update_fields=['shelter_stock'])
 
@@ -273,7 +275,8 @@ def check_blacklist(id_card, phone):
 
     匹配规则：
     - 电话精确匹配
-    - 身份证前6位匹配（忽略星号掩码）
+    - 身份证匹配：清洗掩码后按「前6位 + 后4位」联合比对，
+      避免仅按前6位（地址码）误伤同区县的所有人
 
     :return: 匹配的 Blacklist 记录，或 None
     """
@@ -288,13 +291,14 @@ def check_blacklist(id_card, phone):
         if match:
             return match
 
-    # 身份证前6位匹配（去除星号等掩码字符）
+    # 身份证匹配：前6位+后4位联合（掩码场景仍可定位到人）
     if id_card:
-        clean_id = re.sub(r'[^0-9Xx]', '', id_card)[:6]
-        if clean_id:
+        clean_id = re.sub(r'[^0-9Xx]', '', id_card).upper()
+        if len(clean_id) >= 6:
+            head, tail = clean_id[:6], clean_id[-4:]
             for bl in qs.exclude(id_card=''):
-                bl_clean = re.sub(r'[^0-9Xx]', '', bl.id_card)[:6]
-                if bl_clean and bl_clean == clean_id:
+                bl_clean = re.sub(r'[^0-9Xx]', '', bl.id_card).upper()
+                if len(bl_clean) >= 10 and bl_clean[:6] == head and bl_clean[-4:] == tail:
                     return bl
 
     return None

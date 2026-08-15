@@ -1418,6 +1418,25 @@ input, select, textarea, button { font-family: inherit; font-size: inherit; }
     grid-template-columns: 1fr;
   }
 
+  /* 触屏优化：手机上增大按钮/操作链接的触控目标（推荐 ≥44px） */
+  .btn-sm,
+  .btn-link {
+    min-height: 36px;
+    min-width: 36px;
+    padding: 8px 12px;
+  }
+
+  .table .btn-link {
+    display: inline-block;
+    margin: 2px;
+  }
+
+  .topbar-toggle,
+  .portal-topbar-toggle {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
   .stat-grid {
     grid-template-columns: 1fr;
   }

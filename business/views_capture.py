@@ -73,6 +73,8 @@ def capture_create(request):
     pet_count = int(data.get('pet_count', 0))
     if pet_count <= 0:
         return json_fail('动物数量必须大于0')
+    if pet_count > 100:
+        return json_fail('单批捕捉数量不能超过100只，请分批登记')
 
     # 批量生成宠物编号
     pet_codes = generate_pet_codes(pet_count)
@@ -159,6 +161,12 @@ def owner_return_create(request, pk=None):
     # 即：宠物未关联医院（pet.hospital 为空），表示尚未提交转运单
     if pet.hospital_id is not None:
         return json_fail('该宠物已提交转运单，不可领回。领回仅限捕捉后、转运前的宠物')
+
+    # 防止重复领回登记（同一宠物只能领回一次）
+    if pet.status == 'owner_returned':
+        return json_fail('该宠物已办理过主人领回，不可重复登记')
+    if pet.status != 'in_transit':
+        return json_fail(f'宠物当前状态({pet.get_status_display()})不可领回')
 
     owner_name = data.get('owner_name', '').strip()
     if not owner_name:
